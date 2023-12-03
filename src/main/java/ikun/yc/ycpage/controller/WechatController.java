@@ -1,18 +1,22 @@
 //仰晨:微信接口 创建时间2023/11/28 1:30 星期二
 package ikun.yc.ycpage.controller;
 
+import ikun.yc.ycpage.common.VerificationCodeUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
 
+import javax.annotation.Resource;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.StringReader;
 import java.security.MessageDigest;
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RestController
@@ -24,6 +28,8 @@ public class WechatController {
     @Value("${wechat.encodingAesKey}")
     private String encodingAesKey;
 
+    @Resource
+    public RedisTemplate redisTemplate;
 
     /**
      * 处理微信服务器发送的GET请求，用于验证服务器地址
@@ -97,7 +103,9 @@ public class WechatController {
         String toUserName = root.getElementsByTagName("ToUserName").item(0).getTextContent();
 
         String responseMessage;
-        if ("1".equals(content.trim())) {
+        if ("登录".equals(content.trim())) {
+            // TODO: 2023/11/28 1:30 星期二
+            redisTemplate.opsForValue().set(toUserName, VerificationCodeUtil.generateCode(),60, TimeUnit.MINUTES);
             responseMessage = createTextMessage(fromUserName, toUserName, "ikun");
         } else {
             responseMessage = createTextMessage(fromUserName, toUserName, "小黑子");

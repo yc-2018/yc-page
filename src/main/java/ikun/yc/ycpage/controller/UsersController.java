@@ -1,9 +1,12 @@
 package ikun.yc.ycpage.controller;
 
+import ikun.yc.ycpage.common.R;
 import ikun.yc.ycpage.service.UsersService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -20,6 +23,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/users")
 public class UsersController {
     private final UsersService usersService;
+    public final RedisTemplate redisTemplate;
+
+    @PostMapping
+    public R<?> login(String key) {
+        redisTemplate.opsForValue().get(key);
+        return null;
+    }
+
 
     @GetMapping("/get")
     public Object get() {
