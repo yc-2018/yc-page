@@ -29,24 +29,25 @@ public class WechatController {
     private String encodingAesKey;
 
     @Resource
-    public RedisTemplate redisTemplate;
+    public RedisTemplate<String, String> redisTemplate;
 
     /**
      * 处理微信服务器发送的GET请求，用于验证服务器地址
+     *
      * @param signature 微信加密签名
      * @param timestamp 时间戳
-     * @param nonce 随机数
-     * @param echostr 随机字符串
+     * @param nonce     随机数
+     * @param echostr   随机字符串
      * @return 返回echostr参数内容，则接入生效，成为开发者成功，否则接入失败。
      */
     @GetMapping
-    public String validate(@RequestParam(value = "signature",required = false) String signature,
-                           @RequestParam(value = "timestamp",required = false) String timestamp,
-                           @RequestParam(value = "nonce",required = false) String nonce,
-                           @RequestParam(value = "echostr",required = false) String echostr) throws Exception {
-        log.info("验证微信服务器地址\nsignature:{},\ntimestamp:{},\nnonce:{},\nechostr:{}",signature,timestamp,nonce,echostr);
+    public String validate(@RequestParam(value = "signature", required = false) String signature,
+                           @RequestParam(value = "timestamp", required = false) String timestamp,
+                           @RequestParam(value = "nonce", required = false) String nonce,
+                           @RequestParam(value = "echostr", required = false) String echostr) throws Exception {
+        log.info("验证微信服务器地址\nsignature:{},\ntimestamp:{},\nnonce:{},\nechostr:{}", signature, timestamp, nonce, echostr);
 
-        String[] params = new String[] {token, timestamp, nonce};
+        String[] params = new String[]{token, timestamp, nonce};
         Arrays.sort(params);
 
         StringBuilder sb = new StringBuilder();
@@ -58,7 +59,7 @@ public class WechatController {
         byte[] digest = md.digest(sb.toString().getBytes());
         String encryptedStr = byteArrayToHexString(digest).toLowerCase();
 
-        System.out.println("加密后的字符串："+encryptedStr);
+        System.out.println("加密后的字符串：" + encryptedStr);
         if (encryptedStr.equals(signature)) {
             System.out.println("认证通过");
             return echostr;
@@ -84,15 +85,15 @@ public class WechatController {
     }
 
 
-
     /**
      * 处理微信服务器发送的POST请求，用于接收和回复消息
+     *
      * @param payload 微信服务器发送的POST请求内容
      * @return 返回回复消息给微信服务器
      */
     @PostMapping
     public String handleMessage(@RequestBody String payload) throws Exception {
-        log.info("处理微信服务器发送的POST请求，用于接收和回复消息\npayload:{}",payload);
+        log.info("处理微信服务器发送的POST请求，用于接收和回复消息\npayload:{}", payload);
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         DocumentBuilder db = dbf.newDocumentBuilder();
         Document doc = db.parse(new InputSource(new StringReader(payload)));
@@ -104,9 +105,14 @@ public class WechatController {
 
         String responseMessage;
         if ("登录".equals(content.trim())) {
-            // TODO: 2023/11/28 1:30 星期二
-            redisTemplate.opsForValue().set(toUserName, VerificationCodeUtil.generateCode(),60, TimeUnit.MINUTES);
-            responseMessage = createTextMessage(fromUserName, toUserName, "ikun");
+            String code;
+            do {
+                code = VerificationCodeUtil.generateCode();
+            } while (Boolean.TRUE.equals(redisTemplate.hasKey(code)));   // 直接检查验证码是否已作为键存在
+
+            redisTemplate.opsForValue().set(code, toUserName,60, TimeUnit.MINUTES);          // 存储验证码和用户名的映射
+            return code;
+
         } else {
             responseMessage = createTextMessage(fromUserName, toUserName, "小黑子");
         }
