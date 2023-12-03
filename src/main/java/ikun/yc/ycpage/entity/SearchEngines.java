@@ -1,0 +1,52 @@
+package ikun.yc.ycpage.entity;
+
+import java.io.Serializable;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.extension.activerecord.Model;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
+
+/**
+ * (search_engines)实体类
+ *
+ * @author yc
+ * @since 2023-12-03 22:31:22
+ * @description 由 Mybatisplus Code Generator 创建
+ */
+@Data
+@NoArgsConstructor
+@Accessors(chain = true)
+@TableName("search_engines")
+public class SearchEngines extends Model<SearchEngines> implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * 搜索引擎ID
+     */
+    @TableId(type = IdType.AUTO)
+	private Integer id;
+    /**
+     * 搜索引擎URL
+     */
+    private String engineUrl;
+    /**
+     * 是否快速搜索 1快 0普通
+     */
+    private Integer isQuickSearch;
+    /**
+     * 名称
+     */
+    private String name;
+    /**
+     * 图标URL
+     */
+    private String iconUrl;
+    /**
+     * 用户id
+     */
+    private String userId;
+
+}

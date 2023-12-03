@@ -1,0 +1,63 @@
+package ikun.yc.ycpage.entity;
+
+import java.io.Serializable;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.extension.activerecord.Model;
+import java.util.Date;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
+
+/**
+ * (to_do_items)实体类
+ *
+ * @author yc
+ * @since 2023-12-03 22:31:22
+ * @description 由 Mybatisplus Code Generator 创建
+ */
+@Data
+@NoArgsConstructor
+@Accessors(chain = true)
+@TableName("to_do_items")
+public class ToDoItems extends Model<ToDoItems> implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * 待办事项ID
+     */
+    @TableId(type = IdType.AUTO)
+	private Integer id;
+    /**
+     * 用户ID
+     */
+    private String userId;
+    /**
+     * 待办类型 (0:普通待办，1：循环待办，2：长期待办，3：紧急待办，4：备忘英语
+     */
+    private Integer itemType;
+    /**
+     * 内容
+     */
+    private String content;
+    /**
+     * 是否已完成 （1：完成，0未完成）
+     */
+    private Integer completed;
+    /**
+     * 重复次数(循环代办专属)
+     */
+    private Integer numberOfRecurrences;
+    /**
+     * 创建时间
+     */
+    private Date creationTime;
+    /**
+     * 修改时间
+     */
+    @TableField(update = "now()")
+	private Date updateTime;
+
+}
