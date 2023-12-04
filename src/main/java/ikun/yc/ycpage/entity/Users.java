@@ -1,11 +1,11 @@
 package ikun.yc.ycpage.entity;
 
 import java.io.Serializable;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+
+import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
-import java.util.Date;
+
+import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
@@ -27,7 +27,7 @@ public class Users extends Model<Users> implements Serializable {
     /**
      * 用户ID
      */
-    @TableId(type = IdType.AUTO)
+    @TableId
 	private String id;
     /**
      * 用户名
@@ -45,14 +45,19 @@ public class Users extends Model<Users> implements Serializable {
      * 密码
      */
     private String password;
+
+
     /**
      * 创建时间
      */
-    private Date creationTime;
+    @TableField(fill = FieldFill.INSERT)
+    private LocalDateTime createTime;
+
     /**
      * 修改时间
      */
-    private Date modificationTime;
+    @TableField(update = "now()",fill = FieldFill.INSERT)
+    private LocalDateTime updateTime;
     /**
      * 是否已删除
      */

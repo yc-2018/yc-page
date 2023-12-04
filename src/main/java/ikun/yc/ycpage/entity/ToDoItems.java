@@ -6,7 +6,8 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
-import java.util.Date;
+
+import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
@@ -53,11 +54,11 @@ public class ToDoItems extends Model<ToDoItems> implements Serializable {
     /**
      * 创建时间
      */
-    private Date creationTime;
+    private LocalDateTime createTime;
     /**
      * 修改时间
      */
     @TableField(update = "now()")
-	private Date updateTime;
+	private LocalDateTime updateTime;
 
 }

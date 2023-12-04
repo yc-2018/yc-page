@@ -30,8 +30,8 @@ public class MyMetaObjecthandler implements MetaObjectHandler {
         *     metaObject.setValue("newField", "默认值或其他逻辑");
         * }
         * */
-        metaObject.setValue("createUser", BaseContext.getCurrentId());
-        metaObject.setValue("updateUser", BaseContext.getCurrentId());
+//        metaObject.setValue("createUser", BaseContext.getCurrentId());
+//        metaObject.setValue("updateUser", BaseContext.getCurrentId());
     }
 
     @Override
@@ -39,6 +39,6 @@ public class MyMetaObjecthandler implements MetaObjectHandler {
         log.info("公共字段自动填充[update]");
         log.info(metaObject.toString());
         metaObject.setValue("updateTime", LocalDateTime.now());
-        metaObject.setValue("updateUser", BaseContext.getCurrentId());
+//        metaObject.setValue("updateUser", BaseContext.getCurrentId());
     }
 }

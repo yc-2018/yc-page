@@ -2,6 +2,7 @@
 package ikun.yc.ycpage.controller;
 
 import ikun.yc.ycpage.common.VerificationCodeUtil;
+import ikun.yc.ycpage.service.WechatService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -28,8 +29,9 @@ public class WechatController {
     @Value("${wechat.encodingAesKey}")
     private String encodingAesKey;
 
+
     @Resource
-    public RedisTemplate<String, String> redisTemplate;
+    public WechatService wechatService;
 
     /**
      * 处理微信服务器发送的GET请求，用于验证服务器地址
@@ -91,7 +93,7 @@ public class WechatController {
      * @param payload 微信服务器发送的POST请求内容
      * @return 返回回复消息给微信服务器
      */
-    @PostMapping
+    @PostMapping(produces = "text/xml; charset=UTF-8")
     public String handleMessage(@RequestBody String payload) throws Exception {
         log.info("处理微信服务器发送的POST请求，用于接收和回复消息\npayload:{}", payload);
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -99,25 +101,19 @@ public class WechatController {
         Document doc = db.parse(new InputSource(new StringReader(payload)));
 
         Element root = doc.getDocumentElement();
-        String content = root.getElementsByTagName("Content").item(0).getTextContent();
+        String msgType = root.getElementsByTagName("MsgType").item(0).getTextContent();
         String fromUserName = root.getElementsByTagName("FromUserName").item(0).getTextContent();
         String toUserName = root.getElementsByTagName("ToUserName").item(0).getTextContent();
 
-        String responseMessage;
-        if ("登录".equals(content.trim())) {
-            String code;
-            do {
-                code = VerificationCodeUtil.generateCode();
-            } while (Boolean.TRUE.equals(redisTemplate.hasKey(code)));   // 直接检查验证码是否已作为键存在
+        if ("image".equals(msgType))return createTextMessage(fromUserName, toUserName, "暂不支持图片");
+        if ("voice".equals(msgType)) return createTextMessage(fromUserName, toUserName, "暂不支持语音");
 
-            redisTemplate.opsForValue().set(code, toUserName,60, TimeUnit.MINUTES);          // 存储验证码和用户名的映射
-            return code;
+        String content = root.getElementsByTagName("Content").item(0).getTextContent();
+        if ("登录".equals(content.trim()))
+            return createTextMessage(fromUserName, toUserName,wechatService.login(toUserName));
 
-        } else {
-            responseMessage = createTextMessage(fromUserName, toUserName, "小黑子");
-        }
 
-        return responseMessage;
+        return createTextMessage(fromUserName, toUserName, "小黑子:ikun正在努力中...");
     }
 
     /**
