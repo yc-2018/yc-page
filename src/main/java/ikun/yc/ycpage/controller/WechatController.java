@@ -15,6 +15,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.StringReader;
 import java.security.MessageDigest;
 import java.util.Arrays;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -102,21 +103,23 @@ public class WechatController {
         String fromUserName = root.getElementsByTagName("FromUserName").item(0).getTextContent();
         String toUserName = root.getElementsByTagName("ToUserName").item(0).getTextContent();
 
-        if ("image".equals(msgType))return createTextMessage(fromUserName, toUserName, "暂不支持图片");
+        if ("image".equals(msgType)) return createTextMessage(fromUserName, toUserName, "暂不支持图片");
         if ("voice".equals(msgType)) return createTextMessage(fromUserName, toUserName, "暂不支持语音");
 
         String content = root.getElementsByTagName("Content").item(0).getTextContent();
-        if ("登录".equals(content.trim()))
-            return createTextMessage(fromUserName, toUserName,wechatService.login(toUserName));
+        // 处理用户输入
+        String trimmedContent = content.trim();
+        if ("登录".equals(trimmedContent))
+            return createTextMessage(fromUserName, toUserName, wechatService.login(toUserName));
 
         /*
-        * 下面开始待办事项
-        */
-
-        // 普通待办
-        if (content.trim().startsWith("0 "))  // 去掉前后的空格后还是‘0 ’开头，这就能省略判断长度是不是大于2
-            return createTextMessage(fromUserName, toUserName,wechatService.ordinaryPending(toUserName,content));
-
+         * 下面开始待办事项
+         */
+        // 定义前缀字符串列表
+        List<String> prefixes = Arrays.asList("0 ", "1 ", "2 ");  // 每个前缀对应不同的待办事项类型
+        for (String prefix : prefixes)
+            if (trimmedContent.startsWith(prefix))
+                return createTextMessage(fromUserName, toUserName, wechatService.addPending(toUserName, content, prefix));
 
         return createTextMessage(fromUserName, toUserName, "小黑子:ikun正在努力中...");
     }

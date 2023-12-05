@@ -9,6 +9,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 @Service
 public class WechatServiceImpl implements WechatService {
@@ -29,22 +31,28 @@ public class WechatServiceImpl implements WechatService {
         } while (Boolean.TRUE.equals(redisTemplate.hasKey(code)));   // 直接检查验证码是否已作为键存在
 
         redisTemplate.opsForValue().set(code, toUserName,60, TimeUnit.MINUTES);          // 存储验证码和用户名的映射
-        return "登录验证码为:" + code + ", 5分钟内有效。\n失效后可重新发送登录获取验证码,目前网站地址:https://yc556.gitee.io";
+        return "登录验证码为:" + code + "，五分钟内有效。\n失效后可重新发送登录获取验证码,目前网站地址:https://yc556.gitee.io";
     }
 
+
+
     /**
-     * 普通待办
+     * 添加待办
      * @author 仰晨
      * @param toUserName 用户名
      * @param content 待办内容
+     * @param prefix 为了选择加上的字符串前缀的长度（要去掉前缀的长度）
      * @return 成功返回id，失败返回失败原因
      */
     @Override
-    public String ordinaryPending(String toUserName, String content) {
-        content=content.trim().substring(2);                        // 去掉空格和为了选择加上的字符串前缀
-        ToDoItems items = new ToDoItems(toUserName, content, 0);     // 0表示普通待办
-        boolean save = toDoItemsService.save(items);                         // 保存
+    public String addPending(String toUserName, String content, String prefix) {
+        // 待办类型映射关系列表
+        List<String> pendingNames = Arrays.asList("普通", "循环", "长期");
+        content=content.trim().substring(prefix.length());                       // 去掉空格和为了选择加上的字符串前缀
+        int itemType = Integer.parseInt(prefix.trim());                         // 转换前缀得到待办类型
+        ToDoItems items = new ToDoItems(toUserName, content, itemType);         // 待办内容和类型
+        boolean save = toDoItemsService.save(items);                            // 保存
         if (!save) return "添加失败";
-        return "添加普通待办成功,id：" + items.getId();
+        return "添加"+ pendingNames.get(itemType)+"待办成功,id：" + items.getId();
     }
 }

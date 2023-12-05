@@ -4,5 +4,9 @@ package ikun.yc.ycpage.service;
 public interface WechatService {
     String login(String toUserName);
 
-    String ordinaryPending(String toUserName, String content);
+//    String ordinaryPending(String toUserName, String content);
+//
+//    String forPending(String toUserName, String content);
+
+    String addPending(String toUserName, String content, String prefix);
 }
