@@ -39,18 +39,18 @@ public class WechatServiceImpl implements WechatService {
     /**
      * 添加待办
      * @author 仰晨
-     * @param toUserName 用户名
+     * @param fromUserName 用户名
      * @param content 待办内容
      * @param prefix 为了选择加上的字符串前缀的长度（要去掉前缀的长度）
      * @return 成功返回id，失败返回失败原因
      */
     @Override
-    public String addPending(String toUserName, String content, String prefix) {
+    public String addPending(String fromUserName, String content, String prefix) {
         // 待办类型映射关系列表
         List<String> pendingNames = Arrays.asList("普通", "循环", "长期");
         content=content.trim().substring(prefix.length());                       // 去掉空格和为了选择加上的字符串前缀
         int itemType = Integer.parseInt(prefix.trim());                         // 转换前缀得到待办类型
-        ToDoItems items = new ToDoItems(toUserName, content, itemType);         // 待办内容和类型
+        ToDoItems items = new ToDoItems(fromUserName, content, itemType);         // 待办内容和类型
         boolean save = toDoItemsService.save(items);                            // 保存
         if (!save) return "添加失败";
         return "添加"+ pendingNames.get(itemType)+"待办成功,id：" + items.getId();

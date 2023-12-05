@@ -8,5 +8,5 @@ public interface WechatService {
 //
 //    String forPending(String toUserName, String content);
 
-    String addPending(String toUserName, String content, String prefix);
+    String addPending(String fromUserName, String content, String prefix);
 }

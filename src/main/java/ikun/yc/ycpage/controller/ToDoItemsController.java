@@ -1,5 +1,6 @@
 package ikun.yc.ycpage.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import ikun.yc.ycpage.common.R;
 import ikun.yc.ycpage.entity.ToDoItems;
 import ikun.yc.ycpage.service.ToDoItemsService;
@@ -7,12 +8,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 /**
- * 服务控制器
+ * 待办
  *
  * @author yc
  * @since 2023-12-03 22:31:22
- * @description 由 Mybatisplus Code Generator 创建
  */
 @Slf4j
 @RequiredArgsConstructor
@@ -33,5 +35,13 @@ public class ToDoItemsController {
         Integer itemType = toDoItems.getItemType();
         if (itemType == null) return R.error("待办类型不能为空");
         return R.success(toDoItemsService.save(toDoItems));
+    }
+
+    @GetMapping("/{type}")
+    public R<List<ToDoItems>> getItem(@PathVariable Integer type) {
+        LambdaQueryWrapper<ToDoItems> queryWrapper = new LambdaQueryWrapper<ToDoItems>()
+                .eq(ToDoItems::getItemType, type);
+        // 请求头的token
+        return R.success(toDoItemsService.list(queryWrapper));
     }
 }

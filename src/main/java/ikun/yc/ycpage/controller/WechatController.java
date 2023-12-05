@@ -119,7 +119,7 @@ public class WechatController {
         List<String> prefixes = Arrays.asList("0 ", "1 ", "2 ");  // 每个前缀对应不同的待办事项类型
         for (String prefix : prefixes)
             if (trimmedContent.startsWith(prefix))
-                return createTextMessage(fromUserName, toUserName, wechatService.addPending(toUserName, content, prefix));
+                return createTextMessage(fromUserName, toUserName, wechatService.addPending(fromUserName, content, prefix));
 
         return createTextMessage(fromUserName, toUserName, "小黑子:ikun正在努力中...");
     }
