@@ -27,9 +27,14 @@ public class WechatController {
     @Value("${wechat.encodingAesKey}")
     private String encodingAesKey;
 
-
     @Resource
     public WechatService wechatService;
+
+    private static final String ORDINARY = "0 ";    // 常规待办事项
+    private static final String CIRCULATE = "1 ";   // 循环待办事项
+    private static final String LONG_TERM = "2 ";   // 长期待办
+    private static final String URGENT = "3 ";    //紧急待办
+
 
     /**
      * 处理微信服务器发送的GET请求，用于验证服务器地址
@@ -116,7 +121,7 @@ public class WechatController {
          * 下面开始待办事项
          */
         // 定义前缀字符串列表
-        List<String> prefixes = Arrays.asList("0 ", "1 ", "2 ");  // 每个前缀对应不同的待办事项类型
+        List<String> prefixes = Arrays.asList(ORDINARY, "1 ", "2 ");  // 每个前缀对应不同的待办事项类型
         for (String prefix : prefixes)
             if (trimmedContent.startsWith(prefix))
                 return createTextMessage(fromUserName, toUserName, wechatService.addPending(fromUserName, content, prefix));
