@@ -32,6 +32,13 @@ public class WechatServiceImpl implements WechatService {
         return "登录验证码为:" + code + ", 5分钟内有效。\n失效后可重新发送登录获取验证码,目前网站地址:https://yc556.gitee.io";
     }
 
+    /**
+     * 普通待办
+     * @author 仰晨
+     * @param toUserName 用户名
+     * @param content 待办内容
+     * @return 成功返回id，失败返回失败原因
+     */
     @Override
     public String ordinaryPending(String toUserName, String content) {
         content=content.trim().substring(2);                        // 去掉空格和为了选择加上的字符串前缀
