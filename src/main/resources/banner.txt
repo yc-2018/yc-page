@@ -5,4 +5,4 @@
  _.____`.[ '/'`\ \[ `/'`\][  | [ `.-. | / /'`\; |  __'. / .'`\ \/ .'`\ \| |
 | \____) || \__/ | | |     | |  | | | | \ \._//_| |__) || \__. || \__. || |,
  \______.'| ;.__/ [___]   [___][___||__].',__`|_______/  '.__.'  '.__.' \__/
-         [__|                          ( ( __))  yc-page-Spring-Boot-Version: ${spring-boot.version} , Service Name: ${spring.application.name} , port: ${server.port} , profiles: ${spring.profiles.active}
+         [__|                          ( ( __))  仰晨主页-Spring-Boot-Version: ${spring-boot.version} , Service Name: ${spring.application.name} , port: ${server.port} , profiles: ${spring.profiles.active}

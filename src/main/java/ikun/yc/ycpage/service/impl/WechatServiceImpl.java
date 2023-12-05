@@ -2,6 +2,8 @@
 package ikun.yc.ycpage.service.impl;
 
 import ikun.yc.ycpage.common.VerificationCodeUtil;
+import ikun.yc.ycpage.entity.ToDoItems;
+import ikun.yc.ycpage.service.ToDoItemsService;
 import ikun.yc.ycpage.service.WechatService;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -12,6 +14,8 @@ import java.util.concurrent.TimeUnit;
 public class WechatServiceImpl implements WechatService {
     @Resource
     public RedisTemplate<String, String> redisTemplate;
+    @Resource
+    public ToDoItemsService toDoItemsService;
 
     /**
      * @param toUserName 用户名
@@ -26,5 +30,14 @@ public class WechatServiceImpl implements WechatService {
 
         redisTemplate.opsForValue().set(code, toUserName,60, TimeUnit.MINUTES);          // 存储验证码和用户名的映射
         return "登录验证码为:" + code + ", 5分钟内有效。\n失效后可重新发送登录获取验证码,目前网站地址:https://yc556.gitee.io";
+    }
+
+    @Override
+    public String ordinaryPending(String toUserName, String content) {
+        content=content.trim().substring(2);                        // 去掉空格和为了选择加上的字符串前缀
+        ToDoItems items = new ToDoItems(toUserName, content, 0);     // 0表示普通待办
+        boolean save = toDoItemsService.save(items);                         // 保存
+        if (!save) return "添加失败";
+        return "添加普通待办成功,id：" + items.getId();
     }
 }

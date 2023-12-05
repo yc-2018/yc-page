@@ -1,10 +1,8 @@
 package ikun.yc.ycpage.entity;
 
 import java.io.Serializable;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+
+import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
 
 import java.time.LocalDateTime;
@@ -51,14 +49,23 @@ public class ToDoItems extends Model<ToDoItems> implements Serializable {
      * 重复次数(循环代办专属)
      */
     private Integer numberOfRecurrences;
+
     /**
      * 创建时间
      */
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
+
     /**
      * 修改时间
      */
-    @TableField(update = "now()")
+    @TableField(update = "now()",fill = FieldFill.INSERT)
 	private LocalDateTime updateTime;
+
+    public ToDoItems(String userId, String content, Integer itemType) {
+        this.userId = userId;
+        this.content = content;
+        this.itemType = itemType;
+    }
 
 }

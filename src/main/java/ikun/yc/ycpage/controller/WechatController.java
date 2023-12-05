@@ -1,11 +1,9 @@
 //仰晨:微信接口 创建时间2023/11/28 1:30 星期二
 package ikun.yc.ycpage.controller;
 
-import ikun.yc.ycpage.common.VerificationCodeUtil;
 import ikun.yc.ycpage.service.WechatService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -17,7 +15,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.StringReader;
 import java.security.MessageDigest;
 import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RestController
@@ -111,6 +108,14 @@ public class WechatController {
         String content = root.getElementsByTagName("Content").item(0).getTextContent();
         if ("登录".equals(content.trim()))
             return createTextMessage(fromUserName, toUserName,wechatService.login(toUserName));
+
+        /*
+        * 下面开始待办事项
+        */
+
+        // 普通待办
+        if (content.trim().startsWith("0 "))  // 去掉前后的空格后还是‘0 ’开头，这就能省略判断长度是不是大于2
+            return createTextMessage(fromUserName, toUserName,wechatService.ordinaryPending(toUserName,content));
 
 
         return createTextMessage(fromUserName, toUserName, "小黑子:ikun正在努力中...");
