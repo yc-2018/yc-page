@@ -30,10 +30,33 @@ public class WechatController {
     @Resource
     public WechatService wechatService;
 
-    private static final String ORDINARY = "0 ";    // 常规待办事项
-    private static final String CIRCULATE = "1 ";   // 循环待办事项
-    private static final String LONG_TERM = "2 ";   // 长期待办
-    private static final String URGENT = "3 ";    //紧急待办
+    /**
+     * 常规待办事项
+     */
+    private static final String ORDINARY = "0 ";
+    /**
+     * 循环待办事项
+     */
+    private static final String CIRCULATE = "1 ";
+    /**
+     * 长期待办
+     */
+    private static final String LONG_TERM = "2 ";
+    /**
+     * 紧急待办
+     */
+    private static final String URGENT = "3 ";
+
+    /**
+     * 单词待办
+     */
+    private static final String WORD = "4 ";
+
+    /**
+     * 定义前缀字符串列表,每个前缀对应不同的待办事项类型
+     */
+    private static final List<String> PREFIXES = Arrays.asList(ORDINARY, CIRCULATE, LONG_TERM, URGENT, WORD);
+
 
 
     /**
@@ -120,9 +143,7 @@ public class WechatController {
         /*
          * 下面开始待办事项
          */
-        // 定义前缀字符串列表
-        List<String> prefixes = Arrays.asList(ORDINARY, "1 ", "2 ");  // 每个前缀对应不同的待办事项类型
-        for (String prefix : prefixes)
+        for (String prefix : PREFIXES)
             if (trimmedContent.startsWith(prefix))
                 return createTextMessage(fromUserName, toUserName, wechatService.addPending(fromUserName, content, prefix));
 

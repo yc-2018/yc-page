@@ -47,11 +47,11 @@ public class WechatServiceImpl implements WechatService {
     @Override
     public String addPending(String fromUserName, String content, String prefix) {
         // 待办类型映射关系列表
-        List<String> pendingNames = Arrays.asList("普通", "循环", "长期");
+        List<String> pendingNames = Arrays.asList("普通", "循环", "长期","紧急","英语");
         content=content.trim().substring(prefix.length());                       // 去掉空格和为了选择加上的字符串前缀
         int itemType = Integer.parseInt(prefix.trim());                         // 转换前缀得到待办类型
-        ToDoItems items = new ToDoItems(fromUserName, content, itemType);         // 待办内容和类型
-        boolean save = toDoItemsService.save(items);                            // 保存
+        ToDoItems items = new ToDoItems(fromUserName, content, itemType);      // 待办内容和类型
+        boolean save = toDoItemsService.save(items);                          // 保存
         if (!save) return "添加失败";
         return "添加"+ pendingNames.get(itemType)+"待办成功,id：" + items.getId();
     }
