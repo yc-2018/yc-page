@@ -51,11 +51,20 @@ public class WechatController {
      * 单词待办
      */
     private static final String WORD = "4 ";
+    /**
+     * 日记待办
+     */
+    private static final String DIARY = "5 ";
+    /**
+     * 工作待办
+     */
+    private static final String JOB = "6 ";
 
     /**
      * 定义前缀字符串列表,每个前缀对应不同的待办事项类型
      */
-    private static final List<String> PREFIXES = Arrays.asList(ORDINARY, CIRCULATE, LONG_TERM, URGENT, WORD);
+    private static final List<String> PREFIXES =
+            Arrays.asList(ORDINARY, CIRCULATE, LONG_TERM, URGENT, WORD, DIARY,JOB);
 
 
 

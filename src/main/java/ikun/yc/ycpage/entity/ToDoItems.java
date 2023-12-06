@@ -34,7 +34,7 @@ public class ToDoItems extends Model<ToDoItems> implements Serializable {
      */
     private String userId;
     /**
-     * 待办类型 (0:普通待办，1：循环待办，2：长期待办，3：紧急待办，4：备忘英语
+     * 待办类型 (0:普通待办，1：循环待办，2：长期待办，3：紧急待办，4：备忘英语，5、日记待办，6、公事待办
      */
     private Integer itemType;
     /**
@@ -53,13 +53,12 @@ public class ToDoItems extends Model<ToDoItems> implements Serializable {
     /**
      * 创建时间
      */
-    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 
     /**
      * 修改时间
      */
-    @TableField(update = "now()",fill = FieldFill.INSERT)
+    @TableField(update = "now()")
 	private LocalDateTime updateTime;
 
     public ToDoItems(String userId, String content, Integer itemType) {

@@ -17,13 +17,12 @@ import lombok.experimental.Accessors;
  *
  * @author yc
  * @since 2023-12-03 22:31:22
- * @description 由 Mybatisplus Code Generator 创建
  */
 @Data
 @NoArgsConstructor
 @Accessors(chain = true)
 @TableName("users")
-@ApiModel(value="Users对象", description="")
+@ApiModel("Users对象")
 public class Users extends Model<Users> implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -53,13 +52,12 @@ public class Users extends Model<Users> implements Serializable {
     /**
      * 创建时间
      */
-    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 
     /**
      * 修改时间
      */
-    @TableField(update = "now()",fill = FieldFill.INSERT)
+    @TableField(update = "now()")
     private LocalDateTime updateTime;
     /**
      * 是否已删除
