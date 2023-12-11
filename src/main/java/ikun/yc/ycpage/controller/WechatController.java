@@ -29,7 +29,6 @@ public class WechatController {
 
     @Resource
     public WechatService wechatService;
-
     /**
      * 常规待办事项
      */
@@ -59,7 +58,6 @@ public class WechatController {
      * 工作待办
      */
     private static final String JOB = "6 ";
-
     /**
      * 定义前缀字符串列表,每个前缀对应不同的待办事项类型
      */
@@ -146,7 +144,10 @@ public class WechatController {
         String content = root.getElementsByTagName("Content").item(0).getTextContent();
         // 处理用户输入
         String trimmedContent = content.trim();
-        if ("登录".equals(trimmedContent))
+        /*
+        * 登录
+        */
+        if ("登录".equals(trimmedContent)||"登陆".equals(trimmedContent))
             return createTextMessage(fromUserName, toUserName, wechatService.login(toUserName));
 
         /*

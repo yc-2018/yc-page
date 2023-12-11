@@ -32,8 +32,8 @@ public class GlobalExceptionHandler {
     /**
      * 自定义的异常的 处理方法
      */
-    @ExceptionHandler(CustomException.class)   //只要抛出这个sql..的异常就会被捕捉到 进来这个方法
-    public R<String> exceptionHandler(CustomException ex) {
+    @ExceptionHandler(LoginException.class)   //只要抛出这个sql..的异常就会被捕捉到 进来这个方法
+    public R<String> exceptionHandler(LoginException ex) {
         log.error(ex.getMessage());
 
         return R.error(ex.getMessage());

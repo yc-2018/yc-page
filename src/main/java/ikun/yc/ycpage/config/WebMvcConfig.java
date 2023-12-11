@@ -2,11 +2,15 @@
 package ikun.yc.ycpage.config;
 
 import com.github.xiaoymin.knife4j.spring.annotations.EnableKnife4j;
+import ikun.yc.ycpage.interceptor.LoginInterceptor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
@@ -15,16 +19,28 @@ import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
+/**
+ * 继承 WebMvcConfigurationSupport 时，Spring Boot的自动配置特性会被禁用，包括静态资源处理。
+ * 这是为什么您发现 addResourceHandlers 方法在继承 WebMvcConfigurationSupport 时无效的原因。
+ */
 @Slf4j
 @Configuration
 @EnableSwagger2
 @EnableKnife4j
+@RequiredArgsConstructor
+public class WebMvcConfig extends WebMvcConfigurationSupport/* implements WebMvcConfigurer*/ {
+    private final LoginInterceptor loginInterceptor;
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(loginInterceptor)       //注册拦截器
+                .addPathPatterns("/**")                     //拦截全部路径    /*是一级路径/**是全部路径
+                .excludePathPatterns("/login", "/wechat");  // 排除 /login 和 /wx
+    }
 
-public class WebMvcConfig extends WebMvcConfigurationSupport {
+
     /**
      * 设置静态资源映射
      * */
-
     @Override
     protected void addResourceHandlers(ResourceHandlerRegistry registry) {
         log.info("开始静态资源映射:接口文档地址请访问http://localhost:8080/doc.html");

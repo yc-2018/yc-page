@@ -4,8 +4,8 @@ package ikun.yc.ycpage.common;
 /**
  * 自定义业务异常类
  */
-public class CustomException extends RuntimeException{
-    public CustomException(String message) {
+public class LoginException extends RuntimeException{
+    public LoginException(String message) {
         super(message);
     }
 }

@@ -28,7 +28,7 @@ public class UsersController {
     private final UsersService usersService;
     public final RedisTemplate redisTemplate;
 
-    @PostMapping
+    @PostMapping("login")
     public R<?> login(String key) {
         String user = (String) redisTemplate.opsForValue().get(key);
         if (user == null) {
