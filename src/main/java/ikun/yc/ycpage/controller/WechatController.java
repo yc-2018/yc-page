@@ -1,10 +1,18 @@
 //仰晨:微信接口 创建时间2023/11/28 1:30 星期二
 package ikun.yc.ycpage.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import ikun.yc.ycpage.service.WechatService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
@@ -19,6 +27,8 @@ import java.util.List;
 
 @Slf4j
 @RestController
+@RequiredArgsConstructor
+@Api(tags = "接收微信接口")
 @RequestMapping("/wechat")
 public class WechatController {
     @Value("${wechat.token}")
@@ -27,8 +37,8 @@ public class WechatController {
     @Value("${wechat.encodingAesKey}")
     private String encodingAesKey;
 
-    @Resource
-    public WechatService wechatService;
+    private final WechatService wechatService;
+    private final RestTemplate restTemplate;
     /**
      * 常规待办事项
      */
@@ -75,6 +85,7 @@ public class WechatController {
      * @param echostr   随机字符串
      * @return 返回echostr参数内容，则接入生效，成为开发者成功，否则接入失败。
      */
+    @ApiOperation(value = "处理微信服务器发送的GET请求", notes = "用于微信验证服务器地址", httpMethod = "GET")
     @GetMapping
     public String validate(@RequestParam(value = "signature", required = false) String signature,
                            @RequestParam(value = "timestamp", required = false) String timestamp,
@@ -126,6 +137,7 @@ public class WechatController {
      * @param payload 微信服务器发送的POST请求内容
      * @return 返回回复消息给微信服务器
      */
+    @ApiOperation(value = "接收微信信息", notes = "接收及返回微信信息", httpMethod = "POST")
     @PostMapping(produces = "text/xml; charset=UTF-8")
     public String handleMessage(@RequestBody String payload) throws Exception {
         log.info("处理微信服务器发送的POST请求，用于接收和回复消息\npayload:{}", payload);
@@ -156,6 +168,21 @@ public class WechatController {
         for (String prefix : PREFIXES)
             if (trimmedContent.startsWith(prefix))
                 return createTextMessage(fromUserName, toUserName, wechatService.addPending(fromUserName, content, prefix));
+
+        if ("翻译 ".startsWith(trimmedContent)||"fy ".startsWith(trimmedContent)){
+            String srcText = trimmedContent.substring(3).trim();
+            String url = "https://findmyip.net/api/translate.php?text="+"srcText";
+            String translateResult = "\uD83D\uDE2D接口失效";
+            try {
+                // 调用翻译接口
+                String result = restTemplate.getForObject(url, String.class);
+                // 解析接口返回结果
+                JsonNode jsonNode = new ObjectMapper().readTree(result);
+                translateResult = jsonNode.get("data").get("translate_result").asText();
+            } catch (RestClientException | JsonProcessingException ignored) {}
+            return createTextMessage(fromUserName, toUserName, translateResult);
+        }
+
 
         return createTextMessage(fromUserName, toUserName, "小黑子:ikun正在努力中...");
     }
