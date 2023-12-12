@@ -17,7 +17,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
 
-import javax.annotation.Resource;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.StringReader;
@@ -34,8 +33,8 @@ public class WechatController {
     @Value("${wechat.token}")
     private String token;
 
-    @Value("${wechat.encodingAesKey}")
-    private String encodingAesKey;
+//    @Value("${wechat.encodingAesKey}")
+//    private String encodingAesKey;
 
     private final WechatService wechatService;
     private final RestTemplate restTemplate;
@@ -156,6 +155,7 @@ public class WechatController {
         String content = root.getElementsByTagName("Content").item(0).getTextContent();
         // 处理用户输入
         String trimmedContent = content.trim();
+
         /*
         * 登录
         */
@@ -169,9 +169,9 @@ public class WechatController {
             if (trimmedContent.startsWith(prefix))
                 return createTextMessage(fromUserName, toUserName, wechatService.addPending(fromUserName, content, prefix));
 
-        if ("翻译 ".startsWith(trimmedContent)||"fy ".startsWith(trimmedContent)){
+        if (trimmedContent.startsWith("翻译 ")||trimmedContent.startsWith("fy")){
             String srcText = trimmedContent.substring(3).trim();
-            String url = "https://findmyip.net/api/translate.php?text="+"srcText";
+            String url = "https://findmyip.net/api/translate.php?text="+srcText;
             String translateResult = "\uD83D\uDE2D接口失效";
             try {
                 // 调用翻译接口
@@ -179,7 +179,9 @@ public class WechatController {
                 // 解析接口返回结果
                 JsonNode jsonNode = new ObjectMapper().readTree(result);
                 translateResult = jsonNode.get("data").get("translate_result").asText();
-            } catch (RestClientException | JsonProcessingException ignored) {}
+            } catch (RestClientException | JsonProcessingException exception) {
+                log.error("翻译接口调用失败", exception);
+            }
             return createTextMessage(fromUserName, toUserName, translateResult);
         }
 
