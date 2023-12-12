@@ -56,6 +56,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     /**
      * 定义全局默认时间序列化
+     * 配置完后，格式如 "createTime": "2023-12-05T20:43:20",
+     * 没配置时，格式如 "createTime": [2023,12,11,9,25,12]
      */
     @Override
     public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
