@@ -34,7 +34,7 @@ public class WebMvcConfig extends WebMvcConfigurationSupport/* implements WebMvc
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(loginInterceptor)       //注册拦截器
                 .addPathPatterns("/**")                     //拦截全部路径    /*是一级路径/**是全部路径
-                .excludePathPatterns("/users/login", "/wechat");  // 排除 /login 和 /wx
+                .excludePathPatterns("/users/login", "/wechat","/doc.html");  // 排除 (不拦截的路径)
     }
 
 
