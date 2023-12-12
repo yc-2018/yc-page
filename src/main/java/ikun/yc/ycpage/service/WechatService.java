@@ -9,4 +9,6 @@ public interface WechatService {
 //    String forPending(String toUserName, String content);
 
     String addPending(String fromUserName, String content, String prefix);
+
+    String getApiData(String type, String s);
 }

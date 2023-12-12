@@ -37,7 +37,6 @@ public class WechatController {
 //    private String encodingAesKey;
 
     private final WechatService wechatService;
-    private final RestTemplate restTemplate;
     /**
      * 常规待办事项
      */
@@ -114,21 +113,6 @@ public class WechatController {
     }
 
 
-    /**
-     * byte数组转16进制字符串
-     */
-    private String byteArrayToHexString(byte[] bytes) {
-        StringBuilder sb = new StringBuilder();
-        for (byte b : bytes) {
-            String hex = Integer.toHexString(b & 0xFF).toUpperCase();
-            if (hex.length() < 2) {
-                sb.append('0');
-            }
-            sb.append(hex);
-        }
-        return sb.toString();
-    }
-
 
     /**
      * 处理微信服务器发送的POST请求，用于接收和回复消息
@@ -156,11 +140,6 @@ public class WechatController {
         // 处理用户输入
         String trimmedContent = content.trim();
 
-        /*
-        * 登录
-        */
-        if ("登录".equals(trimmedContent)||"登陆".equals(trimmedContent))
-            return createTextMessage(fromUserName, toUserName, wechatService.login(fromUserName));
 
         /*
          * 下面开始待办事项
@@ -169,24 +148,18 @@ public class WechatController {
             if (trimmedContent.startsWith(prefix))
                 return createTextMessage(fromUserName, toUserName, wechatService.addPending(fromUserName, content, prefix));
 
-        if (trimmedContent.startsWith("翻译 ")||trimmedContent.startsWith("fy")){
-            String srcText = trimmedContent.substring(3).trim();
-            String url = "https://findmyip.net/api/translate.php?text="+srcText;
-            String translateResult = "\uD83D\uDE2D接口失效";
-            try {
-                // 调用翻译接口
-                String result = restTemplate.getForObject(url, String.class);
-                // 解析接口返回结果
-                JsonNode jsonNode = new ObjectMapper().readTree(result);
-                translateResult = jsonNode.get("data").get("translate_result").asText();
-            } catch (RestClientException | JsonProcessingException exception) {
-                log.error("翻译接口调用失败", exception);
-            }
-            return createTextMessage(fromUserName, toUserName, translateResult);
-        }
+        // 王者战力https://api.pearktrue.cn/api/hero/?hero=元歌&type=wx
+        // 鸡汤一言https://api.lucksss.com/api/yiyan?code=json   不写code直接是字符串
+        // 天气https://acid.jiuzige.com.cn/web/index/fcyWeather?city=东莞
+        // 疯狂星期四https://api.pearktrue.cn/api/kfc/
+        // 安慰文案https://v.api.aa1.cn/api/api-wenan-anwei/index.php?type=json
+        // 爱情文案https://v.api.aa1.cn/api/api-wenan-aiqing/index.php?type=json
+        return trimmedContent.equals("登录")||trimmedContent.equals("登陆")?
+                    createTextMessage(fromUserName, toUserName, wechatService.login(fromUserName)):
+               trimmedContent.startsWith("翻译 ")||trimmedContent.startsWith("fy")?
+                    createTextMessage(fromUserName, toUserName, wechatService.getApiData("翻译", trimmedContent)):
 
-
-        return createTextMessage(fromUserName, toUserName, "小黑子:ikun正在努力中...");
+                    createTextMessage(fromUserName, toUserName, "小黑子:ikun正在努力中...");
     }
 
     /**
@@ -200,6 +173,21 @@ public class WechatController {
                 "<MsgType><![CDATA[text]]></MsgType>" +
                 "<Content><![CDATA[" + content + "]]></Content>" +
                 "</xml>";
+    }
+
+    /**
+     * byte数组转16进制字符串
+     */
+    private String byteArrayToHexString(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) {
+            String hex = Integer.toHexString(b & 0xFF).toUpperCase();
+            if (hex.length() < 2) {
+                sb.append('0');
+            }
+            sb.append(hex);
+        }
+        return sb.toString();
     }
 
 }
