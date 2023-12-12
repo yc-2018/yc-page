@@ -1,6 +1,7 @@
 package ikun.yc.ycpage.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.R;
 import ikun.yc.ycpage.entity.ToDoItems;
 import ikun.yc.ycpage.service.ToDoItemsService;
@@ -32,16 +33,19 @@ public class ToDoItemsController {
      */
     @PostMapping
     public R<Boolean> addItem(@RequestBody ToDoItems toDoItems) {
-        Integer itemType = toDoItems.getItemType();
-        if (itemType == null) return R.error("待办类型不能为空");
-        return R.success(toDoItemsService.save(toDoItems));
+        log.info("待办添加参数：{},当前线程id为{}", toDoItems, BaseContext.getCurrentId());
+        toDoItems.setUserId(BaseContext.getCurrentId());    // 设置为登录用户id，不然就可以被随便乱搞了
+        return toDoItems.getItemType() == null?
+                R.error("待办类型不能为空"):
+                R.success(toDoItemsService.save(toDoItems));
     }
 
     @GetMapping("/{type}")
     public R<List<ToDoItems>> getItem(@PathVariable Integer type) {
         LambdaQueryWrapper<ToDoItems> queryWrapper = new LambdaQueryWrapper<ToDoItems>()
-                .eq(ToDoItems::getItemType, type);
-        // 请求头的token
+                .eq(ToDoItems::getItemType, type)
+                .eq(ToDoItems::getUserId, BaseContext.getCurrentId());  // 请求头的token
+
         return R.success(toDoItemsService.list(queryWrapper));
     }
 }

@@ -2,7 +2,7 @@
 package ikun.yc.ycpage.common;
 
 /**
- * 自定义业务异常类
+ * 登录业务异常类
  */
 public class LoginException extends RuntimeException{
     public LoginException(String message) {
