@@ -135,8 +135,8 @@ public class WechatController {
 
         Element root = doc.getDocumentElement();
         String msgType = root.getElementsByTagName("MsgType").item(0).getTextContent();
-        String fromUserName = root.getElementsByTagName("FromUserName").item(0).getTextContent();
-        String toUserName = root.getElementsByTagName("ToUserName").item(0).getTextContent();
+        String fromUserName = root.getElementsByTagName("FromUserName").item(0).getTextContent();   // 用户微信ID
+        String toUserName = root.getElementsByTagName("ToUserName").item(0).getTextContent();       // 公众号ID
 
         if ("image".equals(msgType)) return createTextMessage(fromUserName, toUserName, "暂不支持图片");
         if ("voice".equals(msgType)) return createTextMessage(fromUserName, toUserName, "暂不支持语音");
@@ -148,7 +148,7 @@ public class WechatController {
         * 登录
         */
         if ("登录".equals(trimmedContent)||"登陆".equals(trimmedContent))
-            return createTextMessage(fromUserName, toUserName, wechatService.login(toUserName));
+            return createTextMessage(fromUserName, toUserName, wechatService.login(fromUserName));
 
         /*
          * 下面开始待办事项
