@@ -1,9 +1,6 @@
 //仰晨:微信接口 创建时间2023/11/28 1:30 星期二
 package ikun.yc.ycpage.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import ikun.yc.ycpage.service.WechatService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -11,8 +8,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
@@ -123,7 +118,6 @@ public class WechatController {
     @ApiOperation(value = "接收微信信息", notes = "接收及返回微信信息", httpMethod = "POST")
     @PostMapping(produces = "text/xml; charset=UTF-8")
     public String handleMessage(@RequestBody String payload) throws Exception {
-        log.info("处理微信服务器发送的POST请求，用于接收和回复消息\npayload:{}", payload);
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         DocumentBuilder db = dbf.newDocumentBuilder();
         Document doc = db.parse(new InputSource(new StringReader(payload)));
@@ -139,6 +133,7 @@ public class WechatController {
         String content = root.getElementsByTagName("Content").item(0).getTextContent();
         // 处理用户输入
         String trimmedContent = content.trim();
+        log.info("用户输入内容：《{}》", trimmedContent);
 
 
         /*

@@ -54,7 +54,7 @@ public class WechatServiceImpl implements WechatService {
     @Override
     public String addPending(String fromUserName, String content, String prefix) {
         // 待办类型映射关系列表
-        List<String> pendingNames = Arrays.asList("普通", "循环", "长期","紧急","英语");
+        List<String> pendingNames = Arrays.asList("普通", "循环", "长期","紧急","英语","日记待办","工作待办");
         content=content.trim().substring(prefix.length());                       // 去掉空格和为了选择加上的字符串前缀
         int itemType = Integer.parseInt(prefix.trim());                         // 转换前缀得到待办类型
         ToDoItems items = new ToDoItems(fromUserName, content, itemType);      // 待办内容和类型
