@@ -15,8 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 @Slf4j
 @Service
@@ -46,21 +44,19 @@ public class WechatServiceImpl implements WechatService {
     /**
      * 添加待办
      * @author 仰晨
-     * @param fromUserName 用户名
+     * @param UserID 用户ID
      * @param content 待办内容
-     * @param prefix 为了选择加上的字符串前缀的长度（要去掉前缀的长度）
+     * @param toDoItemType 待办类型
      * @return 成功返回id，失败返回失败原因
      */
     @Override
-    public String addPending(String fromUserName, String content, String prefix) {
-        // 待办类型映射关系列表
-        List<String> pendingNames = Arrays.asList("普通", "循环", "长期","紧急","英语","日记待办","工作待办");
-        content=content.trim().substring(prefix.length());                       // 去掉空格和为了选择加上的字符串前缀
-        int itemType = Integer.parseInt(prefix.trim());                         // 转换前缀得到待办类型
-        ToDoItems items = new ToDoItems(fromUserName, content, itemType);      // 待办内容和类型
-        boolean save = toDoItemsService.save(items);                          // 保存
+    public String addPending(String UserID, String content, String toDoItemType) {
+        String[] parts = content.split("\\s", 2);                       // 使用正则表达式匹配第一个空格进行分割
+        int itemType = Integer.parseInt(parts[0].trim());                         // 转换前缀得到待办类型
+        ToDoItems items = new ToDoItems(UserID, parts[1], itemType);       // 待办内容和类型
+        boolean save = toDoItemsService.save(items);                            // 保存
         if (!save) return "添加失败";
-        return "添加"+ pendingNames.get(itemType)+"待办成功,id：" + items.getId();
+        return "添加" + toDoItemType + "待办成功,id：" + items.getId();
     }
 
     /**

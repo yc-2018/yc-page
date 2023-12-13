@@ -17,7 +17,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.StringReader;
 import java.security.MessageDigest;
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -32,41 +33,19 @@ public class WechatController {
 //    private String encodingAesKey;
 
     private final WechatService wechatService;
-    /**
-     * 常规待办事项
-     */
-    private static final String ORDINARY = "0 ";
-    /**
-     * 循环待办事项
-     */
-    private static final String CIRCULATE = "1 ";
-    /**
-     * 长期待办
-     */
-    private static final String LONG_TERM = "2 ";
-    /**
-     * 紧急待办
-     */
-    private static final String URGENT = "3 ";
 
-    /**
-     * 单词待办
-     */
-    private static final String WORD = "4 ";
-    /**
-     * 日记待办
-     */
-    private static final String DIARY = "5 ";
-    /**
-     * 工作待办
-     */
-    private static final String JOB = "6 ";
-    /**
-     * 定义前缀字符串列表,每个前缀对应不同的待办事项类型
-     */
-    private static final List<String> PREFIXES =
-            Arrays.asList(ORDINARY, CIRCULATE, LONG_TERM, URGENT, WORD, DIARY,JOB);
-
+    private static final Map<String, String>toDoItemMap = new HashMap<>();
+    static {
+        toDoItemMap.put("0 ", "普通");
+        toDoItemMap.put("1 ", "循环");
+        toDoItemMap.put("2 ", "长期");
+        toDoItemMap.put("3 ", "紧急");
+        toDoItemMap.put("4 ", "英语");
+        toDoItemMap.put("5 ", "日记");
+        toDoItemMap.put("6 ", "工作");
+        toDoItemMap.put("10 ", "难搞");
+        toDoItemMap.put("100 ", "测试");
+    }
 
 
     /**
@@ -139,9 +118,10 @@ public class WechatController {
         /*
          * 下面开始待办事项
          */
-        for (String prefix : PREFIXES)
-            if (trimmedContent.startsWith(prefix))
-                return createTextMessage(fromUserName, toUserName, wechatService.addPending(fromUserName, content, prefix));
+        String toDoItemType = isTextInToDoItemMap(trimmedContent);
+        if (toDoItemType!= null)
+            return createTextMessage(fromUserName, toUserName, wechatService.addPending(fromUserName, content, toDoItemType));
+
 
         // 王者战力https://api.pearktrue.cn/api/hero/?hero=元歌&type=wx
         // 鸡汤一言https://api.lucksss.com/api/yiyan?code=json   不写code直接是字符串
@@ -183,6 +163,22 @@ public class WechatController {
             sb.append(hex);
         }
         return sb.toString();
+    }
+
+    /**
+     * 判断用户输入是否在待办事项中
+     * @param text 用户信息
+     * @return 开头在就返回值  不在就返回null
+     * @since 2023-12-13
+     * @author 仰晨
+     */
+    private String isTextInToDoItemMap(String text) {
+        return toDoItemMap.entrySet()
+                .stream()
+                .filter(entry -> text.startsWith(entry.getKey()))
+                .findFirst()
+                .map(Map.Entry::getValue)
+                .orElse(null);
     }
 
 }
