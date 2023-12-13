@@ -1,6 +1,7 @@
 package ikun.yc.ycpage.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.R;
 import ikun.yc.ycpage.entity.ToDoItems;
@@ -8,8 +9,6 @@ import ikun.yc.ycpage.service.ToDoItemsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /**
  * 待办
@@ -41,11 +40,14 @@ public class ToDoItemsController {
     }
 
     @GetMapping("/{type}")
-    public R<List<ToDoItems>> getItem(@PathVariable Integer type) {
+    public R<Page<ToDoItems>> getItem(@RequestParam(defaultValue = "1") Integer page,
+                                      @RequestParam(defaultValue = "10") Integer pageSize,
+                                      @PathVariable Integer type) {
+
         LambdaQueryWrapper<ToDoItems> queryWrapper = new LambdaQueryWrapper<ToDoItems>()
                 .eq(ToDoItems::getItemType, type)
                 .eq(ToDoItems::getUserId, BaseContext.getCurrentId());  // 请求头的token
 
-        return R.success(toDoItemsService.list(queryWrapper));
+        return R.success(toDoItemsService.page(new Page<>(page, pageSize),queryWrapper));
     }
 }

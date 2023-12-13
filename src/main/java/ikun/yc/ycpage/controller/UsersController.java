@@ -26,11 +26,11 @@ import java.util.HashMap;
 @RequestMapping("/users")
 public class UsersController {
     private final UsersService usersService;
-    public final RedisTemplate redisTemplate;
+    public final RedisTemplate<String, String> redisTemplate;
 
     @PostMapping("login")
     public R<?> login(String key) {
-        String user = (String) redisTemplate.opsForValue().get(key);
+        String user = redisTemplate.opsForValue().get(key);
         if (user == null) {
             return R.error("验证码不存在");
         }
