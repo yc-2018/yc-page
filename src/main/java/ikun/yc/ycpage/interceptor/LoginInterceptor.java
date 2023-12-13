@@ -17,11 +17,13 @@ import javax.servlet.http.HttpServletResponse;
 @Component
 public class LoginInterceptor implements HandlerInterceptor {
     @Override   //目标资源方法运行前运行，返回true: 放行，放回false，不放行
-    public boolean preHandle(HttpServletRequest req, HttpServletResponse resp, Object handler) throws Exception {
+    public boolean preHandle(HttpServletRequest req, HttpServletResponse resp, Object handler) {
         System.out.println("preHandle  目标资源方法运行前运行");
 
         String uri = req.getRequestURI();
         log.info("请求路径：{}", uri);
+        // error路径处理
+        if (uri.equals("/error")) throw new LoginException("请求失败");
         // 对 /login 和 /wechat 之外的请求进行拦截(这里不写也行，一般来说注册机里面写了就好了
         if (uri.startsWith("/users/login") || uri.equals("/wechat")) return true;
 
@@ -29,11 +31,6 @@ public class LoginInterceptor implements HandlerInterceptor {
 
         // 检查 JWT 是否存在
         if (jwt == null || jwt.isEmpty()) throw new LoginException("未登录");
-
-        /*{
-            resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "未登录");
-            return false;
-        }*/
 
         try {
             // 尝试解析 JWT
@@ -43,20 +40,18 @@ public class LoginInterceptor implements HandlerInterceptor {
 //            // 可以将 claims 放入请求属性中以供后续使用
 //            req.setAttribute("claims", claims);
         } catch (JwtException e) {
-//            resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "解析令牌失败");
-//            return false;
             throw new LoginException("登录信息有误");
         }
         return true;
     }
 
     @Override   //目标资源方法运行后运行
-    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
-        System.out.println("postHandle  标资源方法运行后运行");
+    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) {
+//        log.info("postHandle  标资源方法运行后运行");
     }
 
     @Override   //视图渲染完毕后运行，最后运行
-    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
-        System.out.println("afterCompletion  视图渲染完毕后运行，最后运行");
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
+//        log.info("afterCompletion  视图渲染完毕后运行，最后运行");
     }
 }
