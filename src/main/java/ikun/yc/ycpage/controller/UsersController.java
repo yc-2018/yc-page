@@ -7,10 +7,7 @@ import ikun.yc.ycpage.service.UsersService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 
@@ -29,7 +26,7 @@ public class UsersController {
     public final RedisTemplate<String, String> redisTemplate;
 
     @PostMapping("login")
-    public R<?> login(String key) {
+    public R<?> login(String key, @RequestParam(defaultValue = "bt") String expireTime ) {
         String user = redisTemplate.opsForValue().get(key);
         if (user == null) {
             return R.error("验证码不存在");
@@ -40,7 +37,7 @@ public class UsersController {
             log.info("是新用户");
             usersService.save(new Users().setId(user));
         }
-        return R.success(JwtUtils.generateJwt(new HashMap<String, Object>(){{put("userId", user);}}));
+        return R.success(JwtUtils.generateJwt(new HashMap<String, Object>(){{put("userId", user);}},expireTime));
     }
 
 

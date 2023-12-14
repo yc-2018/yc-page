@@ -1,6 +1,7 @@
 package ikun.yc.ycpage.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.R;
@@ -39,6 +40,14 @@ public class ToDoItemsController {
                 R.success(toDoItemsService.save(toDoItems));
     }
 
+    /**
+     * 获取待办列表
+     * @param page      第几页
+     * @param pageSize  每页多少条
+     * @param completed 想看的完成类型 0 未完成 1 已完成 -1 全部
+     * @param type      待办类型
+     * @return          待办列表
+     */
     @GetMapping("/{type}")
     public R<Page<ToDoItems>> getItem(@RequestParam(defaultValue = "1") Integer page,
                                       @RequestParam(defaultValue = "10") Integer pageSize,
@@ -53,4 +62,17 @@ public class ToDoItemsController {
 
         return R.success(toDoItemsService.page(new Page<>(page, pageSize),queryWrapper));
     }
+
+    @PutMapping
+        public R<Boolean> updateItem( @RequestBody ToDoItems toDoItems) {
+            log.info("待办更新参数：{}", toDoItems);
+        LambdaUpdateWrapper<ToDoItems> updateWrapper = new LambdaUpdateWrapper<ToDoItems>()
+                .eq(ToDoItems::getId, toDoItems.getId())
+                .eq(ToDoItems::getUserId, BaseContext.getCurrentId())
+                .set(toDoItems.getItemType()!=null,ToDoItems::getItemType, toDoItems.getItemType())
+                .set(toDoItems.getContent()!=null,ToDoItems::getContent, toDoItems.getContent())
+                .set(toDoItems.getCompleted()!=null,ToDoItems::getCompleted, toDoItems.getCompleted())
+                .set(toDoItems.getNumberOfRecurrences()!=null,ToDoItems::getNumberOfRecurrences, toDoItems.getNumberOfRecurrences());
+        return R.success(toDoItemsService.update(updateWrapper));
+        }
 }
