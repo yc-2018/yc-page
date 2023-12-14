@@ -46,7 +46,8 @@ public class ToDoItemsController {
 
         LambdaQueryWrapper<ToDoItems> queryWrapper = new LambdaQueryWrapper<ToDoItems>()
                 .eq(ToDoItems::getItemType, type)
-                .eq(ToDoItems::getUserId, BaseContext.getCurrentId());  // 请求头的token
+                .eq(ToDoItems::getUserId, BaseContext.getCurrentId())  // 请求头的token 的id
+                .orderByDesc(ToDoItems::getUpdateTime);
 
         return R.success(toDoItemsService.page(new Page<>(page, pageSize),queryWrapper));
     }
