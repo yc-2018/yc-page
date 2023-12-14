@@ -42,11 +42,13 @@ public class ToDoItemsController {
     @GetMapping("/{type}")
     public R<Page<ToDoItems>> getItem(@RequestParam(defaultValue = "1") Integer page,
                                       @RequestParam(defaultValue = "10") Integer pageSize,
+                                      @RequestParam(defaultValue = "0") Integer completed,
                                       @PathVariable Integer type) {
 
         LambdaQueryWrapper<ToDoItems> queryWrapper = new LambdaQueryWrapper<ToDoItems>()
                 .eq(ToDoItems::getItemType, type)
-                .eq(ToDoItems::getUserId, BaseContext.getCurrentId())  // 请求头的token 的id
+                .eq(ToDoItems::getUserId, BaseContext.getCurrentId())            // 请求头的token 的id
+                .eq(completed!=-1,ToDoItems::getCompleted, completed)   // 0 未完成 1 已完成 -1 全部
                 .orderByDesc(ToDoItems::getUpdateTime);
 
         return R.success(toDoItemsService.page(new Page<>(page, pageSize),queryWrapper));
