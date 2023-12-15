@@ -1,6 +1,7 @@
 //仰晨study 创建时间2023/6/7 22:38 星期三
-package ikun.yc.ycpage.common;
+package ikun.yc.ycpage.common.exception;
 
+import ikun.yc.ycpage.common.R;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -30,12 +31,14 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 自定义的异常的 处理方法
+     * 泛型异常处理方法
+     * @param ex 捕获到的异常，类型为T
+     * @param <T> 异常的类型，必须继承自RuntimeException
+     * @return 响应体
      */
-    @ExceptionHandler(LoginException.class)   //只要抛出这个sql..的异常就会被捕捉到 进来这个方法
-    public R<String> exceptionHandler(LoginException ex) {
+    @ExceptionHandler({RuntimeException.class}) // 捕获所有继承自RuntimeException的异常
+    public <T extends RuntimeException> R<String> exceptionHandler(T ex) {
         log.error(ex.getMessage());
-
         return R.error(ex.getMessage());
     }
 }

@@ -3,7 +3,8 @@ package ikun.yc.ycpage.interceptor;
 
 import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.JwtUtils;
-import ikun.yc.ycpage.common.LoginException;
+import ikun.yc.ycpage.common.exception.LoginException;
+import ikun.yc.ycpage.common.exception.PathException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +24,7 @@ public class LoginInterceptor implements HandlerInterceptor {
         String uri = req.getRequestURI();
         log.info("请求路径：{}", uri);
         // error路径处理
-        if (uri.equals("/error")) throw new LoginException("请求失败");
+        if (uri.equals("/error")) throw new PathException("请求失败");
         // 对 /login 和 /wechat 之外的请求进行拦截(这里不写也行，一般来说注册机里面写了就好了
         if (uri.startsWith("/users/login") || uri.equals("/wechat")) return true;
 
