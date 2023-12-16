@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+
 /**
  * 待办
  *
@@ -79,6 +81,7 @@ public class ToDoItemsController {
         LambdaUpdateWrapper<ToDoItems> updateWrapper = new LambdaUpdateWrapper<ToDoItems>()
                 .eq(ToDoItems::getId, toDoItem.getId())
                 .eq(ToDoItems::getUserId, BaseContext.getCurrentId())
+                .set(ToDoItems::getUpdateTime, LocalDateTime.now())
                 .set(toDoItem.getItemType()  != null, ToDoItems::getItemType, toDoItem.getItemType())
                 .set(toDoItem.getContent()   != null, ToDoItems::getContent, toDoItem.getContent())
                 .set(toDoItem.getCompleted() != null, ToDoItems::getCompleted, toDoItem.getCompleted())
