@@ -37,7 +37,7 @@ public class UsersController {
     @PostMapping("login")
     public R<?> login(HttpServletRequest request, String key, @RequestParam(defaultValue = "bt") String expireTime ) {
         log.info("用户登录ip{}",request.getRemoteAddr());
-        String ip = request.getRemoteAddr();    // IP地址请求
+        String ip = extractClientIp(request);    // IP地址请求
         String banKey = "ban_" + ip;            // 用来标识被封禁 IP 的键
         String attemptKey = "attempt_" + ip;    // 用来跟踪每个 IP 地址登录尝试次数的键
 
@@ -79,5 +79,23 @@ public class UsersController {
     @GetMapping("/get")
     public Object get() {
         return usersService.list();
+    }
+
+    private String extractClientIp(HttpServletRequest request) {
+        log.info("用户登录ip{}",request.getRemoteAddr());
+        String ip = request.getRemoteAddr();                          // 直接获取IP地址试试
+        if (!ip.equals("0:0:0:0:0:0:0:1")&&!ip.equals("127.0.0.1"))   // 排除非nginx转发
+            return ip;
+
+        String xForwardedForHeader = request.getHeader("X-Forwarded-For");
+        log.info("xForwardedForHeader = " + xForwardedForHeader);
+        if (xForwardedForHeader == null) {
+            String xRealIp = request.getHeader("X-Real-IP");
+            log.info("xRealIp = " + xRealIp);
+            return xRealIp != null ? xRealIp : request.getRemoteAddr();
+        } else {
+            // X-Forwarded-For可能包含多个IP地址，第一个是原始客户端IP
+            return xForwardedForHeader.split(",")[0];
+        }
     }
 }
