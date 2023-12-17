@@ -44,8 +44,6 @@ public class WechatController {
         toDoItemMap.put("5 ", "日记");
         toDoItemMap.put("6 ", "工作");
         toDoItemMap.put("7 ", "其他");
-        toDoItemMap.put("10 ", "难搞");
-        toDoItemMap.put("100 ", "测试");
     }
 
 
@@ -130,6 +128,9 @@ public class WechatController {
 
         if (trimmedContent.startsWith("翻译 ") || trimmedContent.startsWith("fy"))
             return createTextMessage(fromUserName, toUserName, wechatService.getApiData("翻译", trimmedContent));
+
+        if (trimmedContent.equals("舔狗日记") || trimmedContent.equals("tgrj"))
+            return createTextMessage(fromUserName, toUserName, wechatService.getApiData("舔狗日记",null));
 
 
         // 王者战力https://api.pearktrue.cn/api/hero/?hero=元歌&type=wx

@@ -71,10 +71,10 @@ public class WechatServiceImpl implements WechatService {
         switch (type){
             case "翻译":
                 String srcText = s.substring(3).trim();
-                String url = "https://findmyip.net/api/translate.php?text="+srcText;
+                String fyUrl = "https://findmyip.net/api/translate.php?text="+srcText;
                 try {
                     // 调用翻译接口
-                    String result = restTemplate.getForObject(url, String.class);
+                    String result = restTemplate.getForObject(fyUrl, String.class);
                     // 解析接口返回结果
                     JsonNode jsonNode = new ObjectMapper().readTree(result);
                     return jsonNode.get("data").get("translate_result").asText();
@@ -83,7 +83,14 @@ public class WechatServiceImpl implements WechatService {
                     return "\uD83D\uDE2D接口失效";
                 }
             case "舔狗日记":
-                return "舔狗。";
+                try {
+                    // 调用舔狗日记接口
+                    return restTemplate.getForObject("https://api.likepoems.com/ana/lickdog/", String.class);
+                } catch (RestClientException exception) {
+                    log.error("舔狗日记接口调用失败", exception);
+                    return "\uD83D\uDE2D接口失效";
+                }
+
             default:
                 return null;
         }
@@ -101,12 +108,12 @@ public class WechatServiceImpl implements WechatService {
         StringBuilder sb = new StringBuilder();
         sb.append("目前支持的功能有：\n");
         for (Map.Entry<String, String> entry : toDoItemMap.entrySet())
-            sb.append(entry.getKey()).append("+内容").append(" => ").append("添加").append(entry.getValue()).append("待办").append("\n");
+            sb.append(entry.getKey()).append("+空格+内容").append(" => ").append("添加").append(entry.getValue()).append("待办").append("\n");
 
         sb.append("登录 或 登陆 => 获取登录验证码\n")
-          .append("翻译或fy+空格+内容 => 翻译内容\n")
+          .append("翻译或fy+空格+内容=>翻译内容\n")
           .append("舔狗日记 => 舔狗日记\n")
-          .append("说明或sm => 给出目前支持的功能\n");
+          .append("说明或sm=>给出目前支持的功能\n");
 
         return sb.toString();
     }
