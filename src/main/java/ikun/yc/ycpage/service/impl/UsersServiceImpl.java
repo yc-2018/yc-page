@@ -84,7 +84,7 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
      *    proxy_set_header Host $host;
      *    proxy_set_header X-Real-IP $remote_addr;
      *    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-     *    还是拿不到，就用这个方法。
+     *    还是拿不到，就用这个方法。(不安全啊。使用请求头肯定可以被前端给改的。最好就是不搞代理，但是要处理跨越。)
      * @param request 用来获取用户的ip
      * @return 原始客户端IP
      */
