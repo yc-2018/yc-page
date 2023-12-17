@@ -2,7 +2,10 @@ package ikun.yc.ycpage.service;
 
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import ikun.yc.ycpage.common.R;
 import ikun.yc.ycpage.entity.Users;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * 服务接口
@@ -12,4 +15,5 @@ import ikun.yc.ycpage.entity.Users;
  */
 public interface UsersService extends IService<Users> {
 
+    R<?> login(HttpServletRequest request, String key, String expireTime);
 }
