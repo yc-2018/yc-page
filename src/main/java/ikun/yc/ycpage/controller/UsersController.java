@@ -47,7 +47,7 @@ public class UsersController {
 
         // 增加登录尝试次数，如果 attemptKey 不存在，则 Redis 会创建它值为 1然后返回 本来存在就会自增
         Long attempts = redisTemplate.opsForValue().increment(attemptKey);
-        if (attempts!=null) {
+        if (attempts!=null) {   // 其实不可能等于null,只是好烦这个 idea代码提示就先写上了。
             if (attempts == 1)
                 // 如果是第一次尝试，设置过期时间为1分钟
                 redisTemplate.expire(attemptKey, 1, TimeUnit.MINUTES);

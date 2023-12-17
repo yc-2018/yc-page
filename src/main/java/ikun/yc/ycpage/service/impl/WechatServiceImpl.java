@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 @Slf4j
 @Service
@@ -86,5 +87,27 @@ public class WechatServiceImpl implements WechatService {
             default:
                 return null;
         }
+    }
+
+    /**
+     * 获取帮助
+     * @param toDoItemMap 待办内容
+     * @return 说明
+     * @author 陈光龙
+     * @since  2023/12/17
+     */
+    @Override
+    public String getHelp(Map<String, String> toDoItemMap) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("目前支持的功能有：\n");
+        for (Map.Entry<String, String> entry : toDoItemMap.entrySet())
+            sb.append(entry.getKey()).append("+内容").append(" => ").append("添加").append(entry.getValue()).append("待办").append("\n");
+
+        sb.append("登录 或 登陆 => 获取登录验证码\n")
+          .append("翻译或fy+空格+内容 => 翻译内容\n")
+          .append("舔狗日记 => 舔狗日记\n")
+          .append("说明或sm => 给出目前支持的功能\n");
+
+        return sb.toString();
     }
 }

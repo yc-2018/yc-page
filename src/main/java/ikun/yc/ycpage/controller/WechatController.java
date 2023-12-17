@@ -43,6 +43,7 @@ public class WechatController {
         toDoItemMap.put("4 ", "英语");
         toDoItemMap.put("5 ", "日记");
         toDoItemMap.put("6 ", "工作");
+        toDoItemMap.put("7 ", "其他");
         toDoItemMap.put("10 ", "难搞");
         toDoItemMap.put("100 ", "测试");
     }
@@ -114,13 +115,21 @@ public class WechatController {
         String trimmedContent = content.trim();
         log.info("用户输入内容：《{}》", trimmedContent);
 
+        // 登录
+        if(trimmedContent.equals("登录")||trimmedContent.equals("登陆"))
+            return createTextMessage(fromUserName, toUserName, wechatService.login(fromUserName));
 
-        /*
-         * 下面开始待办事项
-         */
+        // 下面开始待办事项
         String toDoItemType = isTextInToDoItemMap(trimmedContent);
         if (toDoItemType!= null)
             return createTextMessage(fromUserName, toUserName, wechatService.addPending(fromUserName, content, toDoItemType));
+
+        // 说明|帮助
+        if (trimmedContent.equals("说明") || trimmedContent.equals("sm"))
+            return createTextMessage(fromUserName, toUserName, wechatService.getHelp(toDoItemMap));
+
+        if (trimmedContent.startsWith("翻译 ") || trimmedContent.startsWith("fy"))
+            return createTextMessage(fromUserName, toUserName, wechatService.getApiData("翻译", trimmedContent));
 
 
         // 王者战力https://api.pearktrue.cn/api/hero/?hero=元歌&type=wx
@@ -129,12 +138,7 @@ public class WechatController {
         // 疯狂星期四https://api.pearktrue.cn/api/kfc/
         // 安慰文案https://v.api.aa1.cn/api/api-wenan-anwei/index.php?type=json
         // 爱情文案https://v.api.aa1.cn/api/api-wenan-aiqing/index.php?type=json
-        return trimmedContent.equals("登录")||trimmedContent.equals("登陆")?
-                    createTextMessage(fromUserName, toUserName, wechatService.login(fromUserName)):
-               trimmedContent.startsWith("翻译 ")||trimmedContent.startsWith("fy")?
-                    createTextMessage(fromUserName, toUserName, wechatService.getApiData("翻译", trimmedContent)):
-
-                    createTextMessage(fromUserName, toUserName, "小黑子:ikun正在努力中...");
+        return createTextMessage(fromUserName, toUserName, "小黑子:ikun正在努力中...");
     }
 
     /**
