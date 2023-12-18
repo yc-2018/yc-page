@@ -56,7 +56,7 @@ public class WechatServiceImpl implements WechatService {
     public String addPending(String UserID, String content, String toDoItemType) {
         // 检查用户是否被禁用
         if (controlAddItemUtil.getOneMinuteAddItemById(UserID))
-            return "请求过于频繁，您已被禁用添加备忘待办5分钟";
+            return "添加待办过于频繁，您已被禁用添加备忘待办5分钟！";
 
         String[] parts = content.split("\\s", 2);                       // 使用正则表达式匹配第一个空格进行分割
         int itemType = Integer.parseInt(parts[0].trim());                         // 转换前缀得到待办类型
