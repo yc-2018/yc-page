@@ -1,63 +1,51 @@
 package ikun.yc.ycpage.entity;
 
-import java.io.Serializable;
-
-import com.baomidou.mybatisplus.annotation.*;
-import com.baomidou.mybatisplus.extension.activerecord.Model;
-
-import java.time.LocalDateTime;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.experimental.Accessors;
+
+import java.time.LocalDateTime;
 
 /**
  * (to_do_items)实体类
  *
  * @author yc
  * @since 2023-12-03 22:31:22
- * @description 由 Mybatisplus Code Generator 创建
  */
+
 @Data
 @NoArgsConstructor
-@Accessors(chain = true)
+@AllArgsConstructor
 @TableName("to_do_items")
-public class ToDoItems extends Model<ToDoItems> implements Serializable {
-    private static final long serialVersionUID = 1L;
+public class ToDoItems{
 
-    /**
-     * 待办事项ID
-     */
+
+    /** 待办事项ID */
     @TableId(type = IdType.AUTO)
 	private Integer id;
-    /**
-     * 用户ID
-     */
+
+    /** 用户ID */
     private String userId;
-    /**
-     * 待办类型 (0:普通待办，1：循环待办，2：长期待办，3：紧急待办，4：备忘英语，5、日记待办，6、公事待办
-     */
+
+    /** 待办类型 (0:普通待办，1：循环待办，2：长期待办，3：紧急待办，4：备忘英语，5、日记待办，6、公事待办*/
     private Integer itemType;
-    /**
-     * 内容
-     */
+
+    /** 内容 */
     private String content;
-    /**
-     * 是否已完成 （1：完成，0未完成）
-     */
+
+    /** 是否已完成 （1：完成，0未完成） */
     private Integer completed;
-    /**
-     * 重复次数(循环代办专属)
-     */
+    /** 重复次数(循环代办专属) */
     private Integer numberOfRecurrences;
 
-    /**
-     * 创建时间
-     */
+    /** 创建时间 */
     private LocalDateTime createTime;
 
-    /**
-     * 修改时间
-     */
+    /** 修改时间 */
     @TableField(update = "now()")
 	private LocalDateTime updateTime;
 
