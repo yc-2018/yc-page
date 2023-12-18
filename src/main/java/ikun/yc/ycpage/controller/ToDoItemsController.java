@@ -38,6 +38,7 @@ public class ToDoItemsController {
         if (toDoItems.getItemType() == null)throw new FieldIsNullException("待办类型不能为空");
         if (toDoItems.getContent() == null) throw new FieldIsNullException("待办内容不能为空");
 
+        toDoItems.setCreateTime(null);                      // 不允许传递创建时间
         toDoItems.setUserId(BaseContext.getCurrentId());    // 设置为登录用户id，不然就可以被随便乱搞了
 
         return R.success(toDoItemsService.save(toDoItems));
@@ -75,7 +76,7 @@ public class ToDoItemsController {
     @PutMapping
     public R<Boolean> updateItem(@RequestBody ToDoItems toDoItem) {
         log.info("待办更新参数：{}", toDoItem);
-        log.info("█████████：{}", toDoItem.getUpdateTime());
+        toDoItem.setCreateTime(null);   // 不允许更新创建时间
         LambdaUpdateWrapper<ToDoItems> updateWrapper = new LambdaUpdateWrapper<ToDoItems>()
                 .eq(ToDoItems::getId, toDoItem.getId())
                 .eq(ToDoItems::getUserId, BaseContext.getCurrentId());
