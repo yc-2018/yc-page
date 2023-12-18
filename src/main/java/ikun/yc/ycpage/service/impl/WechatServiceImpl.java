@@ -4,6 +4,7 @@ package ikun.yc.ycpage.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import ikun.yc.ycpage.common.ControlAddItemUtil;
 import ikun.yc.ycpage.common.VerificationCodeUtil;
 import ikun.yc.ycpage.entity.ToDoItems;
 import ikun.yc.ycpage.service.ToDoItemsService;
@@ -24,6 +25,7 @@ public class WechatServiceImpl implements WechatService {
     private final RedisTemplate<String, String> redisTemplate;
     private final ToDoItemsService toDoItemsService;
     private final RestTemplate restTemplate;
+    private final ControlAddItemUtil controlAddItemUtil;
 
     /**
      * @param toUserName 用户名
@@ -52,9 +54,13 @@ public class WechatServiceImpl implements WechatService {
      */
     @Override
     public String addPending(String UserID, String content, String toDoItemType) {
+        // 检查用户是否被禁用
+        if (controlAddItemUtil.getOneMinuteAddItemById(UserID))
+            return "请求过于频繁，您已被禁用添加备忘待办5分钟";
+
         String[] parts = content.split("\\s", 2);                       // 使用正则表达式匹配第一个空格进行分割
         int itemType = Integer.parseInt(parts[0].trim());                         // 转换前缀得到待办类型
-        ToDoItems items = new ToDoItems(UserID, parts[1], itemType);       // 待办内容和类型
+        ToDoItems items = new ToDoItems(UserID, parts[1], itemType);             // 待办内容和类型
         boolean save = toDoItemsService.save(items);                            // 保存
         if (!save) return "添加失败";
         return "添加" + toDoItemType + "待办成功,id：" + items.getId();

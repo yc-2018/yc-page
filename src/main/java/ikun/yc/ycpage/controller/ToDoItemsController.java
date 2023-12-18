@@ -41,7 +41,7 @@ public class ToDoItemsController {
         toDoItems.setCreateTime(null);                      // 不允许传递创建时间
         toDoItems.setUserId(BaseContext.getCurrentId());    // 设置为登录用户id，不然就可以被随便乱搞了
 
-        return R.success(toDoItemsService.save(toDoItems));
+        return toDoItemsService.addItem(toDoItems);
     }
 
     /**
