@@ -12,8 +12,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
-
 /**
  * 待办
  *
@@ -37,7 +35,6 @@ public class ToDoItemsController {
      */
     @PostMapping
     public R<Boolean> addItem(@RequestBody ToDoItems toDoItems) {
-        log.info("待办添加参数：{},当前线程id为{}", toDoItems, BaseContext.getCurrentId());
         if (toDoItems.getItemType() == null)throw new FieldIsNullException("待办类型不能为空");
         if (toDoItems.getContent() == null) throw new FieldIsNullException("待办内容不能为空");
 
@@ -78,16 +75,16 @@ public class ToDoItemsController {
     @PutMapping
     public R<Boolean> updateItem(@RequestBody ToDoItems toDoItem) {
         log.info("待办更新参数：{}", toDoItem);
+        log.info("█████████：{}", toDoItem.getUpdateTime());
         LambdaUpdateWrapper<ToDoItems> updateWrapper = new LambdaUpdateWrapper<ToDoItems>()
                 .eq(ToDoItems::getId, toDoItem.getId())
-                .eq(ToDoItems::getUserId, BaseContext.getCurrentId())
-                .set(ToDoItems::getUpdateTime, LocalDateTime.now())
-                .set(toDoItem.getItemType()  != null, ToDoItems::getItemType, toDoItem.getItemType())
-                .set(toDoItem.getContent()   != null, ToDoItems::getContent, toDoItem.getContent())
-                .set(toDoItem.getCompleted() != null, ToDoItems::getCompleted, toDoItem.getCompleted())
-                .set(toDoItem.getNumberOfRecurrences() != null, ToDoItems::getNumberOfRecurrences, toDoItem.getNumberOfRecurrences());
+                .eq(ToDoItems::getUserId, BaseContext.getCurrentId());
 
-        boolean updateSuccess = toDoItemsService.update(updateWrapper);
+        // 如果 NumberOfRecurrences 不为空，则在数据库层面增加 1
+        if (toDoItem.getNumberOfRecurrences() != null)
+            updateWrapper.setSql("number_of_recurrences = number_of_recurrences + 1");
+
+        boolean updateSuccess = toDoItemsService.update(toDoItem,updateWrapper);
 
         return updateSuccess ? R.success(true) : R.error("修改失败");
     }
