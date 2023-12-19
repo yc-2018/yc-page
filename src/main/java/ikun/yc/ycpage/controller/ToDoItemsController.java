@@ -103,7 +103,7 @@ public class ToDoItemsController {
                 .eq(ToDoItems ::getUserId, BaseContext.getCurrentId())
                 .setSql("completed = completed + 10");
 
-        boolean updateSuccess = toDoItemsService.update(updateWrapper);
+        boolean updateSuccess = toDoItemsService.update(new ToDoItems(), updateWrapper);
 
         return updateSuccess ? R.success(true) : R.error("删除失败");
     }
