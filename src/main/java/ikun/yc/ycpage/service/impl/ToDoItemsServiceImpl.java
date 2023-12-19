@@ -11,6 +11,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 /**
  * 服务接口实现
  *
@@ -22,6 +26,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class ToDoItemsServiceImpl extends ServiceImpl<ToDoItemsMapper, ToDoItems> implements ToDoItemsService {
     private final ControlAddItemUtil controlAddItemUtil;
+    private final ToDoItemsMapper toDoItemsMapper;
 
 
     /**
@@ -43,5 +48,21 @@ public class ToDoItemsServiceImpl extends ServiceImpl<ToDoItemsMapper, ToDoItems
 
         boolean save = this.save(toDoItem);
         return save ? R.success(true) : R.error("添加失败");
+    }
+
+    /**
+     * @return 除英语备忘外，其他组没完成的条数。
+     */
+    @Override
+    public Map getGroupToDoItemsCount() {
+        // 假设这是从MyBatis查询返回的原始列表
+        List<Map> originalList = toDoItemsMapper.selectGroupToDoItemsCount(BaseContext.getCurrentId());
+
+        // 转换列表为期望的格式
+        return originalList.stream()
+                .collect(Collectors.toMap(
+                        map -> map.get("item_type"), // 键：item_type
+                        map -> map.get("count(*)")  // 值：count
+                ));
     }
 }

@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import ikun.yc.ycpage.common.R;
 import ikun.yc.ycpage.entity.ToDoItems;
 
+import java.util.Map;
+
 /**
  * 服务接口
  *
@@ -14,4 +16,6 @@ import ikun.yc.ycpage.entity.ToDoItems;
 public interface ToDoItemsService extends IService<ToDoItems> {
 
     R<Boolean> addItem(ToDoItems toDoItems);
+
+    Map getGroupToDoItemsCount();
 }
