@@ -53,4 +53,9 @@ public class ToDoItems{
         this.itemType = itemType;
     }
 
+    public ToDoItems(String userId,Integer itemType) {
+        this.userId = userId;
+        this.itemType = itemType;
+    }
+
 }

@@ -18,6 +18,6 @@ import java.util.Map;
 public interface ToDoItemsMapper extends BaseMapper<ToDoItems> {
 
     // 分组统计加在标签上面 未完成的条数。
-    @Select("SELECT item_type,count(*) FROM to_do_items WHERE user_id=#{BaseContext.getCurrentId()} AND completed=0 AND item_type NOT IN (4, #{type}) group by item_type")
-    List<Map> selectGroupToDoItemsCount(String userId, Integer type);
+    @Select("SELECT item_type,count(*) FROM to_do_items WHERE user_id=#{userId} AND completed=0 AND item_type NOT IN (4, #{itemType}) group by item_type")
+    List<Map> selectGroupToDoItemsCount(ToDoItems toDoItems);
 }
