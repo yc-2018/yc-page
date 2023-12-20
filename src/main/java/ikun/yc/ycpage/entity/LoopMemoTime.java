@@ -41,6 +41,5 @@ public class LoopMemoTime implements Serializable {
 
     public LoopMemoTime(Integer toDoItemId) {
         this.toDoItemId = toDoItemId;
-        this.memoDate = LocalDateTime.now();
     }
 }
