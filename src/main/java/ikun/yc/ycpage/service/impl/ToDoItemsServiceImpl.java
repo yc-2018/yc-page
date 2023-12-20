@@ -81,7 +81,8 @@ public class ToDoItemsServiceImpl extends ServiceImpl<ToDoItemsMapper, ToDoItems
         // 如果 NumberOfRecurrences 不为空，则在数据库层面增加 1
         if (toDoItem.getNumberOfRecurrences() == null) return this.update(toDoItem,updateWrapper);
 
-        return this.update(toDoItem, updateWrapper.setSql("number_of_recurrences = number_of_recurrences + 1"))
+        toDoItem.setNumberOfRecurrences(null); // 避免更新时替换掉本来的值再加一
+        return this.update(toDoItem, updateWrapper.setSql("number_of_recurrences = COALESCE(number_of_recurrences, 0) + 1"))
                 && loopMemoTimeService.save(new LoopMemoTime(toDoItem.getId()));
     }
 }
