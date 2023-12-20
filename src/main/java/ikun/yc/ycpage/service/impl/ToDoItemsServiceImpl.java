@@ -55,6 +55,7 @@ public class ToDoItemsServiceImpl extends ServiceImpl<ToDoItemsMapper, ToDoItems
      */
     @Override
     public Map getGroupToDoItemsCount(Integer type) {
+        log.info("█████████userid: {}", BaseContext.getCurrentId());
         // 假设这是从MyBatis查询返回的原始列表
         List<Map> originalList = toDoItemsMapper.selectGroupToDoItemsCount(BaseContext.getCurrentId(),type);
 
