@@ -36,10 +36,11 @@ public class LoopMemoTime implements Serializable {
     private Integer toDoItemId;
 
     @ApiModelProperty(value = "时间")
-    @TableField(value = "memo_date", fill = FieldFill.UPDATE, update = "now()")
+    @TableField(value = "memo_date")
     private LocalDateTime memoDate;
 
     public LoopMemoTime(Integer toDoItemId) {
         this.toDoItemId = toDoItemId;
+        this.memoDate = LocalDateTime.now();
     }
 }
