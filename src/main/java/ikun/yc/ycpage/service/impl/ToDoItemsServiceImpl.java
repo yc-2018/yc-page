@@ -1,7 +1,6 @@
 package ikun.yc.ycpage.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.ControlAddItemUtil;
@@ -80,12 +79,11 @@ public class ToDoItemsServiceImpl extends ServiceImpl<ToDoItemsMapper, ToDoItems
                 .eq(ToDoItems::getUserId, BaseContext.getCurrentId());
 
         // 如果 NumberOfRecurrences 不为空，则在数据库层面增加 1
-        if (toDoItem.getNumberOfRecurrences() != null) {
-            updateWrapper.setSql("number_of_recurrences = number_of_recurrences + 1");
-            loopMemoTimeService.update(new LoopMemoTime(toDoItem.getId()),new UpdateWrapper<>());
-        }
+        if (toDoItem.getNumberOfRecurrences() == null) return this.update(toDoItem,updateWrapper);
 
-        return this.update(toDoItem,updateWrapper);
+        boolean updateSuccess = this.update(toDoItem, updateWrapper.setSql("number_of_recurrences = number_of_recurrences + 1"));
+        loopMemoTimeService.save(new LoopMemoTime(toDoItem.getId()));
 
+        return updateSuccess;
     }
 }
