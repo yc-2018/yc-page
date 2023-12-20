@@ -18,4 +18,6 @@ public interface ToDoItemsService extends IService<ToDoItems> {
     R<Boolean> addItem(ToDoItems toDoItems);
 
     Map getGroupToDoItemsCount(Integer type);
+
+    boolean updateItem(ToDoItems toDoItem);
 }

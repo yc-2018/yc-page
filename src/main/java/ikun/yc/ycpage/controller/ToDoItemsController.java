@@ -78,15 +78,8 @@ public class ToDoItemsController {
     public R<Boolean> updateItem(@RequestBody ToDoItems toDoItem) {
         log.info("待办更新参数：{}", toDoItem);
         toDoItem.setCreateTime(null);   // 不允许更新创建时间
-        LambdaUpdateWrapper<ToDoItems> updateWrapper = new LambdaUpdateWrapper<ToDoItems>()
-                .eq(ToDoItems::getId, toDoItem.getId())
-                .eq(ToDoItems::getUserId, BaseContext.getCurrentId());
 
-        // 如果 NumberOfRecurrences 不为空，则在数据库层面增加 1
-        if (toDoItem.getNumberOfRecurrences() != null)
-            updateWrapper.setSql("number_of_recurrences = number_of_recurrences + 1");
-
-        boolean updateSuccess = toDoItemsService.update(toDoItem,updateWrapper);
+        boolean updateSuccess = toDoItemsService.updateItem(toDoItem);
 
         return updateSuccess ? R.success(true) : R.error("修改失败");
     }

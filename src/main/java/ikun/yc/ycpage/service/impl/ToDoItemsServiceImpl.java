@@ -1,15 +1,20 @@
 package ikun.yc.ycpage.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.ControlAddItemUtil;
 import ikun.yc.ycpage.common.R;
+import ikun.yc.ycpage.entity.LoopMemoTime;
 import ikun.yc.ycpage.entity.ToDoItems;
 import ikun.yc.ycpage.mapper.ToDoItemsMapper;
+import ikun.yc.ycpage.service.LoopMemoTimeService;
 import ikun.yc.ycpage.service.ToDoItemsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -27,6 +32,7 @@ import java.util.stream.Collectors;
 public class ToDoItemsServiceImpl extends ServiceImpl<ToDoItemsMapper, ToDoItems> implements ToDoItemsService {
     private final ControlAddItemUtil controlAddItemUtil;
     private final ToDoItemsMapper toDoItemsMapper;
+    private final LoopMemoTimeService loopMemoTimeService;
 
 
     /**
@@ -51,7 +57,7 @@ public class ToDoItemsServiceImpl extends ServiceImpl<ToDoItemsMapper, ToDoItems
     }
 
     /**
-     * @return 除英语备忘外，其他组没完成的条数。
+     * @return 分组统计加在标签上面 未完成的条数。但是不包括 2长期、1循环、4英语、5日记、和当前的
      */
     @Override
     public Map getGroupToDoItemsCount(Integer type) {
@@ -64,5 +70,22 @@ public class ToDoItemsServiceImpl extends ServiceImpl<ToDoItemsMapper, ToDoItems
                         map -> map.get("item_type"), // 键：item_type
                         map -> map.get("count(*)")  // 值：count
                 ));
+    }
+
+    @Transactional
+    @Override
+    public boolean updateItem(ToDoItems toDoItem) {
+        LambdaUpdateWrapper<ToDoItems> updateWrapper = new LambdaUpdateWrapper<ToDoItems>()
+                .eq(ToDoItems::getId, toDoItem.getId())
+                .eq(ToDoItems::getUserId, BaseContext.getCurrentId());
+
+        // 如果 NumberOfRecurrences 不为空，则在数据库层面增加 1
+        if (toDoItem.getNumberOfRecurrences() != null) {
+            updateWrapper.setSql("number_of_recurrences = number_of_recurrences + 1");
+            loopMemoTimeService.update(new LoopMemoTime(toDoItem.getId()),new UpdateWrapper<>());
+        }
+
+        return this.update(toDoItem,updateWrapper);
+
     }
 }
