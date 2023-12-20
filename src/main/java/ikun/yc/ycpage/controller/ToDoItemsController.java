@@ -67,7 +67,7 @@ public class ToDoItemsController {
                 .orderByDesc(ToDoItems::getUpdateTime);
 
         return R.success(toDoItemsService.page(new Page<>(page, pageSize), queryWrapper))
-                .add("groupToDoItemsCounts", toDoItemsService.getGroupToDoItemsCount());
+                .add("groupToDoItemsCounts", toDoItemsService.getGroupToDoItemsCount(type));
     }
 
     /**

@@ -54,9 +54,9 @@ public class ToDoItemsServiceImpl extends ServiceImpl<ToDoItemsMapper, ToDoItems
      * @return 除英语备忘外，其他组没完成的条数。
      */
     @Override
-    public Map getGroupToDoItemsCount() {
+    public Map getGroupToDoItemsCount(Integer type) {
         // 假设这是从MyBatis查询返回的原始列表
-        List<Map> originalList = toDoItemsMapper.selectGroupToDoItemsCount(BaseContext.getCurrentId());
+        List<Map> originalList = toDoItemsMapper.selectGroupToDoItemsCount(BaseContext.getCurrentId(),type);
 
         // 转换列表为期望的格式
         return originalList.stream()
