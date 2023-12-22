@@ -14,6 +14,8 @@
   {"isQuickSearch":1, "name": "京东", "engineUrl": "https://search.jd.com/Search?keyword=@@@" },
   {"isQuickSearch":1, "name": "天猫", "engineUrl": "https://s.taobao.com/search?fromTmallRedirect=true&q=@@@&tab=mall" },
   {"isQuickSearch":1, "name": "小红书", "engineUrl": "https://www.xiaohongshu.com/search_result?keyword=@@@&source=web_explore_feed" },
+  {"isQuickSearch":1, "name": "微博", "engineUrl": "https://s.weibo.com/weibo?q=@@@" },
+  {"isQuickSearch":1, "name": "知乎", "engineUrl": "https://www.zhihu.com/search?type=content&q=@@@" },
   {"isQuickSearch":1, "name": "B站", "engineUrl": "https://search.bilibili.com/all?keyword=@@@&search_source=1" },
   {"isQuickSearch":1, "name": "GitHub", "engineUrl": "https://github.com/search?q=@@@&type=repositories" },
   {"isQuickSearch":1, "name": "百度翻译", "engineUrl": "https://fanyi.baidu.com/#auto/en/@@@" },
