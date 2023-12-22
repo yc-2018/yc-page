@@ -22,6 +22,11 @@ import org.springframework.web.bind.annotation.*;
 public class PageParametersController {
     private final PageParametersService pageParametersService;
 
+    /**
+     * 修改用户页面配置信息
+     * @param entity 用户页面信息
+     * @return 成功与否
+     */
     @PutMapping
     public R<?> updatePageParameters(@RequestBody PageParameters entity) {
         LambdaUpdateWrapper<PageParameters> wrapper = new LambdaUpdateWrapper<>();
@@ -30,4 +35,11 @@ public class PageParametersController {
         return updateSuccess? R.success(true): R.error("保存失败");
     }
 
+    /** @return 返回用户页面配置信息 */
+    @GetMapping
+    public R<PageParameters> getPageParameters() {
+        return R.success( pageParametersService
+                .getOne(new LambdaUpdateWrapper<PageParameters>()
+                        .eq(PageParameters::getUserId, BaseContext.getCurrentId())));
+    }
 }

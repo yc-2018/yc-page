@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 服务接口实现
+ * 用户的服务接口实现
  *
  * @author yc
  * @since 2023-12-03 22:57:40
@@ -93,7 +93,7 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
             }}, expireTime);
             return R.success(generateJwt);
         } catch (Exception e) {
-            throw new LoginException("😢登录居然失败，请重新试试");
+            throw new LoginException("😢登录居然失败，这种情况非常罕见，请联系站长或请重新试试");
         }
     }
 
