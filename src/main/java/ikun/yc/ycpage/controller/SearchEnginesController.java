@@ -1,7 +1,6 @@
 package ikun.yc.ycpage.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.R;
 import ikun.yc.ycpage.entity.SearchEngines;
@@ -51,6 +50,7 @@ public class SearchEnginesController {
     public R<Boolean> addSearchEngines(@RequestBody SearchEngines searchEngines) {
         if (searchEngines.getEngineUrl()== null) return R.error("URL不允许为空");
         if (searchEngines.getName()== null) return R.error("名称不允许为空");
+        if (searchEngines.getIsQuickSearch()== null) return R.error("引擎类型不允许为空");
 
         searchEngines.setUserId(BaseContext.getCurrentId());
         return R.success(searchEnginesService.save(searchEngines));
@@ -69,18 +69,18 @@ public class SearchEnginesController {
     public R<?> updateSearchEngines(@RequestBody List<SearchEngines> searchEngineList) {
         if (searchEngineList == null || searchEngineList.size() == 0) return R.error("乱搞！🤺");
 
-        StringBuilder sb = new StringBuilder();
-        for (SearchEngines searchEngines : searchEngineList) {
-            sb.append( searchEnginesService.update(new LambdaUpdateWrapper<SearchEngines>()
-                    .eq(SearchEngines::getId, searchEngines.getId())
-                    .eq(SearchEngines::getUserId, BaseContext.getCurrentId())
-                    .set(searchEngines.getEngineUrl() != null, SearchEngines::getEngineUrl, searchEngines.getEngineUrl())
-                    .set(searchEngines.getName() != null, SearchEngines::getName, searchEngines.getName())
-                    .set(searchEngines.getIconUrl() != null, SearchEngines::getIconUrl, searchEngines.getIconUrl())
-                    .set(searchEngines.getIsQuickSearch() != null, SearchEngines::getIsQuickSearch, searchEngines.getIsQuickSearch())
-            ));
-        }
-        return R.success(sb.toString());
+//        LambdaUpdateWrapper<SearchEngines> wrapper = new LambdaUpdateWrapper<>();
+//        for (SearchEngines searchEngines : searchEngineList) {
+//            wrapper .or()
+//                    .eq(SearchEngines::getId, searchEngines.getId())
+//                    .eq(SearchEngines::getUserId, BaseContext.getCurrentId())
+//                    .set(searchEngines.getEngineUrl() != null, SearchEngines::getEngineUrl, searchEngines.getEngineUrl())
+//                    .set(searchEngines.getName() != null, SearchEngines::getName, searchEngines.getName())
+//                    .set(searchEngines.getIconUrl() != null, SearchEngines::getIconUrl, searchEngines.getIconUrl())
+//                    .set(searchEngines.getIsQuickSearch() != null, SearchEngines::getIsQuickSearch, searchEngines.getIsQuickSearch());
+//        }
+        searchEnginesService.batchUpdate(searchEngineList);
+        return R.success(true);
     }
 
 
