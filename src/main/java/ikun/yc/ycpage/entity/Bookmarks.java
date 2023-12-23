@@ -10,11 +10,10 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * (bookmarks)实体类
+ * 书签 实体类
  *
  * @author yc
  * @since 2023-12-03 22:31:22
- * @description 由 Mybatisplus Code Generator 创建
  */
 @Data
 @NoArgsConstructor
@@ -23,26 +22,20 @@ import lombok.experimental.Accessors;
 public class Bookmarks extends Model<Bookmarks> implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    /**
-     * 书签ID
-     */
+    /** 书签ID */
     @TableId(type = IdType.AUTO)
 	private Integer id;
-    /**
-     * 用户ID
-     */
+
+    /** 用户ID */
     private String userId;
-    /**
-     * 名称
-     */
+
+    /** 名称 */
     private String bookmarkName;
-    /**
-     * URL
-     */
+
+    /** URL */
     private String url;
-    /**
-     * 图标
-     */
+
+    /** 图标 */
     private String icon;
 
 }

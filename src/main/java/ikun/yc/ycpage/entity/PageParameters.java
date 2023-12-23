@@ -10,11 +10,10 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * (page_parameters)实体类
+ * 页面参数 实体类
  *
  * @author yc
  * @since 2023-12-03 22:31:22
- * @description 由 Mybatisplus Code Generator 创建
  */
 @Data
 @NoArgsConstructor
@@ -23,26 +22,20 @@ import lombok.experimental.Accessors;
 public class PageParameters extends Model<PageParameters> implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    /**
-     * 页面参数ID
-     */
+    /** 页面参数ID */
     @TableId(type = IdType.AUTO)
 	private Integer id;
-    /**
-     * 用户ID，与users表关联
-     */
+
+    /** 用户ID，与users表关联 */
     private String userId;
-    /**
-     * 边宽
-     */
+
+    /** 边宽 */
     private String borderWidth;
-    /**
-     * 背景URL
-     */
+
+    /** 背景URL */
     private String backgroundUrl;
-    /**
-     * 背景透明度
-     */
+
+    /** 背景透明度 */
     private Integer backgroundTransparency;
 
 }
