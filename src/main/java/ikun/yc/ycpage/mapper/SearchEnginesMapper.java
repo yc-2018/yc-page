@@ -11,7 +11,6 @@ import java.util.List;
  *
  * @author yc
  * @since 2023-12-03 22:31:22
- * @description 由 Mybatisplus Code Generator 创建
 */
 @Mapper
 public interface SearchEnginesMapper extends BaseMapper<SearchEngines> {
