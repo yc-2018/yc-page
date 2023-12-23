@@ -26,11 +26,27 @@ import java.util.List;
 public class SearchEnginesController {
     private final SearchEnginesService searchEnginesService;
 
+    /**
+     * 按用户id获取列表
+     *
+     * @return 搜索引擎列表
+     * @author ChenGuangLong
+     * @since 2023/12/23 16:53:55
+     */
     @GetMapping("/list")
     public R<List<SearchEngines>> getListByUserId() {
         return R.success(searchEnginesService.listByMap(Collections.singletonMap("user_id", BaseContext.getCurrentId())));
     }
 
+
+    /**
+     * 添加搜索引擎
+     *
+     * @param searchEngines 搜索引擎
+     * @return 成功与否
+     * @author ChenGuangLong
+     * @since 2023/12/23 16:53:03
+     */
     @PostMapping
     public R<Boolean> addSearchEngines(@RequestBody SearchEngines searchEngines) {
         if (searchEngines.getEngineUrl()== null) return R.error("URL不允许为空");
@@ -40,9 +56,19 @@ public class SearchEnginesController {
         return R.success(searchEnginesService.save(searchEngines));
     }
 
+
+    /**
+     * 批量循环更新搜索引擎
+     *
+     * @param searchEngineList 搜索引擎列表
+     * @return 返回拼接的循环进去的true或false
+     * @author ChenGuangLong
+     * @since 2023/12/23
+     */
     @PutMapping
     public R<?> updateSearchEngines(@RequestBody List<SearchEngines> searchEngineList) {
-        if (searchEngineList == null) return R.error("ID不允许为空");
+        if (searchEngineList == null || searchEngineList.size() == 0) return R.error("乱搞！🤺");
+
         StringBuilder sb = new StringBuilder();
         for (SearchEngines searchEngines : searchEngineList) {
             sb.append( searchEnginesService.update(new LambdaUpdateWrapper<SearchEngines>()
@@ -54,9 +80,18 @@ public class SearchEnginesController {
                     .set(searchEngines.getIsQuickSearch() != null, SearchEngines::getIsQuickSearch, searchEngines.getIsQuickSearch())
             ));
         }
-        return R.success(sb);
+        return R.success(sb.toString());
     }
 
+
+    /**
+     * 批量删除搜索引擎
+     *
+     * @param ids 引擎id
+     * @return 成功返回true，失败返回提示信息
+     * @author ChenGuangLong
+     * @since 2023/12/23
+     */
     @DeleteMapping
     public R<Boolean> deleteSearchEngines(@RequestBody List<Integer> ids) {
         LambdaQueryWrapper<SearchEngines> wrapper = new LambdaQueryWrapper<>();
