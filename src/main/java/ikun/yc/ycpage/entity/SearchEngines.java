@@ -14,7 +14,6 @@ import lombok.experimental.Accessors;
  *
  * @author yc
  * @since 2023-12-03 22:31:22
- * @description 由 Mybatisplus Code Generator 创建
  */
 @Data
 @NoArgsConstructor
@@ -23,30 +22,23 @@ import lombok.experimental.Accessors;
 public class SearchEngines extends Model<SearchEngines> implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    /**
-     * 搜索引擎ID
-     */
+    /** 搜索引擎ID  */
     @TableId(type = IdType.AUTO)
 	private Integer id;
-    /**
-     * 搜索引擎URL
-     */
+
+    /** 搜索引擎URL  */
     private String engineUrl;
-    /**
-     * 是否快速搜索 1快 0普通
-     */
+
+    /** 是否快速搜索 1快 0普通  */
     private Integer isQuickSearch;
-    /**
-     * 名称
-     */
+
+    /** 名称  */
     private String name;
-    /**
-     * 图标URL
-     */
+
+    /** 图标URL  */
     private String iconUrl;
-    /**
-     * 用户id
-     */
+
+    /** 用户id  */
     private String userId;
 
 }
