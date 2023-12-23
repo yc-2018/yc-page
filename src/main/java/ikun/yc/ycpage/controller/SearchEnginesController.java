@@ -35,6 +35,7 @@ public class SearchEnginesController {
     public R<Boolean> addSearchEngines(@RequestBody SearchEngines searchEngines) {
         if (searchEngines.getEngineUrl()== null) return R.error("URL不允许为空");
         if (searchEngines.getName()== null) return R.error("名称不允许为空");
+        if (searchEngines.getIsQuickSearch()== null) return R.error("引擎类型不允许为空");
 
         searchEngines.setUserId(BaseContext.getCurrentId());
         return R.success(searchEnginesService.save(searchEngines));
@@ -44,17 +45,18 @@ public class SearchEnginesController {
     public R<Boolean> updateSearchEngines(@RequestBody List<SearchEngines> searchEngineList) {
         if (searchEngineList == null) return R.error("ID不允许为空");
 
-        LambdaUpdateWrapper<SearchEngines> wrapper = new LambdaUpdateWrapper<>();
-        for (SearchEngines searchEngines : searchEngineList) {
-            wrapper .or()
-                    .eq(SearchEngines::getId, searchEngines.getId())
-                    .eq(SearchEngines::getUserId, BaseContext.getCurrentId())
-                    .set(searchEngines.getEngineUrl() != null, SearchEngines::getEngineUrl, searchEngines.getEngineUrl())
-                    .set(searchEngines.getName() != null, SearchEngines::getName, searchEngines.getName())
-                    .set(searchEngines.getIconUrl() != null, SearchEngines::getIconUrl, searchEngines.getIconUrl())
-                    .set(searchEngines.getIsQuickSearch() != null, SearchEngines::getIsQuickSearch, searchEngines.getIsQuickSearch());
-        }
-        return R.success(searchEnginesService.update(wrapper));
+//        LambdaUpdateWrapper<SearchEngines> wrapper = new LambdaUpdateWrapper<>();
+//        for (SearchEngines searchEngines : searchEngineList) {
+//            wrapper .or()
+//                    .eq(SearchEngines::getId, searchEngines.getId())
+//                    .eq(SearchEngines::getUserId, BaseContext.getCurrentId())
+//                    .set(searchEngines.getEngineUrl() != null, SearchEngines::getEngineUrl, searchEngines.getEngineUrl())
+//                    .set(searchEngines.getName() != null, SearchEngines::getName, searchEngines.getName())
+//                    .set(searchEngines.getIconUrl() != null, SearchEngines::getIconUrl, searchEngines.getIconUrl())
+//                    .set(searchEngines.getIsQuickSearch() != null, SearchEngines::getIsQuickSearch, searchEngines.getIsQuickSearch());
+//        }
+        searchEnginesService.batchUpdate(searchEngineList);
+        return R.success(true);
     }
 
     @DeleteMapping

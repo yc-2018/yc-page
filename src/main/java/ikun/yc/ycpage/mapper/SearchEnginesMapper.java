@@ -4,6 +4,8 @@ import ikun.yc.ycpage.entity.SearchEngines;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
+import java.util.List;
+
 /**
  * (search_engines)数据Mapper
  *
@@ -13,5 +15,6 @@ import org.apache.ibatis.annotations.Mapper;
 */
 @Mapper
 public interface SearchEnginesMapper extends BaseMapper<SearchEngines> {
+    void batchUpdateSearchEngines(List<SearchEngines> searchEngineList);
 
 }

@@ -9,4 +9,18 @@
         id,engine_url,is_quick_search,name,icon_url,user_id
     </sql>
 
+    <update id="batchUpdateSearchEngines" parameterType="list">
+        <foreach collection="list" item="item" separator=";" open="" close="">
+            UPDATE search_engines
+            SET
+            <trim prefix="SET" suffixOverrides=",">
+                <if test="item.engineUrl != null"> engine_url = #{item.engineUrl}, </if>
+                <if test="item.name != null"> name = #{item.name}, </if>
+                <if test="item.isQuickSearch != null"> is_quick_search = #{item.isQuickSearch}, </if>
+                <!-- 其他字段 -->
+            </trim>
+            WHERE id = #{item.id} AND user_id = #{item.userId}
+        </foreach>
+    </update>
+
 </mapper>
