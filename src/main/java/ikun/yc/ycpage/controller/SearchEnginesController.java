@@ -26,39 +26,72 @@ import java.util.List;
 public class SearchEnginesController {
     private final SearchEnginesService searchEnginesService;
 
+    /**
+     * 按用户id获取列表
+     *
+     * @return 搜索引擎列表
+     * @author ChenGuangLong
+     * @since 2023/12/23 16:53:55
+     */
     @GetMapping("/list")
     public R<List<SearchEngines>> getListByUserId() {
         return R.success(searchEnginesService.listByMap(Collections.singletonMap("user_id", BaseContext.getCurrentId())));
     }
 
+
+    /**
+     * 添加搜索引擎
+     *
+     * @param searchEngines 搜索引擎
+     * @return 成功与否
+     * @author ChenGuangLong
+     * @since 2023/12/23 16:53:03
+     */
     @PostMapping
     public R<Boolean> addSearchEngines(@RequestBody SearchEngines searchEngines) {
         if (searchEngines.getEngineUrl()== null) return R.error("URL不允许为空");
         if (searchEngines.getName()== null) return R.error("名称不允许为空");
-        if (searchEngines.getIsQuickSearch()== null) return R.error("引擎类型不允许为空");
 
         searchEngines.setUserId(BaseContext.getCurrentId());
         return R.success(searchEnginesService.save(searchEngines));
     }
 
-    @PutMapping
-    public R<Boolean> updateSearchEngines(@RequestBody List<SearchEngines> searchEngineList) {
-        if (searchEngineList == null) return R.error("ID不允许为空");
 
-//        LambdaUpdateWrapper<SearchEngines> wrapper = new LambdaUpdateWrapper<>();
-//        for (SearchEngines searchEngines : searchEngineList) {
-//            wrapper .or()
-//                    .eq(SearchEngines::getId, searchEngines.getId())
-//                    .eq(SearchEngines::getUserId, BaseContext.getCurrentId())
-//                    .set(searchEngines.getEngineUrl() != null, SearchEngines::getEngineUrl, searchEngines.getEngineUrl())
-//                    .set(searchEngines.getName() != null, SearchEngines::getName, searchEngines.getName())
-//                    .set(searchEngines.getIconUrl() != null, SearchEngines::getIconUrl, searchEngines.getIconUrl())
-//                    .set(searchEngines.getIsQuickSearch() != null, SearchEngines::getIsQuickSearch, searchEngines.getIsQuickSearch());
-//        }
-        searchEnginesService.batchUpdate(searchEngineList);
-        return R.success(true);
+    /**
+     * 批量循环更新搜索引擎
+     *
+     * @param searchEngineList 搜索引擎列表
+     * @return 返回拼接的循环进去的true或false
+     * @author ChenGuangLong
+     * @since 2023/12/23
+     */
+    @PutMapping
+    public R<?> updateSearchEngines(@RequestBody List<SearchEngines> searchEngineList) {
+        if (searchEngineList == null || searchEngineList.size() == 0) return R.error("乱搞！🤺");
+
+        StringBuilder sb = new StringBuilder();
+        for (SearchEngines searchEngines : searchEngineList) {
+            sb.append( searchEnginesService.update(new LambdaUpdateWrapper<SearchEngines>()
+                    .eq(SearchEngines::getId, searchEngines.getId())
+                    .eq(SearchEngines::getUserId, BaseContext.getCurrentId())
+                    .set(searchEngines.getEngineUrl() != null, SearchEngines::getEngineUrl, searchEngines.getEngineUrl())
+                    .set(searchEngines.getName() != null, SearchEngines::getName, searchEngines.getName())
+                    .set(searchEngines.getIconUrl() != null, SearchEngines::getIconUrl, searchEngines.getIconUrl())
+                    .set(searchEngines.getIsQuickSearch() != null, SearchEngines::getIsQuickSearch, searchEngines.getIsQuickSearch())
+            ));
+        }
+        return R.success(sb.toString());
     }
 
+
+    /**
+     * 批量删除搜索引擎
+     *
+     * @param ids 引擎id
+     * @return 成功返回true，失败返回提示信息
+     * @author ChenGuangLong
+     * @since 2023/12/23
+     */
     @DeleteMapping
     public R<Boolean> deleteSearchEngines(@RequestBody List<Integer> ids) {
         LambdaQueryWrapper<SearchEngines> wrapper = new LambdaQueryWrapper<>();
