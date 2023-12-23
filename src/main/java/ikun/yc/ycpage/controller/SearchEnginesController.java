@@ -28,7 +28,7 @@ public class SearchEnginesController {
 
     @GetMapping("/list")
     public R<List<SearchEngines>> getListByUserId() {
-        return R.success(searchEnginesService.listByMap(Collections.singletonMap("userId", BaseContext.getCurrentId())));
+        return R.success(searchEnginesService.listByMap(Collections.singletonMap("user_id", BaseContext.getCurrentId())));
     }
 
     @PostMapping
