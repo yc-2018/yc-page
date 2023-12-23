@@ -1,19 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="ikun.yc.ycpage.mapper.SearchEnginesMapper">
-    <sql id="tableName">
-        search_engines
-    </sql>
-
-    <sql id="baseColumn">
-        id,engine_url,is_quick_search,name,icon_url,user_id
-    </sql>
 
     <update id="batchUpdateSearchEngines" parameterType="list">
         <foreach collection="list" item="item" separator=";" open="" close="">
             UPDATE search_engines
             SET
-            <trim prefix="SET" suffixOverrides=",">
+            <trim suffixOverrides=",">
                 <if test="item.engineUrl != null"> engine_url = #{item.engineUrl}, </if>
                 <if test="item.name != null"> name = #{item.name}, </if>
                 <if test="item.isQuickSearch != null"> is_quick_search = #{item.isQuickSearch}, </if>
