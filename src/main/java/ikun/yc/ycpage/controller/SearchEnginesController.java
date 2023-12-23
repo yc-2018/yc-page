@@ -33,8 +33,8 @@ public class SearchEnginesController {
 
     @PostMapping
     public R<Boolean> addSearchEngines(@RequestBody SearchEngines searchEngines) {
-        if (searchEngines.getEngineUrl()!= null) return R.error("URL不允许为空");
-        if (searchEngines.getName()!= null) return R.error("名称不允许为空");
+        if (searchEngines.getEngineUrl()== null) return R.error("URL不允许为空");
+        if (searchEngines.getName()== null) return R.error("名称不允许为空");
 
         searchEngines.setUserId(BaseContext.getCurrentId());
         return R.success(searchEnginesService.save(searchEngines));
