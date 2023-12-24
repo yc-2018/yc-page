@@ -9,8 +9,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 《搜索引擎》服务控制器
@@ -28,13 +29,18 @@ public class SearchEnginesController {
     /**
      * 按用户id获取列表
      *
+     * @param type 类型（可选）
      * @return 搜索引擎列表
      * @author ChenGuangLong
      * @since 2023/12/23 16:53:55
      */
     @GetMapping("/list")
-    public R<List<SearchEngines>> getListByUserId() {
-        return R.success(searchEnginesService.listByMap(Collections.singletonMap("user_id", BaseContext.getCurrentId())));
+    public R<List<SearchEngines>> getListByUserId(@RequestParam(required = false) Integer type) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("user_id", BaseContext.getCurrentId());
+        if (type!= null) map.put("is_quick_search", type);
+
+        return R.success(searchEnginesService.listByMap(map));
     }
 
 
