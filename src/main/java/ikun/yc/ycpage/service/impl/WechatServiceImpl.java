@@ -63,7 +63,7 @@ public class WechatServiceImpl implements WechatService {
         ToDoItems items = new ToDoItems(UserID, parts[1], itemType);             // 待办内容和类型
         boolean save = toDoItemsService.save(items);                            // 保存
         if (!save) return "添加失败";
-        return "添加" + toDoItemType + "待办成功,id：" + items.getId()+"\n对该待办的增删改查请到<a href=\"https://8.134.201.95\" >仰晨主页: https://yc556.gitee.io</a>";
+        return "添加" + toDoItemType + "待办成功,id：" + items.getId()+"\n对该待办的增删改查请到<a href=\"http://8.134.201.95\" >仰晨主页: https://yc556.gitee.io</a>";
     }
 
     /**
@@ -120,7 +120,7 @@ public class WechatServiceImpl implements WechatService {
           .append("翻译或fy+空格+内容=>翻译内容\n")
           .append("舔狗日记 => 舔狗日记\n")
           .append("说明或sm=>给出目前支持的功能\n")
-          .append("仰晨主页:<a href=\"https://8.134.201.95\"> https://yc556.gitee.io</a>");
+          .append("仰晨主页:<a href=\"http://8.134.201.95\"> https://yc556.gitee.io</a>");
 
         return sb.toString();
     }
