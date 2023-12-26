@@ -53,13 +53,14 @@ public class SearchEnginesController {
      * @since 2023/12/23 16:53:03
      */
     @PostMapping
-    public R<Boolean> addSearchEngines(@RequestBody SearchEngines searchEngines) {
+    public R<?> addSearchEngines(@RequestBody SearchEngines searchEngines) {
         if (searchEngines.getEngineUrl()== null) return R.error("URL不允许为空");
         if (searchEngines.getName()== null) return R.error("名称不允许为空");
         if (searchEngines.getIsQuickSearch()== null) return R.error("引擎类型不允许为空");
 
         searchEngines.setUserId(BaseContext.getCurrentId());
-        return R.success(searchEnginesService.save(searchEngines));
+        boolean saveSuccess = searchEnginesService.save(searchEngines);
+        return R.success(saveSuccess?searchEngines.getId():null);
     }
 
 
