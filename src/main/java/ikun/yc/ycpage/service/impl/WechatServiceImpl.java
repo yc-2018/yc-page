@@ -118,7 +118,7 @@ public class WechatServiceImpl implements WechatService {
 
         sb.append("登录 或 登陆 => 获取登录验证码\n")
           .append("翻译或fy+空格+内容=>翻译内容\n")
-          .append("舔狗日记 => 舔狗日记\n")
+          .append("舔狗日记或tgrj => 舔狗日记\n")
           .append("说明或sm=>给出目前支持的功能\n")
           .append("仰晨主页:<a href=\"http://8.134.201.95\"> https://yc556.gitee.io</a>");
 

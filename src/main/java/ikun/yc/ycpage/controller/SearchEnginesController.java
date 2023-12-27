@@ -65,7 +65,7 @@ public class SearchEnginesController {
 
 
     /**
-     * 批量循环更新搜索引擎
+     * 批量更新搜索引擎
      *
      * @param searchEngineList 搜索引擎列表
      * @return 返回拼接的循环进去的true或false
@@ -76,16 +76,6 @@ public class SearchEnginesController {
     public R<?> updateSearchEngines(@RequestBody List<SearchEngines> searchEngineList) {
         if (searchEngineList == null || searchEngineList.size() == 0) return R.error("乱搞！🤺");
 
-//        LambdaUpdateWrapper<SearchEngines> wrapper = new LambdaUpdateWrapper<>();
-//        for (SearchEngines searchEngines : searchEngineList) {
-//            wrapper .or()
-//                    .eq(SearchEngines::getId, searchEngines.getId())
-//                    .eq(SearchEngines::getUserId, BaseContext.getCurrentId())
-//                    .set(searchEngines.getEngineUrl() != null, SearchEngines::getEngineUrl, searchEngines.getEngineUrl())
-//                    .set(searchEngines.getName() != null, SearchEngines::getName, searchEngines.getName())
-//                    .set(searchEngines.getIconUrl() != null, SearchEngines::getIconUrl, searchEngines.getIconUrl())
-//                    .set(searchEngines.getIsQuickSearch() != null, SearchEngines::getIsQuickSearch, searchEngines.getIsQuickSearch());
-//        }
         searchEnginesService.batchUpdate(searchEngineList);
         return R.success(true);
     }
