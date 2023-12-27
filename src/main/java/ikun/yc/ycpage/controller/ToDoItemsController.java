@@ -66,8 +66,13 @@ public class ToDoItemsController {
                 .lt(completed == -1, ToDoItems::getCompleted, 10)      // >=10 已删除
                 .orderByDesc(ToDoItems::getUpdateTime);
 
-        return R.success(toDoItemsService.page(new Page<>(page, pageSize), queryWrapper))
-                .add("groupToDoItemsCounts", toDoItemsService.getGroupToDoItemsCount(type));
+        R<Page<ToDoItems>> pageR = R.success(toDoItemsService.page(new Page<>(page, pageSize), queryWrapper));
+
+        // 如果是查询未完成的，统计数量
+        if (completed == 0)
+            pageR.add("groupToDoItemsCounts", toDoItemsService.getGroupToDoItemsCount(type));
+
+        return pageR;
     }
 
     /**
