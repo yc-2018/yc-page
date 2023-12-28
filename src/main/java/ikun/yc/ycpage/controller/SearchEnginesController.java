@@ -3,6 +3,7 @@ package ikun.yc.ycpage.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.R;
+import ikun.yc.ycpage.common.anno.Log;
 import ikun.yc.ycpage.entity.SearchEngines;
 import ikun.yc.ycpage.service.SearchEnginesService;
 import lombok.RequiredArgsConstructor;
@@ -52,6 +53,7 @@ public class SearchEnginesController {
      * @author ChenGuangLong
      * @since 2023/12/23 16:53:03
      */
+    @Log
     @PostMapping
     public R<?> addSearchEngines(@RequestBody SearchEngines searchEngines) {
         if (searchEngines.getEngineUrl()== null) return R.error("URL不允许为空");
@@ -72,6 +74,7 @@ public class SearchEnginesController {
      * @author ChenGuangLong
      * @since 2023/12/23
      */
+    @Log
     @PutMapping
     public R<?> updateSearchEngines(@RequestBody List<SearchEngines> searchEngineList) {
         if (searchEngineList == null || searchEngineList.size() == 0) return R.error("乱搞！🤺");
@@ -89,6 +92,7 @@ public class SearchEnginesController {
      * @author ChenGuangLong
      * @since 2023/12/23
      */
+    @Log
     @DeleteMapping
     public R<Boolean> deleteSearchEngines(@RequestBody List<Integer> ids) {
         LambdaQueryWrapper<SearchEngines> wrapper = new LambdaQueryWrapper<>();

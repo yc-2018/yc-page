@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.R;
+import ikun.yc.ycpage.common.anno.Log;
 import ikun.yc.ycpage.common.exception.FieldIsNullException;
 import ikun.yc.ycpage.entity.ToDoItems;
 import ikun.yc.ycpage.service.ToDoItemsService;
@@ -33,6 +34,7 @@ public class ToDoItemsController {
      * @author 仰晨
      * @since 2023-12-03 22:31:22
      */
+    @Log
     @PostMapping
     public R<Boolean> addItem(@RequestBody ToDoItems toDoItems) {
         if (toDoItems.getItemType() == null)throw new FieldIsNullException("待办类型不能为空");
@@ -79,6 +81,7 @@ public class ToDoItemsController {
      * 修改待办
      * @param toDoItem 待办对象
      */
+    @Log
     @PutMapping
     public R<Boolean> updateItem(@RequestBody ToDoItems toDoItem) {
         log.info("待办更新参数：{}", toDoItem);
@@ -94,6 +97,7 @@ public class ToDoItemsController {
      * 获取的时候不要拿大于十的就好了。为了删除后还能区分是否完成。10就是未完成，11就是完成。
      * @param id 待办id
      */
+    @Log
     @DeleteMapping("/{id}")
     public R<?> deleteItem(@PathVariable String id) {
         log.info("逻辑删除待办id：{}", id);
