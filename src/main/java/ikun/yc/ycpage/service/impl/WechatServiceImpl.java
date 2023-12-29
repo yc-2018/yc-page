@@ -63,7 +63,7 @@ public class WechatServiceImpl implements WechatService {
         ToDoItems items = new ToDoItems(UserID, parts[1], itemType);             // 待办内容和类型
         boolean save = toDoItemsService.save(items);                            // 保存
         if (!save) return "添加失败";
-        return "添加" + toDoItemType + "待办成功,id：" + items.getId()+"\n对该待办的增删改查请到<a href=\"http://8.134.201.95\" >仰晨主页: https://yc556.gitee.io</a>";
+        return "添加" + toDoItemType + "待办成功,id：" + (items.getId() * 17)+"\n对该待办的增删改查请到<a href=\"http://8.134.201.95\" >仰晨主页: https://yc556.gitee.io</a>";
     }
 
     /**
