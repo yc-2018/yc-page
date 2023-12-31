@@ -24,7 +24,7 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @Api(tags = "接收微信接口")
-@RequestMapping("/wechat")
+@RequestMapping("/ikun说不能让人猜到微信接口")
 public class WechatController {
     @Value("${wechat.token}")
     private String token;

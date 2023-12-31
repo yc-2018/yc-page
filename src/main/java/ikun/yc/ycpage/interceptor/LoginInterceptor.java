@@ -26,7 +26,7 @@ public class LoginInterceptor implements HandlerInterceptor {
         // error路径处理
         if (uri.equals("/error")) throw new PathException("请求失败");
         // 对 /login 和 /wechat 之外的请求进行拦截(这里不写也行，一般来说注册机里面写了就好了
-        if (uri.startsWith("/users/login") || uri.equals("/wechat")) return true;
+        if (uri.startsWith("/users/login") || uri.equals("/ikun说不能让人猜到微信接口")) return true;
 
         String jwt = req.getHeader("Authorization");
 
