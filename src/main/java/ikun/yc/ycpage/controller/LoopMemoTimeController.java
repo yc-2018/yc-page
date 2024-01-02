@@ -21,8 +21,19 @@ import org.springframework.web.bind.annotation.*;
 public class LoopMemoTimeController {
 
     private final LoopMemoTimeService loopMemoTimeService;
+
+    /**
+     * 获取循环备忘录时间列表
+     *
+     * @param page     第几页
+     * @param pageSize 页面大小
+     * @param itemId   待办id
+     * @return 待办时间列表
+     * @author ChenGuangLong
+     * @since 2024/01/02 19:45:50
+     */
     @GetMapping("/{itemId}")
-    public R<Page<LoopMemoTime>> getLoopMemoTime(@RequestParam(defaultValue = "1") Integer page,
+    public R<Page<LoopMemoTime>> getLoopMemoTimeList(@RequestParam(defaultValue = "1") Integer page,
                                               @RequestParam(defaultValue = "20") Integer pageSize,
                                               @PathVariable Integer itemId) {
 
