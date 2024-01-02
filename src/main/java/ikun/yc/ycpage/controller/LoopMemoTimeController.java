@@ -21,12 +21,14 @@ import org.springframework.web.bind.annotation.*;
 public class LoopMemoTimeController {
 
     private final LoopMemoTimeService loopMemoTimeService;
-    @GetMapping("/{id}")
+    @GetMapping("/{itemId}")
     public R<Page<LoopMemoTime>> getLoopMemoTime(@RequestParam(defaultValue = "1") Integer page,
                                               @RequestParam(defaultValue = "20") Integer pageSize,
-                                              @PathVariable Integer id) {
+                                              @PathVariable Integer itemId) {
 
     return R.success(loopMemoTimeService.page(new Page<>(page, pageSize),
-            new LambdaQueryWrapper<LoopMemoTime>().eq(LoopMemoTime::getId, id)));
+            new LambdaQueryWrapper<LoopMemoTime>()
+                    .eq(LoopMemoTime::getToDoItemId, itemId)
+                    .orderByDesc(LoopMemoTime::getMemoDate)));
     }
 }
