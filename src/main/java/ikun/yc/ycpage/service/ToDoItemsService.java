@@ -15,7 +15,7 @@ import java.util.Map;
  */
 public interface ToDoItemsService extends IService<ToDoItems> {
 
-    R<Boolean> addItem(ToDoItems toDoItems);
+    R<Integer> addItem(ToDoItems toDoItems);
 
     Map getGroupToDoItemsCount(Integer type);
 

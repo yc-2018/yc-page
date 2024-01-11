@@ -40,7 +40,7 @@ public class ToDoItemsServiceImpl extends ServiceImpl<ToDoItemsMapper, ToDoItems
      * @return 成功或失败或被禁用。
      */
     @Override
-    public R<Boolean> addItem(ToDoItems toDoItem) {
+    public R<Integer> addItem(ToDoItems toDoItem) {
         String userId = BaseContext.getCurrentId();
 
         // 检查用户是否被禁用
@@ -52,7 +52,7 @@ public class ToDoItemsServiceImpl extends ServiceImpl<ToDoItemsMapper, ToDoItems
         toDoItem.setUserId(userId);
 
         boolean save = this.save(toDoItem);
-        return save ? R.success(true) : R.error("添加失败");
+        return save ? R.success(toDoItem.getId()) : R.error("添加失败");
     }
 
     /**

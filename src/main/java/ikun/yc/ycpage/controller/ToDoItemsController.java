@@ -36,7 +36,7 @@ public class ToDoItemsController {
      */
     @Log
     @PostMapping
-    public R<Boolean> addItem(@RequestBody ToDoItems toDoItems) {
+    public R<Integer> addItem(@RequestBody ToDoItems toDoItems) {
         if (toDoItems.getItemType() == null)throw new FieldIsNullException("待办类型不能为空");
         if (toDoItems.getContent() == null) throw new FieldIsNullException("待办内容不能为空");
 
