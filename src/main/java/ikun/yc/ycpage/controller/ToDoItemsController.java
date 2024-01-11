@@ -53,12 +53,14 @@ public class ToDoItemsController {
      * @param pageSize  每页多少条
      * @param completed 想看的完成类型 0 未完成 1 已完成 -1 全部
      * @param type      待办类型
+     * @param orderBy  排序方式 1：更新时间↓ 2：更新时间↑ 3：创建时间↓ 4：创建时间↑ 5：A↓ 6：Z↓
      * @return 待办列表
      */
     @GetMapping("/{type}")
     public R<Page<ToDoItems>> getItem(@RequestParam(defaultValue = "1") Integer page,
                                       @RequestParam(defaultValue = "10") Integer pageSize,
-                                      @RequestParam(defaultValue = "0") Integer completed,
+                                      @RequestParam(defaultValue = "0") Integer completed,      // 0 未完成 1 已完成 -1 全部
+                                      @RequestParam(defaultValue = "1") Integer orderBy,
                                       @PathVariable Integer type) {
 
         LambdaQueryWrapper<ToDoItems> queryWrapper = new LambdaQueryWrapper<ToDoItems>()
@@ -66,7 +68,12 @@ public class ToDoItemsController {
                 .eq(ToDoItems::getUserId, BaseContext.getCurrentId())               // 请求头的token 的id
                 .eq(completed != -1, ToDoItems::getCompleted, completed)   // 0 未完成 1 已完成 -1 全部
                 .lt(completed == -1, ToDoItems::getCompleted, 10)      // >=10 已删除
-                .orderByDesc(ToDoItems::getUpdateTime);
+                .orderByDesc(orderBy == 1, ToDoItems::getUpdateTime)
+                .orderByDesc(orderBy == 3, ToDoItems::getCreateTime)
+                .orderByDesc(orderBy == 6, ToDoItems::getContent)
+                .orderByAsc(orderBy == 2, ToDoItems::getUpdateTime)
+                .orderByAsc(orderBy == 4, ToDoItems::getCreateTime)
+                .orderByAsc(orderBy == 5, ToDoItems::getContent);
 
         R<Page<ToDoItems>> pageR = R.success(toDoItemsService.page(new Page<>(page, pageSize), queryWrapper));
 
