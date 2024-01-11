@@ -39,6 +39,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/users/login",
                         "/ikun说不能让人猜到微信接口",
                         "/favicon.ico",
+                        "/other/run-script",
                         "/doc.html",                // 放行Swagger
                         "/docs.html",               // 放行Swagger
                         "/swagger-ui.html",         // 放行Swagger
