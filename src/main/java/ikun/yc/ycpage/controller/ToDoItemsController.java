@@ -54,6 +54,8 @@ public class ToDoItemsController {
      * @param completed 想看的完成类型 0 未完成 1 已完成 -1 全部
      * @param type      待办类型
      * @param orderBy  排序方式 1：更新时间↓ 2：更新时间↑ 3：创建时间↓ 4：创建时间↑ 5：A↓ 6：Z↓
+     * @param firstLetter 从哪个字母开始查询
+     * @param keyword  搜索关键词
      * @return 待办列表
      */
     @GetMapping("/{type}")
@@ -61,6 +63,8 @@ public class ToDoItemsController {
                                       @RequestParam(defaultValue = "10") Integer pageSize,
                                       @RequestParam(defaultValue = "0") Integer completed,      // 0 未完成 1 已完成 -1 全部
                                       @RequestParam(defaultValue = "1") Integer orderBy,
+                                      @RequestParam(required = false) String firstLetter,
+                                      @RequestParam(required = false) String keyword,
                                       @PathVariable Integer type) {
 
         LambdaQueryWrapper<ToDoItems> queryWrapper = new LambdaQueryWrapper<ToDoItems>()
@@ -73,7 +77,9 @@ public class ToDoItemsController {
                 .orderByDesc(orderBy == 6, ToDoItems::getContent)
                 .orderByAsc(orderBy == 2, ToDoItems::getUpdateTime)
                 .orderByAsc(orderBy == 4, ToDoItems::getCreateTime)
-                .orderByAsc(orderBy == 5, ToDoItems::getContent);
+                .orderByAsc(orderBy == 5, ToDoItems::getContent)
+                .likeRight(firstLetter!=null, ToDoItems::getContent, firstLetter)
+                .like(keyword!=null && firstLetter == null, ToDoItems::getContent, keyword);
 
         R<Page<ToDoItems>> pageR = R.success(toDoItemsService.page(new Page<>(page, pageSize), queryWrapper));
 
