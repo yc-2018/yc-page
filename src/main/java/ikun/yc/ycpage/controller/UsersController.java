@@ -33,10 +33,4 @@ public class UsersController {
         return usersService.login(request, key,expireTime);
     }
 
-
-    @GetMapping("/get")
-    public Object get() {
-        return usersService.list();
-    }
-
 }

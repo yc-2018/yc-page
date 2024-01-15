@@ -39,7 +39,7 @@ public class WechatServiceImpl implements WechatService {
         } while (Boolean.TRUE.equals(redisTemplate.hasKey(code)));   // 直接检查验证码是否已作为键存在
 
         redisTemplate.opsForValue().set(code, toUserName,60, TimeUnit.MINUTES);          // 存储验证码和用户名的映射
-        return "登录验证码为:" + code + "，五分钟内有效。\n失效后可重新发送登录获取验证码,目前网站地址:https://yc556.gitee.io";
+        return "登录验证码为:" + code + "，五分钟内有效。\n失效后可重新发送登录获取验证码,网站地址:https://yc556.cn";
     }
 
 
@@ -63,7 +63,7 @@ public class WechatServiceImpl implements WechatService {
         ToDoItems items = new ToDoItems(UserID, parts[1], itemType);             // 待办内容和类型
         boolean save = toDoItemsService.save(items);                            // 保存
         if (!save) return "添加失败";
-        return "添加" + toDoItemType + "待办成功,id：" + (items.getId() * 17)+"\n对该待办的增删改查请到<a href=\"http://8.134.201.95\" >仰晨主页: https://yc556.gitee.io</a>";
+        return "添加" + toDoItemType + "待办成功 \n对该待办的增删改查请到<a href=\"https://yc556.cn\" >仰晨: https://yc556.cn</a>";
     }
 
     /**
@@ -120,7 +120,7 @@ public class WechatServiceImpl implements WechatService {
           .append("翻译或fy+空格+内容=>翻译内容\n")
           .append("舔狗日记或tgrj => 舔狗日记\n")
           .append("说明或sm=>给出目前支持的功能\n")
-          .append("仰晨主页:<a href=\"http://8.134.201.95\"> https://yc556.gitee.io</a>");
+          .append("仰晨主页:<a href=\"https://yc556.cn\"> https://yc556.cn</a>");
 
         return sb.toString();
     }
