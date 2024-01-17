@@ -8,6 +8,7 @@ import ikun.yc.ycpage.common.exception.PathException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
@@ -20,6 +21,11 @@ public class LoginInterceptor implements HandlerInterceptor {
     @Override   //目标资源方法运行前运行，返回true: 放行，放回false，不放行
     public boolean preHandle(HttpServletRequest req, HttpServletResponse resp, Object handler) {
         System.out.println("preHandle  目标资源方法运行前运行");
+
+        // 检查是否是OPTIONS请求(跨域)
+        if (req.getMethod().equals(HttpMethod.OPTIONS.name())) {
+            return true; // 允许OPTIONS请求通过
+        }
 
         String uri = req.getRequestURI();
         log.info("请求路径：{}", uri);
@@ -49,6 +55,7 @@ public class LoginInterceptor implements HandlerInterceptor {
     @Override   //目标资源方法运行后运行
     public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) {
 //        log.info("postHandle  标资源方法运行后运行");
+
     }
 
     @Override   //视图渲染完毕后运行，最后运行
