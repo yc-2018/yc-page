@@ -23,9 +23,9 @@ public class LoginInterceptor implements HandlerInterceptor {
         System.out.println("preHandle  目标资源方法运行前运行");
 
         // 检查是否是OPTIONS请求(跨域)
-//        if (req.getMethod().equals(HttpMethod.OPTIONS.name())) {
-//            return true; // 允许OPTIONS请求通过
-//        }
+        if (req.getMethod().equals(HttpMethod.OPTIONS.name())) {
+            return true; // 允许OPTIONS请求通过
+        }
 
         String uri = req.getRequestURI();
         log.info("请求路径：{}", uri);
