@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -56,6 +57,15 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 );  // 排除 (不拦截的路径)
     }
 
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOrigins("*") // 或指定特定的源
+                .allowedMethods("GET", "POST", "PUT", "DELETE") // 允许的方法
+                .allowedHeaders("*") // 允许的头部
+                .allowCredentials(true) // 是否允许证书（cookies）
+                .maxAge(3600); // 预检请求的缓存时间（秒）
+    }
 
     /**
      * 定义全局默认时间序列化
