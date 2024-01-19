@@ -22,7 +22,7 @@ public class UsersController {
     private final UsersService usersService;
 
     /**
-     * 登录（同一个 ip一分钟内请求超过十次，封禁一个小时。）
+     * 登录（同一个 ip一分钟内请求超过3次，封禁一个小时。）
      * @param request 用来获取用户的ip
      * @param key 验证码
      * @param expireTime 登录超时时间

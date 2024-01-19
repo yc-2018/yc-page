@@ -38,7 +38,7 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
 
 
     /**
-     * 登录（同一个 ip一分钟内请求超过十次，封禁一个小时。）
+     * 登录（同一个 ip一分钟内请求超过3次，封禁一个小时。）
      * @param request 用来获取用户的ip
      * @param key 验证码
      * @param expireTime 登录超时时间
@@ -54,7 +54,7 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
 
             // 检查IP是否被封禁
             if (Boolean.TRUE.equals(redisTemplate.hasKey(banKey)))
-                return R.error("您因频繁登录ip已被封禁1小时，请稍后再试");
+                return R.error("您因频繁登录 目前已被封禁1小时，请稍后再试");
 
             // 增加登录尝试次数，如果 attemptKey 不存在，则 Redis 会创建它值为 1然后返回 本来存在就会自增
             Long attempts = redisTemplate.opsForValue().increment(attemptKey);
@@ -64,7 +64,7 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
                     redisTemplate.expire(attemptKey, 1, TimeUnit.MINUTES);
 
                 // 检查尝试次数是否超过限制
-                if (attempts > 10) {
+                if (attempts > 3) {
                     // 封禁IP一个小时
                     redisTemplate.opsForValue().set(banKey, "banned", 1, TimeUnit.HOURS);
                     redisTemplate.delete(attemptKey); // 重置尝试次数
