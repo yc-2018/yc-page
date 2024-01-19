@@ -78,13 +78,13 @@ public class ToDoItemsController {
                 .orderByAsc(orderBy == 2, ToDoItems::getUpdateTime)
                 .orderByAsc(orderBy == 4, ToDoItems::getCreateTime)
                 .orderByAsc(orderBy == 5, ToDoItems::getContent)
-                .likeRight(firstLetter!=null, ToDoItems::getContent, firstLetter)
-                .like(keyword!=null && firstLetter == null, ToDoItems::getContent, keyword);
+                .likeRight(firstLetter != null, ToDoItems::getContent, firstLetter)
+                .like(keyword != null, ToDoItems::getContent, keyword);
 
         R<Page<ToDoItems>> pageR = R.success(toDoItemsService.page(new Page<>(page, pageSize), queryWrapper));
 
-        // 如果是查询未完成的，统计数量
-        if (completed == 0)
+        // 如果是查询未完成的 而且不是英语的，统计数量
+        if (completed == 0 && type != 4)
             pageR.add("groupToDoItemsCounts", toDoItemsService.getGroupToDoItemsCount(type));
 
         return pageR;
