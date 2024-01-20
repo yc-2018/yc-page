@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 @Service
 @RequiredArgsConstructor
 public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements UsersService {
-    public final RedisTemplate<String, String> redisTemplate;
+    private final RedisTemplate<String, String> redisTemplate;
     private final SearchEnginesService searchEnginesService;
     private final SearchEngineDataInitializer searchEngineDataInitializer;
     private final PageParametersService pageParametersService;
