@@ -1,6 +1,7 @@
 //仰晨study 创建时间2024/1/11 23:51 星期四
 package ikun.yc.ycpage.controller;
 
+import ikun.yc.ycpage.common.anno.CountControl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,6 +21,7 @@ import java.nio.file.Paths;
 @RequestMapping("/other")
 public class OtherController {
     @GetMapping("/run-script")
+    @CountControl(controlFrequency = 1)
     public String runScript(String scriptName) {
         try {
             // 判断操作系统是否为Linux

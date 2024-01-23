@@ -3,7 +3,9 @@ package ikun.yc.ycpage.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.R;
+import ikun.yc.ycpage.common.anno.CountControl;
 import ikun.yc.ycpage.common.anno.Log;
+import ikun.yc.ycpage.common.aop.CountControlAspect;
 import ikun.yc.ycpage.entity.SearchEngines;
 import ikun.yc.ycpage.service.SearchEnginesService;
 import lombok.RequiredArgsConstructor;
@@ -55,6 +57,7 @@ public class SearchEnginesController {
      */
     @Log
     @PostMapping
+    @CountControl(operationType = CountControlAspect.ADD, controlFrequency = 10)
     public R<?> addSearchEngines(@RequestBody SearchEngines searchEngines) {
         if (searchEngines.getEngineUrl()== null) return R.error("URL不允许为空");
         if (searchEngines.getName()== null) return R.error("名称不允许为空");
@@ -76,8 +79,9 @@ public class SearchEnginesController {
      */
     @Log
     @PutMapping
+    @CountControl(operationType = CountControlAspect.UPDATE)
     public R<?> updateSearchEngines(@RequestBody List<SearchEngines> searchEngineList) {
-        if (searchEngineList == null || searchEngineList.size() == 0) return R.error("乱搞！🤺");
+        if (searchEngineList == null || searchEngineList.isEmpty()) return R.error("乱搞！🤺");
 
         searchEnginesService.batchUpdate(searchEngineList);
         return R.success(true);

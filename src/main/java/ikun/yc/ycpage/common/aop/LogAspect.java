@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -19,6 +20,7 @@ import java.util.Arrays;
 @Component
 @Slf4j
 @Aspect     //切面类
+@Order(2) // 设置执行顺序，数值越小优先级越高
 public class LogAspect {
     private final OperateLogMapper operateLogMapper;
 

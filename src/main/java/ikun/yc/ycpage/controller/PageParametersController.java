@@ -3,7 +3,9 @@ package ikun.yc.ycpage.controller;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.R;
+import ikun.yc.ycpage.common.anno.CountControl;
 import ikun.yc.ycpage.common.anno.Log;
+import ikun.yc.ycpage.common.aop.CountControlAspect;
 import ikun.yc.ycpage.entity.PageParameters;
 import ikun.yc.ycpage.service.PageParametersService;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,7 @@ public class PageParametersController {
      */
     @Log
     @PutMapping
+    @CountControl(operationType = CountControlAspect.UPDATE)
     public R<?> updatePageParameters(@RequestBody PageParameters entity) {
         LambdaUpdateWrapper<PageParameters> wrapper = new LambdaUpdateWrapper<>();
         wrapper.eq(PageParameters::getUserId, BaseContext.getCurrentId());

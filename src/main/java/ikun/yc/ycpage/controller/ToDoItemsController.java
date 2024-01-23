@@ -5,7 +5,9 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.R;
+import ikun.yc.ycpage.common.anno.CountControl;
 import ikun.yc.ycpage.common.anno.Log;
+import ikun.yc.ycpage.common.aop.CountControlAspect;
 import ikun.yc.ycpage.common.exception.FieldIsNullException;
 import ikun.yc.ycpage.entity.ToDoItems;
 import ikun.yc.ycpage.service.ToDoItemsService;
@@ -28,7 +30,7 @@ public class ToDoItemsController {
 
     /**
      * 添加待办
-     *
+     * 一分钟最多请求十次。超过十次禁用5分钟
      * @param toDoItems 待办对象
      * @return 成功与否
      * @author 仰晨
@@ -36,6 +38,7 @@ public class ToDoItemsController {
      */
     @Log
     @PostMapping
+    @CountControl(operationType = CountControlAspect.ADD, controlFrequency = 10, banTime = 5)
     public R<Integer> addItem(@RequestBody ToDoItems toDoItems) {
         if (toDoItems.getItemType() == null)throw new FieldIsNullException("待办类型不能为空");
         if (toDoItems.getContent() == null) throw new FieldIsNullException("待办内容不能为空");
@@ -96,6 +99,7 @@ public class ToDoItemsController {
      */
     @Log
     @PutMapping
+    @CountControl(operationType = CountControlAspect.UPDATE)  // 一分钟请求超出5次，禁用1分钟
     public R<Boolean> updateItem(@RequestBody ToDoItems toDoItem) {
         log.info("待办更新参数：{}", toDoItem);
         toDoItem.setCreateTime(null);   // 不允许更新创建时间
@@ -111,6 +115,7 @@ public class ToDoItemsController {
      * @param id 待办id
      */
     @Log
+    @CountControl(operationType = CountControlAspect.DELETE)
     @DeleteMapping("/{id}")
     public R<?> deleteItem(@PathVariable String id) {
         log.info("逻辑删除待办id：{}", id);

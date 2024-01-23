@@ -29,7 +29,7 @@ public class ControlAddItemUtil {
         if (Boolean.TRUE.equals(redisTemplate.hasKey("banAddItem:" + userId)))
             return true;
 
-        // 增加请求计数
+        // 使用RedisTemplate进行自增操作，不存在会当成0进行自增变成1
         Long requestCount = redisTemplate.opsForValue().increment(key);
         if (requestCount != null && requestCount == 1)
             redisTemplate.expire(key, EXPIRE_TIME, TimeUnit.SECONDS);
