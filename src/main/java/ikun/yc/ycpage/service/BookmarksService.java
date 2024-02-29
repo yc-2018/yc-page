@@ -9,8 +9,15 @@ import ikun.yc.ycpage.entity.Bookmarks;
  *
  * @author yc
  * @since 2023-12-03 22:57:40
- * @description 由 Mybatisplus Code Generator 创建
  */
 public interface BookmarksService extends IService<Bookmarks> {
-
+    /**
+     * 保存书签
+     *
+     * @param bookmarks 书签
+     * @return 新增的书签id
+     * @author ChenGuangLong
+     * @since 2024/02/29 15:08:48
+     */
+    Integer saveBookmarks(Bookmarks bookmarks);
 }

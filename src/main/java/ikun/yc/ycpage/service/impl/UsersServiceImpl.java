@@ -5,9 +5,11 @@ import ikun.yc.ycpage.common.JwtUtils;
 import ikun.yc.ycpage.common.R;
 import ikun.yc.ycpage.common.SearchEngineDataInitializer;
 import ikun.yc.ycpage.common.exception.LoginException;
+import ikun.yc.ycpage.entity.Bookmarks;
 import ikun.yc.ycpage.entity.PageParameters;
 import ikun.yc.ycpage.entity.Users;
 import ikun.yc.ycpage.mapper.UsersMapper;
+import ikun.yc.ycpage.service.BookmarksService;
 import ikun.yc.ycpage.service.PageParametersService;
 import ikun.yc.ycpage.service.SearchEnginesService;
 import ikun.yc.ycpage.service.UsersService;
@@ -20,6 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
+
+import static ikun.yc.ycpage.controller.BookmarksController.BOOKMARK_ROOT;
 
 /**
  * 用户的服务接口实现
@@ -35,6 +39,7 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
     private final SearchEnginesService searchEnginesService;
     private final SearchEngineDataInitializer searchEngineDataInitializer;
     private final PageParametersService pageParametersService;
+    private final BookmarksService bookmarksService;
 
 
     /**
@@ -81,10 +86,11 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
 
             // 校验验证码成功，判断是否是新用户
             if (this.getById(user) == null) {
-                log.info("是新用户");
+                log.info("{}是新用户",user);
                 this.save(new Users().setId(user));
-                pageParametersService.save(new PageParameters().setUserId(user));
-                searchEnginesService.saveBatch(searchEngineDataInitializer.getInitialSearchEngines(user));
+                bookmarksService.save(new Bookmarks().setUserId(user).setType(BOOKMARK_ROOT));  // 保存默认的书签根
+                pageParametersService.save(new PageParameters().setUserId(user));   // 保存默认的页面参数
+                searchEnginesService.saveBatch(searchEngineDataInitializer.getInitialSearchEngines(user));  // 保存初始搜索引擎
             }
 
             log.info("用户：{},登录", user);
