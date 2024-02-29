@@ -99,6 +99,7 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
             }}, expireTime);
             return R.success(generateJwt);
         } catch (Exception e) {
+            log.error("登录异常失败", e);
             throw new LoginException("😢登录居然失败，这种情况非常罕见，请联系站长或请重新试试");
         }
     }
