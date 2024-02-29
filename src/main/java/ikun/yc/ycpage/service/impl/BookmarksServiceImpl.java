@@ -55,7 +55,7 @@ public class BookmarksServiceImpl extends ServiceImpl<BookmarksMapper, Bookmarks
             this.updateById(bookmarkGroup);
             // 如果增加的是书签组
         }else if (Objects.equals(bookmarks.getType(), BOOKMARK_GROUP)){
-            this.save(bookmarks);
+            this.save(bookmarks.setSort(null)); // 保存书签组 但是新的是不会有排序字段的
             this.update(new LambdaUpdateWrapper<Bookmarks>()
                     .eq(Bookmarks::getUserId, userId)
                     .eq(Bookmarks::getType, BOOKMARK_ROOT)
