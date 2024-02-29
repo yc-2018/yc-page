@@ -17,7 +17,7 @@ import lombok.experimental.Accessors;
  */
 @Data
 @NoArgsConstructor
-@Accessors(chain = true)
+@Accessors(chain = true)    //chain = true 生成setter方法返回this //https://blog.csdn.net/qs_xf/article/details/123876948
 @TableName("bookmarks")
 public class Bookmarks extends Model<Bookmarks> implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -30,10 +30,16 @@ public class Bookmarks extends Model<Bookmarks> implements Serializable {
     private String userId;
 
     /** 名称 */
-    private String bookmarkName;
+    private String name;
 
     /** URL */
     private String url;
+
+    /** 排序  书签组：所属书签排序，如：id/id/id    书签：书签组id */
+    private String sort;
+
+    /** 类型 状态0:正常书签(默认)  1:排序书签组(一个账号一个)  2:快捷图标书签 */
+    private Integer type;
 
     /** 图标 */
     private String icon;
