@@ -1,6 +1,7 @@
 package ikun.yc.ycpage.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.R;
 import ikun.yc.ycpage.common.anno.CountControl;
@@ -8,6 +9,7 @@ import ikun.yc.ycpage.common.anno.Log;
 import ikun.yc.ycpage.common.aop.CountControlAspect;
 import ikun.yc.ycpage.common.exception.ParamException;
 import ikun.yc.ycpage.entity.Bookmarks;
+import ikun.yc.ycpage.entity.dto.BookmarksDto;
 import ikun.yc.ycpage.service.BookmarksService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,7 +45,7 @@ public class BookmarksController {
      * @since 2024/02/29 15:08:48
      */
     @Log
-    @CountControl(operationType = CountControlAspect.UPDATE,controlFrequency = 10)  // 一分钟请求超出10次，禁用1分钟
+    @CountControl(operationType = CountControlAspect.ADD,controlFrequency = 10)  // 一分钟请求超出10次，禁用1分钟
     @PostMapping
     public R<Integer> addBookmarks(@RequestBody Bookmarks bookmarks) {
         if (!dataVerification(bookmarks)) throw new ParamException("参数有误");
@@ -66,6 +68,26 @@ public class BookmarksController {
         );
     }
 
+    /**
+     * 拖动排序
+     * @param bookmarksDto 书签dto
+     * @return {@link R }<{@link Boolean }>
+     * @author ChenGuangLong
+     * @since 2024/03/02 02:38:14
+     */
+
+    @PutMapping("/dragSort")
+    public R<Boolean> dragSort(@RequestBody BookmarksDto bookmarksDto) {
+        if (!(Objects.equals(bookmarksDto.getType(), BOOKMARK_GROUP) ||
+              Objects.equals(bookmarksDto.getType(), BOOKMARK_ROOT)))
+            throw new ParamException("参数有误");
+
+        return R.success(bookmarksService.update(new LambdaUpdateWrapper<Bookmarks>()
+                .set(Bookmarks::getSort, bookmarksDto.getSort())
+                .eq(Bookmarks::getId, bookmarksDto.getId())
+                .eq(Bookmarks::getUserId, BaseContext.getCurrentId()))
+        );
+    }
 
     /**
      * 更新书签
