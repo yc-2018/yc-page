@@ -20,4 +20,6 @@ public interface BookmarksService extends IService<Bookmarks> {
      * @since 2024/02/29 15:08:48
      */
     Integer saveBookmarks(Bookmarks bookmarks);
+
+    Integer delBookmark(Bookmarks bookmarks);
 }

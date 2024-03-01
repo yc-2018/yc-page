@@ -64,4 +64,16 @@ public class BookmarksServiceImpl extends ServiceImpl<BookmarksMapper, Bookmarks
         }
         return bookmarks.getId();
     }
+
+    /**
+     * 删除书签
+     *
+     * @param bookmarks 书签
+     * @return 删除结果
+     * @author ChenGuangLong
+     */
+    @Override
+    public Integer delBookmark(Bookmarks bookmarks) {
+        return null;
+    }
 }

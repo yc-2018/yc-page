@@ -46,7 +46,7 @@ public class BookmarksController {
     @CountControl(operationType = CountControlAspect.UPDATE,controlFrequency = 10)  // 一分钟请求超出10次，禁用1分钟
     @PostMapping
     public R<Integer> addBookmarks(@RequestBody Bookmarks bookmarks) {
-        if (!isaBookmarkType(bookmarks.getType())) throw new ParamException("参数有误");
+        if (!dataVerification(bookmarks)) throw new ParamException("参数有误");
 
         return R.success(bookmarksService.saveBookmarks(bookmarks.setId(null)));
     }
@@ -83,19 +83,48 @@ public class BookmarksController {
      * @return 删除结果
      * @author ChenGuangLong
      */
+    @Log
+    @CountControl(operationType = CountControlAspect.DELETE,controlFrequency = 30)  // 一分钟请求超出30次，禁用1分钟
+    @DeleteMapping
+    public R<Integer> deleteBookmarks(@RequestBody Bookmarks bookmarks) {
+        if (!dataVerification(bookmarks)) throw new ParamException("参数有误");
+
+        return R.success(bookmarksService.delBookmark(bookmarks));
+    }
 
 
 
 
     /*****************
      * 判断是否是书签类型
+     * 排序字符串要符合规则
      *
      * @author ChenGuangLong
      * @since 2024/02/29 19:35:09
      */
-    private static boolean isaBookmarkType(Integer type) {
-        return  Objects.equals(type, BOOKMARK_GROUP) ||
-                Objects.equals(type, BOOKMARK) ||
-                Objects.equals(type, LARGE_BOOKMARK);
+    private boolean dataVerification(Bookmarks bookmarks) {
+        if (Objects.equals(bookmarks.getType(), BOOKMARK_GROUP) &&      // 判断类型
+            Objects.equals(bookmarks.getType(), BOOKMARK) &&
+            Objects.equals(bookmarks.getType(), LARGE_BOOKMARK)){
+            if (Objects.equals(bookmarks.getType(), BOOKMARK))          // 判断书签排序字段
+                return bookmarks.getSort().matches("^\\d+$");
+            return matchesPattern(bookmarks.getSort());                 // 书签组||大书签 字段
+        }
+        return false;
+    }
+
+    /*****************
+     * 排序字符串要符合规则
+     * 5个数字 或 5个数字/5个数字 或 5个数字/5个数字/5个数字...
+     *
+     * @param sortStr 排序str
+     * @return boolean
+     * @author ChenGuangLong
+     * @since 2024/03/01 17:19:53
+     */
+    private boolean matchesPattern(String sortStr) {
+        if (sortStr == null || sortStr.isEmpty()) return true;
+        String regex = "^(\\d{1,5})(/\\d{1,5})*$";
+        return sortStr.matches(regex);
     }
 }
