@@ -125,8 +125,8 @@ public class BookmarksController {
      * @since 2024/02/29 19:35:09
      */
     private boolean dataVerification(Bookmarks bookmarks) {
-        if (Objects.equals(bookmarks.getType(), BOOKMARK_GROUP) &&      // 判断类型
-            Objects.equals(bookmarks.getType(), BOOKMARK) &&
+        if (Objects.equals(bookmarks.getType(), BOOKMARK_GROUP) ||      // 判断类型
+            Objects.equals(bookmarks.getType(), BOOKMARK) ||
             Objects.equals(bookmarks.getType(), LARGE_BOOKMARK)){
             if (Objects.equals(bookmarks.getType(), BOOKMARK))          // 判断书签排序字段
                 return bookmarks.getSort().matches("^\\d+$");
