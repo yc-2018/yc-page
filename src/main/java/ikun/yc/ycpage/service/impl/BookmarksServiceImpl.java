@@ -99,9 +99,6 @@ public class BookmarksServiceImpl extends ServiceImpl<BookmarksMapper, Bookmarks
              new HashSet<>(Arrays.asList(sqlBookmark.getSort().split("/")))))
             throw new ParamException("本地数据非最新,请刷新后重试。");
 
-        return this.update(new LambdaUpdateWrapper<Bookmarks>()
-                .set(Bookmarks::getSort, bookmarks.getSort())
-                .eq(Bookmarks::getId, bookmarks.getId())
-                .eq(Bookmarks::getUserId, bookmarks.getId()));
+        return this.updateById(sqlBookmark.setSort(bookmarks.getSort()));
     }
 }
