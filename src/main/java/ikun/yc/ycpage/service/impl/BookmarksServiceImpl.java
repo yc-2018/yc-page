@@ -12,6 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Objects;
 
 import static ikun.yc.ycpage.controller.BookmarksController.*;
@@ -75,5 +77,31 @@ public class BookmarksServiceImpl extends ServiceImpl<BookmarksMapper, Bookmarks
     @Override
     public Integer delBookmark(Bookmarks bookmarks) {
         return null;
+    }
+
+    /**
+     * 拖动排序
+     *
+     * @param bookmarks 书签
+     * @return {@link Boolean }
+     * @author ChenGuangLong
+     * @since 2024/03/03 20:53:29
+     */
+    @Override
+    public Boolean dragSort(Bookmarks bookmarks) {
+        Bookmarks sqlBookmark = this.getById(bookmarks.getId());
+        // 判断书签是否存在 且是当前用户的
+        if (Objects.isNull(sqlBookmark) || !sqlBookmark.getUserId().equals(bookmarks.getUserId()))
+            throw new ParamException("书签组不存在");
+
+        // 排序的数据只是位置不一样
+        if (!new HashSet<>(Arrays.asList(bookmarks.getSort().split("/"))).equals(
+             new HashSet<>(Arrays.asList(sqlBookmark.getSort().split("/")))))
+            throw new ParamException("本地数据非最新,请刷新后重试。");
+
+        return this.update(new LambdaUpdateWrapper<Bookmarks>()
+                .set(Bookmarks::getSort, bookmarks.getSort())
+                .eq(Bookmarks::getId, bookmarks.getId())
+                .eq(Bookmarks::getUserId, bookmarks.getId()));
     }
 }

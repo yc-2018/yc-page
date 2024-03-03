@@ -1,5 +1,6 @@
 package ikun.yc.ycpage.entity.dto;
 
+import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.entity.Bookmarks;
 import lombok.Getter;
 import lombok.Setter;
@@ -32,7 +33,14 @@ public class BookmarksDto{
     private String icon;
 
     public Bookmarks toBookmarks(){
-        return new Bookmarks().setId(id).setName(name).setUrl(url).setSort(sort).setType(type).setIcon(icon);
+        return new Bookmarks()
+                .setId(id)
+                .setName(name)
+                .setUrl(url)
+                .setSort(sort)
+                .setType(type)
+                .setIcon(icon)
+                .setUserId(BaseContext.getCurrentId());
     }
 
 }
