@@ -1,5 +1,6 @@
 package ikun.yc.ycpage.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import ikun.yc.ycpage.common.BaseContext;
@@ -15,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.ArrayList;
+import java.util.List;
 
 import static ikun.yc.ycpage.controller.BookmarksController.*;
 
@@ -68,14 +71,49 @@ public class BookmarksServiceImpl extends ServiceImpl<BookmarksMapper, Bookmarks
     }
 
     /**
-     * 删除书签
+     *
      *
      * @param bookmarks 书签
      * @return 删除结果
      * @author ChenGuangLong
      */
+    @Transactional
     @Override
-    public Integer delBookmark(Bookmarks bookmarks) {
+    public Boolean delBookmark(Bookmarks bookmarks) {
+        if (Objects.equals(bookmarks.getType(), BOOKMARK)){
+            // 如果是书签，判断书签组是否存在 是否是当前用户的
+            Bookmarks bookmarkGroup = this.getById(Integer.parseInt(bookmarks.getSort()));
+            if (Objects.isNull(bookmarkGroup)|| !bookmarkGroup.getUserId().equals(bookmarks.getUserId()))
+                throw new ParamException("参数存在错误,或页面数据不是最新的！");
+            // 书签组排序字段删除当前要删除的书签
+            String newSort = reduceSortString(bookmarkGroup.getSort(), bookmarks.getId());
+            this.update(new LambdaUpdateWrapper<Bookmarks>()
+                    .eq(Bookmarks::getUserId, bookmarkGroup.getUserId())
+                    .eq(Bookmarks::getId, bookmarkGroup.getId())
+                    .set(Bookmarks::getSort, newSort)
+            );
+            return this.removeById(bookmarks.getId());
+
+            // 如果删除的是书签组
+        }else if (Objects.equals(bookmarks.getType(), BOOKMARK_GROUP)){
+            Bookmarks bookmarkRoot = this.getOne(new LambdaUpdateWrapper<Bookmarks>()
+                    .eq(Bookmarks::getUserId, BaseContext.getCurrentId())
+                    .eq(Bookmarks::getType, BOOKMARK_ROOT));
+            String newSort = reduceSortString(bookmarkRoot.getSort(), bookmarks.getId());
+            // 更新根排序
+            this.update(new LambdaUpdateWrapper<Bookmarks>()
+                    .eq(Bookmarks::getId, bookmarkRoot.getId())
+                    .set(Bookmarks::getSort, newSort)
+            );
+            // 删除书签组和它的子书签
+            return this.remove(new LambdaQueryWrapper<Bookmarks>()
+                    .eq(Bookmarks::getUserId, bookmarkRoot.getUserId())
+                    .eq(Bookmarks::getType, BOOKMARK)
+                    .eq(Bookmarks::getSort, bookmarks.getId().toString())
+                    .or()
+                    .eq(Bookmarks::getId, bookmarks.getId())
+            );
+        }
         return null;
     }
 
@@ -100,5 +138,32 @@ public class BookmarksServiceImpl extends ServiceImpl<BookmarksMapper, Bookmarks
             throw new ParamException("本地数据非最新,请刷新后重试。");
 
         return this.updateById(sqlBookmark.setSort(bookmarks.getSort()));
+    }
+
+    /**
+     * 从排序字符串减去要删除的id
+     *
+     * @param sortString 排序字符串
+     * @param idToRemove 要删除id
+     * @author ChenGuangLong
+     * @since 2024/03/05 00:32:39
+     */
+    private String reduceSortString(String sortString, int idToRemove) {
+        // 将sortString按'/'分割
+        List<String> parts = new ArrayList<>(Arrays.asList(sortString.split("/")));
+
+        // 将idToRemove转换为字符串
+        String idStr = String.valueOf(idToRemove);
+
+        // 检查是否包含idToRemove
+        if (!parts.contains(idStr)) throw new IllegalArgumentException("书签不存在");//排序字符串不包含指定的ID
+
+        // 移除指定的ID
+        parts.remove(idStr);
+
+        // 根据剩余部分重组sortString
+        if (parts.isEmpty()) return ""; // 或根据实际需求返回null或其他值
+         else return String.join("/", parts);
+
     }
 }

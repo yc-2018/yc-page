@@ -102,7 +102,7 @@ public class BookmarksController {
     @Log
     @CountControl(operationType = CountControlAspect.DELETE,controlFrequency = 30)  // 一分钟请求超出30次，禁用1分钟
     @DeleteMapping
-    public R<Integer> deleteBookmarks(@RequestBody Bookmarks bookmarks) {
+    public R<Boolean> deleteBookmarks(@RequestBody Bookmarks bookmarks) {
         if (!dataVerification(bookmarks)) throw new ParamException("参数有误");
 
         return R.success(bookmarksService.delBookmark(bookmarks));
