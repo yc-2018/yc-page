@@ -1,6 +1,7 @@
 package ikun.yc.ycpage.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.R;
 import ikun.yc.ycpage.common.anno.CountControl;
@@ -84,12 +85,29 @@ public class BookmarksController {
     }
 
     /**
-     * 更新书签
+     * 修改书签
      *
-     * @param bookmarks 书签
-     * @return 更新结果
+     * @param bookmarksDto 要修改的书签
      * @author ChenGuangLong
+     * @since 2024/03/05 18:16:15
      */
+    @Log
+    @CountControl(operationType = CountControlAspect.UPDATE,controlFrequency = 10)  // 一分钟请求超出10次，禁用1分钟
+    @PutMapping
+    public R<Boolean> updateBookmarks(@RequestBody BookmarksDto bookmarksDto) {
+        if (!(Objects.equals(bookmarksDto.getType(), BOOKMARK_GROUP) ||
+              Objects.equals(bookmarksDto.getType(), BOOKMARK)))
+            throw new ParamException("参数有误");
+
+        return R.success(bookmarksService.update(new LambdaUpdateWrapper<Bookmarks>()
+                .eq(Bookmarks::getId, bookmarksDto.getId())
+                .eq(Bookmarks::getUserId, BaseContext.getCurrentId())
+                .set(Bookmarks::getName, bookmarksDto.getName())
+                .set(Bookmarks::getUrl, bookmarksDto.getUrl())
+                .set(Bookmarks::getIcon, bookmarksDto.getIcon())
+                )
+        );
+    }
 
 
     /**
