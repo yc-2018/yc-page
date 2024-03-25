@@ -69,7 +69,7 @@ public class ToDoItemsServiceImpl extends ServiceImpl<ToDoItemsMapper, ToDoItems
     public boolean updateItem(ToDoItems toDoItem) {
         LambdaUpdateWrapper<ToDoItems> updateWrapper = new LambdaUpdateWrapper<ToDoItems>()
                 .eq(ToDoItems::getId, toDoItem.getId())
-                .eq(ToDoItems::getUserId, BaseContext.getCurrentId());
+                .eq(ToDoItems::getUserId, toDoItem.getUserId());
 
         // 如果 NumberOfRecurrences 不为空，则在数据库层面增加 1
         if (toDoItem.getNumberOfRecurrences() == null) return this.update(toDoItem,updateWrapper);
