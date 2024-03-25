@@ -15,9 +15,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Date;
-import java.util.List;
-
 /**
  * 待办
  *
@@ -62,7 +59,7 @@ public class ToDoItemsController {
      * @param orderBy  排序方式 1：更新时间↓ 2：更新时间↑ 3：创建时间↓ 4：创建时间↑ 5：A↓ 6：Z↓
      * @param firstLetter 从哪个字母开始查询
      * @param keyword  搜索关键词
-     * @param dateRange 日期范围
+     //* @param dateRange 日期范围
      * @return 待办列表
      */
     @GetMapping("/{type}")
@@ -72,9 +69,8 @@ public class ToDoItemsController {
                                       @RequestParam(defaultValue = "1") Integer orderBy,
                                       @RequestParam(required = false) String firstLetter,
                                       @RequestParam(required = false) String keyword,
-                                      @RequestParam(required = false) List<Date> dateRange,
+                                      //@RequestParam(required = false) List<Date> dateRange,
                                       @PathVariable Integer type) {
-        System.out.println("获取待办列表█████████" + dateRange);
 
         LambdaQueryWrapper<ToDoItems> queryWrapper = new LambdaQueryWrapper<ToDoItems>()
                 .eq(ToDoItems::getItemType, type)
@@ -108,7 +104,7 @@ public class ToDoItemsController {
     @CountControl(operationType = CountControlAspect.UPDATE)  // 一分钟请求超出5次，禁用1分钟
     public R<Boolean> updateItem(@RequestBody ToDoItems toDoItem) {
         log.info("待办更新参数：{}", toDoItem);
-        toDoItem.setCreateTime(null);   // 不允许更新创建时间
+        toDoItem.toReviseInfo();   // 不允许更新的字段就不允许更新
 
         boolean updateSuccess = toDoItemsService.updateItem(toDoItem);
 

@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 /**
  * 自定义元数据对象处理器
  */
-//@Component
+@Component
 @Slf4j
 public class MyMetaObjecthandler implements MetaObjectHandler {
     @Override
@@ -36,9 +36,12 @@ public class MyMetaObjecthandler implements MetaObjectHandler {
 
     @Override
     public void updateFill(MetaObject metaObject) {
-        log.info("公共字段自动填充[update]");
-        log.info(metaObject.toString());
-        metaObject.setValue("updateTime", LocalDateTime.now());
+//        log.info("公共字段自动填充[update]");
+//        log.info(metaObject.toString());
+        Object updateTime = getFieldValByName("updateTime", metaObject);
+        if (updateTime == null) {
+            metaObject.setValue("updateTime", LocalDateTime.now());
+        }
 //        metaObject.setValue("updateUser", BaseContext.getCurrentId());
     }
 }

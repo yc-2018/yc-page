@@ -1,6 +1,7 @@
 package ikun.yc.ycpage.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import ikun.yc.ycpage.common.BaseContext;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -44,7 +45,7 @@ public class ToDoItems{
     private LocalDateTime createTime;
 
     /** 修改时间 */
-    @TableField(fill = FieldFill.UPDATE, update = "now()")
+    @TableField(fill = FieldFill.UPDATE)//, update = "now()")
 	private LocalDateTime updateTime;
 
     public ToDoItems(String userId, String content, Integer itemType) {
@@ -57,5 +58,11 @@ public class ToDoItems{
         this.userId = userId;
         this.itemType = itemType;
     }
+
+    public void toReviseInfo(){
+        userId = BaseContext.getCurrentId();
+        createTime = null;
+    }
+
 
 }
