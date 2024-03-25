@@ -1,16 +1,16 @@
 package ikun.yc.ycpage.entity;
 
-import java.io.Serializable;
-
-import com.baomidou.mybatisplus.annotation.*;
-import com.baomidou.mybatisplus.extension.activerecord.Model;
-
-import java.time.LocalDateTime;
-
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import ikun.yc.ycpage.common.BaseContext;
 import io.swagger.annotations.ApiModel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+
+import java.io.Serializable;
+import java.time.LocalDateTime;
 
 /**
  * (users)实体类
@@ -23,7 +23,7 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 @TableName("users")
 @ApiModel("Users对象")
-public class Users extends Model<Users> implements Serializable {
+public class Users implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** 用户ID */
@@ -52,4 +52,13 @@ public class Users extends Model<Users> implements Serializable {
     /** 是否已删除 */
     private Integer isDeleted;
 
+    /** 头像 */
+    private String avatar;
+
+    public Users getNameAndAvatar() {
+        return new Users()
+                .setId(BaseContext.getCurrentId())
+                .setUsername(username)
+                .setAvatar(avatar);
+    }
 }

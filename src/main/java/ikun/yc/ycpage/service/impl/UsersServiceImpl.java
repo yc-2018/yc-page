@@ -79,23 +79,28 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
 
             // ---------------正常登录逻辑--------------
             // 校验验证码
-            String user = redisTemplate.opsForValue().get(key);
-            if (user == null) {
+            String userId = redisTemplate.opsForValue().get(key);
+            if (userId == null) {
                 return R.error("验证码不存在");
             }
 
             // 校验验证码成功，判断是否是新用户
-            if (this.getById(user) == null) {
-                log.info("{}是新用户",user);
-                this.save(new Users().setId(user));
-                bookmarksService.save(new Bookmarks().setUserId(user).setType(BOOKMARK_ROOT));  // 保存默认的书签根
-                pageParametersService.save(new PageParameters().setUserId(user));   // 保存默认的页面参数
-                searchEnginesService.saveBatch(searchEngineDataInitializer.getInitialSearchEngines(user));  // 保存初始搜索引擎
+            Users user = this.getById(userId);
+            if (user == null) {
+                user = new Users();
+                log.info("{}是新用户",userId);
+                this.save(user.setId(userId));
+                bookmarksService.save(new Bookmarks().setUserId(userId).setType(BOOKMARK_ROOT));  // 保存默认的书签根
+                pageParametersService.save(new PageParameters().setUserId(userId));   // 保存默认的页面参数
+                searchEnginesService.saveBatch(searchEngineDataInitializer.getInitialSearchEngines(userId));  // 保存初始搜索引擎
             }
 
-            log.info("用户：{},登录", user);
+            log.info("用户：{},登录", userId);
+            Users loginUser = user;     // 不重新赋值会报错 有点神奇
             String generateJwt = JwtUtils.generateJwt(new HashMap<String, Object>() {{
-                put("userId", user);
+                put("userId", userId);
+                put("userName", loginUser.getUsername());
+                put("avatar", loginUser.getAvatar());
             }}, expireTime);
             return R.success(generateJwt);
         } catch (Exception e) {

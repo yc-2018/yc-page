@@ -1,6 +1,7 @@
 package ikun.yc.ycpage.controller;
 
 import ikun.yc.ycpage.common.R;
+import ikun.yc.ycpage.entity.Users;
 import ikun.yc.ycpage.service.UsersService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +32,17 @@ public class UsersController {
     @PostMapping("login")
     public R<?> login(HttpServletRequest request, String key, @RequestParam(defaultValue = "bt") String expireTime ) {
         return usersService.login(request, key,expireTime);
+    }
+
+    /**
+     * 更新用户名或头像
+     *
+     * @param users 用户信息
+     * @return {@code R<?>}
+     */
+    @PutMapping("update")
+    public R<?> updateNameOrAvatar(Users users) {
+        return R.success(usersService.updateById(users.getNameAndAvatar()));
     }
 
 }
