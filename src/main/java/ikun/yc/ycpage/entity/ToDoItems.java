@@ -66,7 +66,7 @@ public class ToDoItems{
         userId = BaseContext.getCurrentId();
         createTime = null;
         // 更新时间 不为空的情况下允许在7+1天内，不在7+1天内不允许 设置为空
-        if (updateTime != null && updateTime.isBefore(LocalDateTime.now().minusDays(8))) {
+        if (updateTime != null && (updateTime.isBefore(LocalDateTime.now().minusDays(8))|| updateTime.isAfter(LocalDateTime.now().plusDays(1))) ) {
             updateTime = null;
         }
     }
