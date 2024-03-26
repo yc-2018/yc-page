@@ -19,14 +19,14 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * 服务接口实现
+ * 备忘录服务接口实现
  *
  * @author yc
  * @since 2023-12-03 22:57:40
  */
 @Slf4j
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class ToDoItemsServiceImpl extends ServiceImpl<ToDoItemsMapper, ToDoItems> implements ToDoItemsService {
     private final ToDoItemsMapper toDoItemsMapper;
     private final LoopMemoTimeService loopMemoTimeService;
@@ -48,6 +48,8 @@ public class ToDoItemsServiceImpl extends ServiceImpl<ToDoItemsMapper, ToDoItems
         return save ? R.success(toDoItem.getId()) : R.error("添加失败");
     }
 
+
+
     /**
      * @return 分组统计加在标签上面 未完成的条数。但是不包括 2长期、1循环、4英语、5日记、和当前的
      */
@@ -64,6 +66,13 @@ public class ToDoItemsServiceImpl extends ServiceImpl<ToDoItemsMapper, ToDoItems
                 ));
     }
 
+
+    /**
+     * 更新备忘录item
+     *
+     * @param toDoItem 要修改的item信息
+     * @return 成功与否
+     */
     @Transactional
     @Override
     public boolean updateItem(ToDoItems toDoItem) {
@@ -71,11 +80,12 @@ public class ToDoItemsServiceImpl extends ServiceImpl<ToDoItemsMapper, ToDoItems
                 .eq(ToDoItems::getId, toDoItem.getId())
                 .eq(ToDoItems::getUserId, toDoItem.getUserId());
 
-        // 如果 NumberOfRecurrences 不为空，则在数据库层面增加 1
+        // 循环+1 以外的直接更新
         if (toDoItem.getNumberOfRecurrences() == null) return this.update(toDoItem,updateWrapper);
 
+        // 如果 NumberOfRecurrences 不为空，则在数据库层面增加 1
         toDoItem.setNumberOfRecurrences(null); // 避免更新时替换掉本来的值再加一
         return this.update(toDoItem, updateWrapper.setSql("number_of_recurrences = COALESCE(number_of_recurrences, 0) + 1"))
-                && loopMemoTimeService.save(new LoopMemoTime(toDoItem.getId()));
+                && loopMemoTimeService.save(new LoopMemoTime(toDoItem));
     }
 }
