@@ -3,8 +3,10 @@ package ikun.yc.ycpage.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 import java.io.Serializable;
@@ -22,6 +24,8 @@ import java.time.LocalDateTime;
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
 @TableName("loop_memo_time")
+@NoArgsConstructor
+@AllArgsConstructor
 @ApiModel(value="LoopMemoTime对象", description="目前作为:循环代办的历史时间。")
 public class LoopMemoTime implements Serializable {
 
