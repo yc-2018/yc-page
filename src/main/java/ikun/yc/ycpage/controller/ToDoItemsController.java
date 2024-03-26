@@ -31,7 +31,7 @@ public class ToDoItemsController {
     /**
      * 添加待办
      * 一分钟最多请求十次。超过十次禁用5分钟
-     * @param toDoItems 待办对象
+     * @param memo 待办对象
      * @return 成功与否
      * @author 仰晨
      * @since 2023-12-03 22:31:22
@@ -39,14 +39,13 @@ public class ToDoItemsController {
     @Log
     @PostMapping
     @CountControl(operationType = CountControlAspect.ADD, controlFrequency = 10, banTime = 5)
-    public R<Integer> addItem(@RequestBody ToDoItems toDoItems) {
-        if (toDoItems.getItemType() == null)throw new FieldIsNullException("待办类型不能为空");
-        if (toDoItems.getContent() == null) throw new FieldIsNullException("待办内容不能为空");
+    public R<Integer> addItem(@RequestBody ToDoItems memo) {
+        if (memo.getItemType() == null)throw new FieldIsNullException("待办类型不能为空");
+        if (memo.getContent() == null) throw new FieldIsNullException("待办内容不能为空");
 
-        toDoItems.setCreateTime(null);                      // 不允许传递创建时间
-        toDoItems.setUserId(BaseContext.getCurrentId());    // 设置为登录用户id，不然就可以被随便乱搞了
+        memo.toReviseInfo();   // 不允许更新的字段就不允许更新
 
-        return toDoItemsService.addItem(toDoItems);
+        return toDoItemsService.addItem(memo);
     }
 
     /**

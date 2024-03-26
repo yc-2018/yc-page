@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 
 
 /**
- * (to_do_items)实体类
+ * 待办(备忘录)实体类
  *
  * @author yc
  * @since 2023-12-03 22:31:22
@@ -59,9 +59,16 @@ public class ToDoItems{
         this.itemType = itemType;
     }
 
+    /**
+     * 修改待办信息 防止恶意修改
+     */
     public void toReviseInfo(){
         userId = BaseContext.getCurrentId();
         createTime = null;
+        // 更新时间 不为空的情况下允许在7+1天内，不在7+1天内不允许 设置为空
+        if (updateTime != null && updateTime.isBefore(LocalDateTime.now().minusDays(8))) {
+            updateTime = null;
+        }
     }
 
 
