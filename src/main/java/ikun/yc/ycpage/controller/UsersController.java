@@ -41,7 +41,7 @@ public class UsersController {
      * @return {@code R<?>}
      */
     @PutMapping
-    public R<?> updateNameOrAvatar(Users users) {
+    public R<?> updateNameOrAvatar(@RequestBody Users users) {
         return R.success(usersService.updateById(users.getNameAndAvatar()));
     }
 
