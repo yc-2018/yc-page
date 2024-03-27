@@ -40,7 +40,7 @@ public class UsersController {
      * @param users 用户信息
      * @return {@code R<?>}
      */
-    @PutMapping("update")
+    @PutMapping
     public R<?> updateNameOrAvatar(Users users) {
         return R.success(usersService.updateById(users.getNameAndAvatar()));
     }
