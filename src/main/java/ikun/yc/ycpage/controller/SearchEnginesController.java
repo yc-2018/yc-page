@@ -10,6 +10,7 @@ import ikun.yc.ycpage.entity.SearchEngines;
 import ikun.yc.ycpage.service.SearchEnginesService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -59,9 +60,9 @@ public class SearchEnginesController {
     @PostMapping
     @CountControl(operationType = CountControlAspect.ADD, controlFrequency = 10)
     public R<?> addSearchEngines(@RequestBody SearchEngines searchEngines) {
-        if (searchEngines.getEngineUrl()== null) return R.error("URL不允许为空");
-        if (searchEngines.getName()== null) return R.error("名称不允许为空");
-        if (searchEngines.getIsQuickSearch()== null) return R.error("引擎类型不允许为空");
+        Assert.notNull(searchEngines.getEngineUrl(), "URL不允许为空");
+        Assert.notNull(searchEngines.getName(), "名称不允许为空");
+        Assert.notNull(searchEngines.getIsQuickSearch(), "引擎类型不允许为空");
 
         searchEngines.setUserId(BaseContext.getCurrentId());
         boolean saveSuccess = searchEnginesService.save(searchEngines);
