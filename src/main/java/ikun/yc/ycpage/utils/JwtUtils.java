@@ -1,5 +1,5 @@
 //仰晨study 创建时间2023/12/4 1:28 星期一
-package ikun.yc.ycpage.common;
+package ikun.yc.ycpage.utils;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

@@ -9,6 +9,7 @@ import ikun.yc.ycpage.common.VerificationCodeUtil;
 import ikun.yc.ycpage.entity.ToDoItems;
 import ikun.yc.ycpage.service.ToDoItemsService;
 import ikun.yc.ycpage.service.WechatService;
+import ikun.yc.ycpage.utils.StrUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -114,14 +115,25 @@ public class WechatServiceImpl implements WechatService {
         StringBuilder sb = new StringBuilder();
         sb.append("目前支持的功能有：\n");
         for (Map.Entry<String, String> entry : toDoItemMap.entrySet())
-            sb.append(entry.getKey()).append("+空格+内容").append(" => ").append("添加").append(entry.getValue()).append("待办").append("\n");
+            sb.append(StrUtils.joins(entry.getKey(),"+空格+内容 => 添加",entry.getValue(),"待办\n"));
 
-        sb.append("登录 或 登陆 => 获取登录验证码\n")
-          .append("翻译或fy+空格+内容=>翻译内容\n")
-          .append("舔狗日记或tgrj => 舔狗日记\n")
-          .append("说明或sm=>给出目前支持的功能\n")
-          .append("仰晨主页:<a href=\"https://yc556.cn\"> https://yc556.cn</a>");
+        sb.append(StrUtils.joins(msgMenu("登录"), "或", msgMenu("登录")," => 获取登录验证码\n",
+            msgMenu("翻译 只因你太美","翻译"),"或",msgMenu("fy hello","fy"),"+空格+内容=>翻译内容\n",
+            msgMenu("舔狗日记"),"或",msgMenu("tgrj")," => 舔狗日记\n",
+            msgMenu("说明"),"或",msgMenu("sm")," =>显示可用功能\n",
+            "仰晨主页:<a href=\"https://yc556.cn\"> https://yc556.cn</a>"
+        ));
 
         return sb.toString();
+    }
+
+    /** 消息菜单 */
+    private String msgMenu(String content, String text) {
+        return String.format("<a href=\"weixin://bizmsgmenu?msgmenucontent=%s&msgmenuid=0\">%s</a>", content, text);
+    }
+
+    /** 消息菜单 */
+    private String msgMenu(String content) {
+        return msgMenu(content, content);
     }
 }
