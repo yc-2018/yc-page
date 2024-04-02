@@ -3,11 +3,14 @@ package ikun.yc.ycpage.controller;
 import ikun.yc.ycpage.common.R;
 import ikun.yc.ycpage.entity.Users;
 import ikun.yc.ycpage.service.UsersService;
+import ikun.yc.ycpage.utils.JwtUtils;
+import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Date;
 
 /**
  * 用户控制器
@@ -41,8 +44,19 @@ public class UsersController {
      * @return {@code R<?>}
      */
     @PutMapping
-    public R<?> updateNameOrAvatar(@RequestBody Users users) {
-        return R.success(usersService.updateById(users.getNameAndAvatar()));
+    public R<?> updateNameOrAvatar(@RequestBody Users users, @RequestHeader("Authorization") String authHeader) {
+        log.info("更新用户名或头像前:{}",users);
+        boolean ok = usersService.updateById(users.getNameAndAvatar());     // 更新用户名或头像
+        log.info("更新用户名或头像后:{}",users);
+        if (!ok) return R.error("更新失败");
+
+        Claims claims = JwtUtils.parseJWT(authHeader);                      // 解析 JWT
+        Date expiration = claims.getExpiration();                           // 获取过期时间
+        long expire = expiration.getTime() - System.currentTimeMillis();    // 计算剩余过期时间
+        claims.put("username", users.getUsername());
+        claims.put("avatar", users.getAvatar());
+        String newJwt = JwtUtils.generateJwt(claims, expire);               // 生成新的 JWT
+        return R.success(newJwt);
     }
 
 }
