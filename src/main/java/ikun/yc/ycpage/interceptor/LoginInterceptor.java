@@ -2,7 +2,7 @@
 package ikun.yc.ycpage.interceptor;
 
 import ikun.yc.ycpage.common.BaseContext;
-import ikun.yc.ycpage.common.JwtUtils;
+import ikun.yc.ycpage.utils.JwtUtils;
 import ikun.yc.ycpage.common.exception.LoginException;
 import ikun.yc.ycpage.common.exception.PathException;
 import io.jsonwebtoken.Claims;

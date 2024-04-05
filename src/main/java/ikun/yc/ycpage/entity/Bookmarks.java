@@ -1,6 +1,7 @@
 package ikun.yc.ycpage.entity;
 
 import java.io.Serializable;
+
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -22,28 +23,28 @@ import lombok.experimental.Accessors;
 @EqualsAndHashCode(callSuper = false)
 @TableName("bookmarks")
 public class Bookmarks extends Model<Bookmarks> implements Serializable {
-    private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-    /** 书签ID */
-    @TableId(type = IdType.AUTO)
-	private Integer id;
+  /** 书签ID */
+  @TableId(type = IdType.AUTO)
+  private Integer id;
 
-    /** 用户ID */
-    private String userId;
+  /** 用户ID */
+  private String userId;
 
-    /** 名称 */
-    private String name;
+  /** 名称 */
+  private String name;
 
-    /** URL */
-    private String url;
+  /** URL */
+  private String url;
 
-    /** 排序  书签组：所属书签排序，如：id/id/id    书签：书签组id */
-    private String sort;
+  /** 排序  书签组：所属书签排序，如：id/id/id    书签：书签组id */
+  private String sort;
 
-    /** 类型 状态0:正常书签(默认)  1:排序书签组(一个账号一个)  2:快捷图标书签 */
-    private Integer type;
+  /** 类型 状态0:正常书签(默认)  1:排序书签组(一个账号一个)  2:快捷图标书签 */
+  private Integer type;
 
-    /** 图标 */
-    private String icon;
+  /** 图标 */
+  private String icon;
 
 }

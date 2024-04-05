@@ -1,7 +1,7 @@
 package ikun.yc.ycpage.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import ikun.yc.ycpage.common.JwtUtils;
+import ikun.yc.ycpage.utils.JwtUtils;
 import ikun.yc.ycpage.common.R;
 import ikun.yc.ycpage.common.SearchEngineDataInitializer;
 import ikun.yc.ycpage.common.exception.LoginException;

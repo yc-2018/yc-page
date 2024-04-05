@@ -126,7 +126,7 @@ public class WechatController {
         if (trimmedContent.equals("说明") || trimmedContent.equals("sm"))
             return createTextMessage(fromUserName, toUserName, wechatService.getHelp(toDoItemMap));
 
-        if (trimmedContent.startsWith("翻译 ") || trimmedContent.startsWith("fy"))
+        if (trimmedContent.startsWith("翻译 ") || trimmedContent.startsWith("fy "))
             return createTextMessage(fromUserName, toUserName, wechatService.getApiData("翻译", trimmedContent));
 
         if (trimmedContent.equals("舔狗日记") || trimmedContent.equals("tgrj"))
