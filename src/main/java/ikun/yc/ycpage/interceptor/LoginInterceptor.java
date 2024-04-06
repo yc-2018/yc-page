@@ -2,13 +2,12 @@
 package ikun.yc.ycpage.interceptor;
 
 import ikun.yc.ycpage.common.BaseContext;
-import ikun.yc.ycpage.utils.JwtUtils;
 import ikun.yc.ycpage.common.exception.LoginException;
 import ikun.yc.ycpage.common.exception.PathException;
+import ikun.yc.ycpage.utils.JwtUtils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
@@ -20,7 +19,6 @@ import javax.servlet.http.HttpServletResponse;
 public class LoginInterceptor implements HandlerInterceptor {
     @Override   //目标资源方法运行前运行，返回true: 放行，放回false，不放行
     public boolean preHandle(HttpServletRequest req, HttpServletResponse resp, Object handler) {
-        System.out.println("preHandle  目标资源方法运行前运行");
 
         // 检查是否是OPTIONS请求(跨域)
 //        if (req.getMethod().equals(HttpMethod.OPTIONS.name())) {
