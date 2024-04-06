@@ -99,7 +99,7 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
             Users loginUser = user;     // 不重新赋值会报错 有点神奇
             String generateJwt = JwtUtils.generateJwt(new HashMap<String, Object>() {{
                 put("userId", userId);
-                put("userName", loginUser.getUsername());
+                put("username", loginUser.getUsername());
                 put("avatar", loginUser.getAvatar());
             }}, expireTime);
             return R.success(generateJwt);
