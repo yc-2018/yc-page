@@ -139,7 +139,7 @@ public class WechatController {
         // 疯狂星期四https://api.pearktrue.cn/api/kfc/
         // 安慰文案https://v.api.aa1.cn/api/api-wenan-anwei/index.php?type=json
         // 爱情文案https://v.api.aa1.cn/api/api-wenan-aiqing/index.php?type=json
-        return createTextMessage(fromUserName, toUserName, "小黑子:因为公众号对接了服务器，之前的回复和自定义菜单都失效了，非常抱歉，如果想看现在支持的功能请输入 说明 或 sm");
+        return createTextMessage(fromUserName, toUserName, wechatService.getDefaultMsg());
     }
 
     /**

@@ -15,4 +15,6 @@ public interface WechatService {
     String getApiData(String type, String s);
 
     String getHelp(Map<String, String> toDoItemMap);
+
+    String getDefaultMsg();
 }

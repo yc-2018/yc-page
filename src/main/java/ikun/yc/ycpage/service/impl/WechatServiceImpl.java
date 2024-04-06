@@ -127,6 +127,20 @@ public class WechatServiceImpl implements WechatService {
         return sb.toString();
     }
 
+    /**
+     * 获取默认消息
+     *
+     * @author ChenGuangLong
+     * @since 2024/04/06 17:29:00
+     */
+    @Override
+    public String getDefaultMsg() {
+        return StrUtils.joins("因为公众号对接了服务器，之前的回复和自定义菜单都失效了，非常抱歉" +
+            "\n如果你要登录Open备忘第一页(仰晨主页)请点击或回复",msgMenu("登录"),
+            "\n如果想看现在支持的功能请输入或点击",msgMenu("说明")," 或 ",msgMenu("sm"));
+    }
+
+
     /** 消息菜单 */
     private String msgMenu(String content, String text) {
         return String.format("<a href=\"weixin://bizmsgmenu?msgmenucontent=%s&msgmenuid=0\">%s</a>", content, text);
