@@ -57,15 +57,20 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 );  // 排除 (不拦截的路径)
     }
 
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")
-                .allowedOrigins("*") // 或指定特定的源
-                .allowedMethods("GET", "POST", "PUT", "DELETE") // 允许的方法
-                .allowedHeaders("*") // 允许的头部
-                .allowCredentials(false) // 是否允许证书（cookies）
-                .maxAge(3600); // 预检请求的缓存时间（秒）
-    }
+//    /**
+//     * 添加cors（跨域）映射
+//     *
+//     * @param registry 注册表
+//     */
+//    @Override
+//    public void addCorsMappings(CorsRegistry registry) {
+//        registry.addMapping("/**")
+//                .allowedOrigins("*") // 或指定特定的源
+//                .allowedMethods("GET", "POST", "PUT", "DELETE") // 允许的方法
+//                .allowedHeaders("*") // 允许的头部
+//                .allowCredentials(false) // 是否允许证书（cookies）
+//                .maxAge(3600); // 预检请求的缓存时间（秒）
+//    }
 
     /**
      * 定义全局默认时间序列化
@@ -76,7 +81,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
         Jackson2ObjectMapperBuilder builder = new Jackson2ObjectMapperBuilder()
                 .indentOutput(true)
-                .dateFormat(new SimpleDateFormat("yyyy-MM-dd"))
+                .dateFormat(new SimpleDateFormat(DATE_FORMAT))
                 .simpleDateFormat(DATE_TIME_FORMAT)
                 .serializers(new LocalDateTimeSerializer(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT)))
                 .serializers(new LocalDateSerializer(DateTimeFormatter.ofPattern(DATE_FORMAT)))
