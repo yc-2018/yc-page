@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Component
 @RequiredArgsConstructor
-public class ControlAddItemUtil {
+public class ControlAddItemTool {
     private static final long EXPIRE_TIME = 60;       // 1分钟
     private static final long BAN_DURATION = 5 * 60; // 5分钟
     private static final int MAX_REQUESTS = 10;     // 10次

@@ -60,6 +60,6 @@ public class LoginInterceptor implements HandlerInterceptor {
 
     @Override   //视图渲染完毕后运行，最后运行
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
-//        log.info("afterCompletion  视图渲染完毕后运行，最后运行");
+        BaseContext.removeCurrentId();  // 清除当前线程中的用户ID，避免了内存泄漏的风险。
     }
 }

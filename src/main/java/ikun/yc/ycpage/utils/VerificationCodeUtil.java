@@ -1,5 +1,5 @@
 //仰晨study 创建时间2023/12/4 1:47 星期一
-package ikun.yc.ycpage.common;
+package ikun.yc.ycpage.utils;
 
 import java.util.Random;
 

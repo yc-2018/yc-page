@@ -4,8 +4,8 @@ package ikun.yc.ycpage.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import ikun.yc.ycpage.common.ControlAddItemUtil;
-import ikun.yc.ycpage.common.VerificationCodeUtil;
+import ikun.yc.ycpage.common.ControlAddItemTool;
+import ikun.yc.ycpage.utils.VerificationCodeUtil;
 import ikun.yc.ycpage.entity.ToDoItems;
 import ikun.yc.ycpage.service.ToDoItemsService;
 import ikun.yc.ycpage.service.WechatService;
@@ -26,7 +26,7 @@ public class WechatServiceImpl implements WechatService {
     private final RedisTemplate<String, String> redisTemplate;
     private final ToDoItemsService toDoItemsService;
     private final RestTemplate restTemplate;
-    private final ControlAddItemUtil controlAddItemUtil;
+    private final ControlAddItemTool controlAddItemTool;
 
     /**
      * @param toUserName 用户名
@@ -56,7 +56,7 @@ public class WechatServiceImpl implements WechatService {
     @Override
     public String addPending(String UserID, String content, String toDoItemType) {
         // 检查用户是否被禁用
-        if (controlAddItemUtil.getOneMinuteAddItemById(UserID))
+        if (controlAddItemTool.getOneMinuteAddItemById(UserID))
             return "添加待办过于频繁，您已被禁用添加备忘待办5分钟！";
 
         String[] parts = content.split("\\s", 2);                       // 使用正则表达式匹配第一个空格进行分割
