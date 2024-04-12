@@ -1,6 +1,5 @@
 package ikun.yc.ycpage.controller;
 
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.R;
 import ikun.yc.ycpage.common.anno.CountControl;
@@ -35,17 +34,19 @@ public class PageParametersController {
     @PutMapping
     @CountControl(operationType = CountControlAspect.UPDATE)
     public R<?> updatePageParameters(@RequestBody PageParameters entity) {
-        LambdaUpdateWrapper<PageParameters> wrapper = new LambdaUpdateWrapper<>();
-        wrapper.eq(PageParameters::getUserId, BaseContext.getCurrentId());
-        boolean updateSuccess = pageParametersService.update(entity, wrapper);
-        return updateSuccess? R.success(true): R.error("保存失败");
+        boolean updateSuccess = pageParametersService.lambdaUpdate()
+            .eq(PageParameters::getUserId, BaseContext.getCurrentId())
+            .update(entity);
+        return updateSuccess ? R.success(true) : R.error("保存失败");
     }
 
     /** @return 返回用户页面配置信息 */
     @GetMapping
     public R<PageParameters> getPageParameters() {
-        return R.success( pageParametersService
-                .getOne(new LambdaUpdateWrapper<PageParameters>()
-                        .eq(PageParameters::getUserId, BaseContext.getCurrentId())));
+        return R.success(
+            pageParametersService.lambdaQuery()
+                .eq(PageParameters::getUserId, BaseContext.getCurrentId())
+                .one()
+        );
     }
 }

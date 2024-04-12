@@ -1,6 +1,5 @@
 package ikun.yc.ycpage.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.R;
 import ikun.yc.ycpage.common.anno.CountControl;
@@ -65,8 +64,9 @@ public class SearchEnginesController {
         Assert.notNull(searchEngines.getIsQuickSearch(), "引擎类型不允许为空");
 
         searchEngines.setUserId(BaseContext.getCurrentId());
-        boolean saveSuccess = searchEnginesService.save(searchEngines);
-        return R.success(saveSuccess?searchEngines.getId():null);
+
+        boolean saveSuccess = searchEngines.insert();   // 插入,实体类继承Model的正确用法
+        return R.success(saveSuccess ? searchEngines.getId() : null);
     }
 
 
@@ -100,11 +100,9 @@ public class SearchEnginesController {
     @Log
     @DeleteMapping
     public R<Boolean> deleteSearchEngines(@RequestBody List<Integer> ids) {
-        LambdaQueryWrapper<SearchEngines> wrapper = new LambdaQueryWrapper<>();
-        wrapper .in(SearchEngines::getId, ids)
-                .eq(SearchEngines::getUserId, BaseContext.getCurrentId());
-
-        return searchEnginesService.remove(wrapper)? R.success(true) : R.error("删除失败");
+        return searchEnginesService.lambdaUpdate()
+            .in(SearchEngines::getId, ids)
+            .eq(SearchEngines::getUserId, BaseContext.getCurrentId())
+            .remove()? R.success(true) : R.error("删除失败");
     }
-
 }

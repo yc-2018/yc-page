@@ -1,7 +1,6 @@
 package ikun.yc.ycpage.controller;
 
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import ikun.yc.ycpage.common.R;
 import ikun.yc.ycpage.entity.LoopMemoTime;
@@ -37,9 +36,10 @@ public class LoopMemoTimeController {
                                               @RequestParam(defaultValue = "20") Integer pageSize,
                                               @PathVariable Integer itemId) {
 
-    return R.success(loopMemoTimeService.page(new Page<>(page, pageSize),
-            new LambdaQueryWrapper<LoopMemoTime>()
-                    .eq(LoopMemoTime::getToDoItemId, itemId)
-                    .orderByDesc(LoopMemoTime::getMemoDate)));
+        return R.success(loopMemoTimeService.lambdaQuery()
+            .eq(LoopMemoTime::getToDoItemId, itemId)
+            .orderByDesc(LoopMemoTime::getMemoDate)
+            .page(new Page<>(page, pageSize))
+        );
     }
 }

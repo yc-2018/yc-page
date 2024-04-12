@@ -1,7 +1,5 @@
 package ikun.yc.ycpage.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.R;
 import ikun.yc.ycpage.common.anno.CountControl;
@@ -63,8 +61,8 @@ public class BookmarksController {
      */
     @GetMapping
     public R<List<Bookmarks>> getBookmarks() {
-        return R.success(bookmarksService.list(new LambdaQueryWrapper<Bookmarks>()
-                .eq(Bookmarks::getUserId, BaseContext.getCurrentId()))
+        return R.success(
+            bookmarksService.lambdaQuery().eq(Bookmarks::getUserId, BaseContext.getCurrentId()).list()
         );
     }
 
@@ -99,13 +97,14 @@ public class BookmarksController {
               Objects.equals(bookmarksDto.getType(), BOOKMARK)))
             throw new ParamException("参数有误");
 
-        return R.success(bookmarksService.update(new LambdaUpdateWrapper<Bookmarks>()
+        return R.success(
+            bookmarksService.lambdaUpdate()
                 .eq(Bookmarks::getId, bookmarksDto.getId())
                 .eq(Bookmarks::getUserId, BaseContext.getCurrentId())
                 .set(Bookmarks::getName, bookmarksDto.getName())
                 .set(Bookmarks::getUrl, bookmarksDto.getUrl())
                 .set(Bookmarks::getIcon, bookmarksDto.getIcon())
-                )
+                .update()
         );
     }
 
