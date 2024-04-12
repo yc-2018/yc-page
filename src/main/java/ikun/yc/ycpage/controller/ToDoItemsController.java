@@ -36,7 +36,7 @@ public class ToDoItemsController {
      */
     @Log
     @PostMapping
-    @CountControl(operationType = CountControlAspect.ADD, controlFrequency = 10, banTime = 5)
+    @CountControl(operationType = CountControlAspect.ADD, frequency = 10, banMin = 5)
     public R<Integer> addItem(@RequestBody ToDoItems memo) {
         if (memo.getItemType() == null)throw new FieldIsNullException("待办类型不能为空");
         if (memo.getContent() == null) throw new FieldIsNullException("待办内容不能为空");

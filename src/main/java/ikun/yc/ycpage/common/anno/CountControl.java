@@ -35,12 +35,12 @@ public @interface CountControl {
      * @author ChenGuangLong
      * @since 2024/01/23 11:36:11
      */
-    int controlFrequency() default 5;
+    int frequency() default 5;
 
     /**
      * 禁用时间(分钟)
      * @author ChenGuangLong
      * @since 2024/01/23 14:49
      */
-    int banTime() default 1;
+    int banMin() default 1;
 }

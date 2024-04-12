@@ -43,7 +43,7 @@ public class BookmarksController {
      * @since 2024/02/29 15:08:48
      */
     @Log
-    @CountControl(operationType = CountControlAspect.ADD,controlFrequency = 10)  // 一分钟请求超出10次，禁用1分钟
+    @CountControl(operationType = CountControlAspect.ADD, frequency = 10)  // 一分钟请求超出10次，禁用1分钟
     @PostMapping
     public R<Integer> addBookmarks(@RequestBody Bookmarks bookmarks) {
         if (!dataVerification(bookmarks)) throw new ParamException("参数有误");
@@ -90,7 +90,7 @@ public class BookmarksController {
      * @since 2024/03/05 18:16:15
      */
     @Log
-    @CountControl(operationType = CountControlAspect.UPDATE,controlFrequency = 10)  // 一分钟请求超出10次，禁用1分钟
+    @CountControl(operationType = CountControlAspect.UPDATE, frequency = 10)  // 一分钟请求超出10次，禁用1分钟
     @PutMapping
     public R<Boolean> updateBookmarks(@RequestBody BookmarksDto bookmarksDto) {
         if (!(Objects.equals(bookmarksDto.getType(), BOOKMARK_GROUP) ||
@@ -117,7 +117,7 @@ public class BookmarksController {
      * @author ChenGuangLong
      */
     @Log
-    @CountControl(operationType = CountControlAspect.DELETE,controlFrequency = 30)  // 一分钟请求超出30次，禁用1分钟
+    @CountControl(operationType = CountControlAspect.DELETE, frequency = 30)  // 一分钟请求超出30次，禁用1分钟
     @DeleteMapping
     public R<Boolean> deleteBookmarks(@RequestBody Bookmarks bookmarks) {
         if (!dataVerification(bookmarks)) throw new ParamException("参数有误");

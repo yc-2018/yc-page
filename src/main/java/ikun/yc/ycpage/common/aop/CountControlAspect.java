@@ -53,8 +53,8 @@ public class CountControlAspect {
 
         // 获取注解的属性值
         int operationType = countControlAnnotation.operationType();         // 操作类型
-        int controlFrequency = countControlAnnotation.controlFrequency();   // 控制频率（次）
-        int banTime = countControlAnnotation.banTime();                     // 禁用时间（分钟）
+        int controlFrequency = countControlAnnotation.frequency();          // 控制频率（次）
+        int banTime = countControlAnnotation.banMin();                      // 禁用时间（分钟）
         int expireTime = countControlAnnotation.expireTime();               // 超时时间（分钟）
 
         // 组装Redis的key

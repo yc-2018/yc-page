@@ -57,7 +57,7 @@ public class SearchEnginesController {
      */
     @Log
     @PostMapping
-    @CountControl(operationType = CountControlAspect.ADD, controlFrequency = 10)
+    @CountControl(operationType = CountControlAspect.ADD, frequency = 10)
     public R<?> addSearchEngines(@RequestBody SearchEngines searchEngines) {
         Assert.notNull(searchEngines.getEngineUrl(), "URL不允许为空");
         Assert.notNull(searchEngines.getName(), "名称不允许为空");

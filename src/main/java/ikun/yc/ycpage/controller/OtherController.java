@@ -21,7 +21,7 @@ import java.nio.file.Paths;
 @RequestMapping("/other")
 public class OtherController {
     @GetMapping("/run-script")
-    @CountControl(controlFrequency = 1)
+    @CountControl(frequency = 1)
     public String runScript(String scriptName) {
         try {
             // 判断操作系统是否为Linux
