@@ -1,7 +1,7 @@
 package ikun.yc.ycpage.config;
 
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+// import org.springframework.context.annotation.Configuration;
 import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
@@ -17,7 +17,7 @@ import java.util.List;
 /**
  * swagger3默认首页变成 <a href="http://localhost:8080/swagger-ui/index.html">swagger3</a>
  */
-@Configuration
+//@Configuration
 public class SwaggerConfig {
   
   @Bean

@@ -1,7 +1,5 @@
 package ikun.yc.ycpage.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.R;
@@ -71,7 +69,9 @@ public class ToDoItemsController {
                                       //@RequestParam(required = false) List<Date> dateRange,
                                       @PathVariable Integer type) {
 
-        LambdaQueryWrapper<ToDoItems> queryWrapper = new LambdaQueryWrapper<ToDoItems>()
+
+        R<Page<ToDoItems>> pageR = R.success(
+            toDoItemsService.lambdaQuery()
                 .eq(ToDoItems::getItemType, type)
                 .eq(ToDoItems::getUserId, BaseContext.getCurrentId())               // 请求头的token 的id
                 .eq(completed != -1, ToDoItems::getCompleted, completed)   // 0 未完成 1 已完成 -1 全部
@@ -83,9 +83,10 @@ public class ToDoItemsController {
                 .orderByAsc(orderBy == 4, ToDoItems::getCreateTime)
                 .orderByAsc(orderBy == 5, ToDoItems::getContent)
                 .likeRight(firstLetter != null, ToDoItems::getContent, firstLetter)
-                .like(keyword != null, ToDoItems::getContent, keyword);
+                .like(keyword != null, ToDoItems::getContent, keyword)
+                .page(new Page<>(page, pageSize))
+        );
 
-        R<Page<ToDoItems>> pageR = R.success(toDoItemsService.page(new Page<>(page, pageSize), queryWrapper));
 
         // 如果是查询未完成的 而且不是英语的，统计数量
         if (completed == 0 && type != 4)
@@ -102,7 +103,7 @@ public class ToDoItemsController {
     @PutMapping
     @CountControl(operationType = CountControlAspect.UPDATE)  // 一分钟请求超出5次，禁用1分钟
     public R<Boolean> updateItem(@RequestBody ToDoItems toDoItem) {
-        log.info("待办更新参数：{}", toDoItem);
+
         toDoItem.toReviseInfo();   // 不允许更新的字段就不允许更新
 
         boolean updateSuccess = toDoItemsService.updateItem(toDoItem);
@@ -119,14 +120,10 @@ public class ToDoItemsController {
     @CountControl(operationType = CountControlAspect.DELETE)
     @DeleteMapping("/{id}")
     public R<?> deleteItem(@PathVariable String id) {
-        log.info("逻辑删除待办id：{}", id);
-        LambdaUpdateWrapper<ToDoItems> updateWrapper = new LambdaUpdateWrapper<ToDoItems>()
-                .eq(ToDoItems ::getId, id)
-                .eq(ToDoItems ::getUserId, BaseContext.getCurrentId())
-                .setSql("completed = completed + 10");
-
-        boolean updateSuccess = toDoItemsService.update(new ToDoItems(), updateWrapper);
-
-        return updateSuccess ? R.success(true) : R.error("删除失败");
+        return toDoItemsService.lambdaUpdate()
+            .eq(ToDoItems::getId, id)
+            .eq(ToDoItems::getUserId, BaseContext.getCurrentId())
+            .setSql("completed = completed + 10")
+            .update() ? R.success(true) : R.error("删除失败");
     }
 }

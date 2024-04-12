@@ -3,6 +3,7 @@ package ikun.yc.ycpage.entity;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.extension.activerecord.Model;
 import ikun.yc.ycpage.common.BaseContext;
 import io.swagger.annotations.ApiModel;
 import lombok.Data;
@@ -23,7 +24,7 @@ import java.time.LocalDateTime;
 @Accessors(chain = true)
 @TableName("users")
 @ApiModel("Users对象")
-public class Users implements Serializable {
+public class Users extends Model<Users> implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** 用户ID */

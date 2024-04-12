@@ -1,7 +1,5 @@
 package ikun.yc.ycpage.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.exception.ParamException;
@@ -13,11 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import static ikun.yc.ycpage.controller.BookmarksController.*;
 
@@ -60,12 +54,13 @@ public class BookmarksServiceImpl extends ServiceImpl<BookmarksMapper, Bookmarks
             this.updateById(bookmarkGroup);
             // 如果增加的是书签组
         }else if (Objects.equals(bookmarks.getType(), BOOKMARK_GROUP)){
-            this.save(bookmarks.setSort(null)); // 保存书签组 但是新的是不会有排序字段的
-            this.update(new LambdaUpdateWrapper<Bookmarks>()
-                    .eq(Bookmarks::getUserId, userId)
-                    .eq(Bookmarks::getType, BOOKMARK_ROOT)
-                    .setSql("sort = CASE WHEN sort IS NULL OR sort = '' THEN " + bookmarks.getId() + " ELSE CONCAT(sort, '/', " + bookmarks.getId() + ") END")
-            );
+            bookmarks.setSort(null).insert();   // 保存书签组 但是新的是不会有排序字段的
+
+            this.lambdaUpdate()
+                .eq(Bookmarks::getUserId, userId)
+                .eq(Bookmarks::getType, BOOKMARK_ROOT)
+                .setSql("sort = CASE WHEN sort IS NULL OR sort = '' THEN " + bookmarks.getId() + " ELSE CONCAT(sort, '/', " + bookmarks.getId() + ") END")
+                .update();
         }
         return bookmarks.getId();
     }
@@ -87,32 +82,35 @@ public class BookmarksServiceImpl extends ServiceImpl<BookmarksMapper, Bookmarks
                 throw new ParamException("参数存在错误,或页面数据不是最新的！");
             // 书签组排序字段删除当前要删除的书签
             String newSort = reduceSortString(bookmarkGroup.getSort(), bookmarks.getId());
-            this.update(new LambdaUpdateWrapper<Bookmarks>()
-                    .eq(Bookmarks::getUserId, bookmarkGroup.getUserId())
-                    .eq(Bookmarks::getId, bookmarkGroup.getId())
-                    .set(Bookmarks::getSort, newSort)
-            );
+            this.lambdaUpdate()
+                .eq(Bookmarks::getUserId, bookmarkGroup.getUserId())
+                .eq(Bookmarks::getId, bookmarkGroup.getId())
+                .set(Bookmarks::getSort, newSort)
+                .update();
             return this.removeById(bookmarks.getId());
 
             // 如果删除的是书签组
         }else if (Objects.equals(bookmarks.getType(), BOOKMARK_GROUP)){
-            Bookmarks bookmarkRoot = this.getOne(new LambdaUpdateWrapper<Bookmarks>()
-                    .eq(Bookmarks::getUserId, BaseContext.getCurrentId())
-                    .eq(Bookmarks::getType, BOOKMARK_ROOT));
+            Bookmarks bookmarkRoot = this.lambdaQuery()
+                .eq(Bookmarks::getUserId, BaseContext.getCurrentId())
+                .eq(Bookmarks::getType, BOOKMARK_ROOT)
+                .one();
             String newSort = reduceSortString(bookmarkRoot.getSort(), bookmarks.getId());
             // 更新根排序
-            this.update(new LambdaUpdateWrapper<Bookmarks>()
-                    .eq(Bookmarks::getId, bookmarkRoot.getId())
-                    .set(Bookmarks::getSort, newSort)
-            );
+            this.lambdaUpdate()
+                .eq(Bookmarks::getId, bookmarkRoot.getId())
+                .set(Bookmarks::getSort, newSort)
+                .update();
+
             // 删除书签组和它的子书签
-            return this.remove(new LambdaQueryWrapper<Bookmarks>()
-                    .eq(Bookmarks::getUserId, bookmarkRoot.getUserId())
-                    .eq(Bookmarks::getType, BOOKMARK)
-                    .eq(Bookmarks::getSort, bookmarks.getId().toString())
-                    .or()
-                    .eq(Bookmarks::getId, bookmarks.getId())
-            );
+            return this.lambdaUpdate()
+                .eq(Bookmarks::getUserId, bookmarkRoot.getUserId())
+                .eq(Bookmarks::getType, BOOKMARK)
+                .eq(Bookmarks::getSort, bookmarks.getId().toString())
+                .or()
+                .eq(Bookmarks::getId, bookmarks.getId())
+                .remove();
+
         }
         return null;
     }
@@ -127,7 +125,7 @@ public class BookmarksServiceImpl extends ServiceImpl<BookmarksMapper, Bookmarks
      */
     @Override
     public Boolean dragSort(Bookmarks bookmarks) {
-        Bookmarks sqlBookmark = this.getById(bookmarks.getId());
+        Bookmarks sqlBookmark = bookmarks.selectById();
         // 判断书签是否存在 且是当前用户的
         if (Objects.isNull(sqlBookmark) || !sqlBookmark.getUserId().equals(bookmarks.getUserId()))
             throw new ParamException("书签组不存在");
@@ -137,7 +135,7 @@ public class BookmarksServiceImpl extends ServiceImpl<BookmarksMapper, Bookmarks
              new HashSet<>(Arrays.asList(sqlBookmark.getSort().split("/")))))
             throw new ParamException("本地数据非最新,请刷新后重试。");
 
-        return this.updateById(sqlBookmark.setSort(bookmarks.getSort()));
+        return sqlBookmark.setSort(bookmarks.getSort()).updateById();
     }
 
     /**

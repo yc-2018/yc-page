@@ -45,7 +45,7 @@ public class UsersController {
      */
     @PutMapping
     public R<?> updateNameOrAvatar(@RequestBody Users users, @RequestHeader("Authorization") String authHeader) {
-        boolean ok = usersService.updateById(users.getNameAndAvatar());     // 更新用户名或头像
+        boolean ok = users.getNameAndAvatar().updateById();                 // 更新用户名或头像
         if (!ok) return R.error("更新失败");
 
         Claims claims = JwtUtils.parseJWT(authHeader);                      // 解析 JWT
