@@ -1,6 +1,7 @@
 //仰晨:微信接口 创建时间2023/11/28 1:30 星期二
 package ikun.yc.ycpage.controller;
 
+import ikun.yc.ycpage.entity.dto.WechatDto;
 import ikun.yc.ycpage.service.WechatService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -76,7 +77,7 @@ public class WechatController {
         byte[] digest = md.digest(sb.toString().getBytes());
         String encryptedStr = byteArrayToHexString(digest).toLowerCase();
 
-        System.out.println("加密后的字符串：" + encryptedStr);
+      //System.out.println("加密后的字符串：" + encryptedStr);
         if (encryptedStr.equals(signature)) {
             System.out.println("认证通过");
             return echostr;
@@ -105,32 +106,31 @@ public class WechatController {
         String fromUserName = root.getElementsByTagName("FromUserName").item(0).getTextContent();   // 用户微信ID
         String toUserName = root.getElementsByTagName("ToUserName").item(0).getTextContent();       // 公众号ID
 
-        if ("image".equals(msgType)) return createTextMessage(fromUserName, toUserName, "暂不支持图片");
-        if ("voice".equals(msgType)) return createTextMessage(fromUserName, toUserName, "暂不支持语音");
+        WechatDto wechatDto = new WechatDto(msgType, fromUserName, toUserName, null);
 
-        String content = root.getElementsByTagName("Content").item(0).getTextContent();
+        if ("image".equals(wechatDto.getMsgType())) return wechatDto.msg("暂不支持图片");
+        if ("voice".equals(wechatDto.getMsgType())) return wechatDto.msg("暂不支持语音");
+
+        String content = root.getElementsByTagName("Content").item(0).getTextContent().trim();
         // 处理用户输入
-        String trimmedContent = content.trim();
-        log.info("用户输入内容：《{}》", trimmedContent);
+        wechatDto.setContent(content);
 
-        // 登录
-        if(trimmedContent.equals("登录")||trimmedContent.equals("登陆"))
-            return createTextMessage(fromUserName, toUserName, wechatService.login(fromUserName));
 
-        // 下面开始待办事项
-        String toDoItemType = isTextInToDoItemMap(trimmedContent);
-        if (toDoItemType!= null)
-            return createTextMessage(fromUserName, toUserName, wechatService.addPending(fromUserName, content, toDoItemType));
+        if (wechatDto.eqAny("登录", "登陆"))   // 登录
+            return wechatDto.msg(wechatService.login(fromUserName));
 
-        // 说明|帮助
-        if (trimmedContent.equals("说明") || trimmedContent.equals("sm"))
-            return createTextMessage(fromUserName, toUserName, wechatService.getHelp(toDoItemMap));
+        String toDoItemType = isTextInToDoItemMap(wechatDto.getContent());
+        if (toDoItemType != null)// 添加待办事项
+            return wechatDto.msg(wechatService.addPending(fromUserName, content, toDoItemType));
 
-        if (trimmedContent.startsWith("翻译 ") || trimmedContent.startsWith("fy "))
-            return createTextMessage(fromUserName, toUserName, wechatService.getApiData("翻译", trimmedContent));
+        if (wechatDto.eqAny("说明", "sm"))
+            return wechatDto.msg(wechatService.getHelp(toDoItemMap));
 
-        if (trimmedContent.equals("舔狗日记") || trimmedContent.equals("tgrj"))
-            return createTextMessage(fromUserName, toUserName, wechatService.getApiData("舔狗日记",null));
+        if (wechatDto.startsWithAny("翻译 ", "fy "))
+            return wechatDto.msg(wechatService.getApiData("翻译", wechatDto.getContent()));
+
+        if (wechatDto.eqAny("舔狗日记", "tgrj"))
+            return wechatDto.msg(wechatService.getApiData("舔狗日记", null));
 
 
         // 王者战力https://api.pearktrue.cn/api/hero/?hero=元歌&type=wx
@@ -139,21 +139,10 @@ public class WechatController {
         // 疯狂星期四https://api.pearktrue.cn/api/kfc/
         // 安慰文案https://v.api.aa1.cn/api/api-wenan-anwei/index.php?type=json
         // 爱情文案https://v.api.aa1.cn/api/api-wenan-aiqing/index.php?type=json
-        return createTextMessage(fromUserName, toUserName, wechatService.getDefaultMsg());
+        return wechatDto.msg(wechatService.getDefaultMsg());
     }
 
-    /**
-     * 创建回复消息
-     */
-    private String createTextMessage(String fromUserName, String toUserName, String content) {
-        return "<xml>" +
-                "<ToUserName><![CDATA[" + fromUserName + "]]></ToUserName>" +
-                "<FromUserName><![CDATA[" + toUserName + "]]></FromUserName>" +
-                "<CreateTime>" + System.currentTimeMillis() / 1000 + "</CreateTime>" +
-                "<MsgType><![CDATA[text]]></MsgType>" +
-                "<Content><![CDATA[" + content + "]]></Content>" +
-                "</xml>";
-    }
+
 
     /**
      * byte数组转16进制字符串
