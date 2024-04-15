@@ -36,7 +36,7 @@ public class WechatDto {
      */
     public boolean eqAny(String... strings) {
         if (this.content == null || strings == null) return false;
-        for (String s : strings) return this.content.equals(s);
+        for (String s : strings) if (this.content.equals(s)) return true;
         return false;
     }
 
@@ -47,8 +47,7 @@ public class WechatDto {
      */
     public boolean startsWithAny( String... prefixes) {
         if (this.content == null || prefixes == null) return false;
-        for (String prefix : prefixes)
-            if (this.content.startsWith(prefix)) return true;
+        for (String prefix : prefixes) if (this.content.startsWith(prefix)) return true;
         return false;
     }
 

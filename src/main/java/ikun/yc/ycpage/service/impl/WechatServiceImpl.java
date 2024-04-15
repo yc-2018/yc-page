@@ -117,7 +117,7 @@ public class WechatServiceImpl implements WechatService {
         for (Map.Entry<String, String> entry : toDoItemMap.entrySet())
             sb.append(StrUtils.joins(entry.getKey(),"+空格+内容 => 添加",entry.getValue(),"待办\n"));
 
-        sb.append(StrUtils.joins(msgMenu("登录"), "或", msgMenu("登录")," => 获取登录验证码\n",
+        sb.append(StrUtils.joins(msgMenu("登录"), "或", msgMenu("登陆")," => 获取登录验证码\n",
             msgMenu("翻译 只因你太美","翻译"),"或",msgMenu("fy hello","fy"),"+空格+内容=>翻译内容\n",
             msgMenu("舔狗日记"),"或",msgMenu("tgrj")," => 舔狗日记\n",
             msgMenu("说明"),"或",msgMenu("sm")," =>显示可用功能\n",
