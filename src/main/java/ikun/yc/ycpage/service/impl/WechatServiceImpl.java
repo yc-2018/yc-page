@@ -81,7 +81,7 @@ public class WechatServiceImpl implements WechatService {
                     return "\uD83D\uDE2D接口失效";
                 }
 
-            case "fy":
+            case "tgrj":
             case "舔狗日记":
                 try {
                     // 调用舔狗日记接口
@@ -150,9 +150,9 @@ public class WechatServiceImpl implements WechatService {
     private void setReplyType(WechatDto wechatDto) {
         if (wechatDto.startsWithAny("翻译 ", "fy "))
             wechatDto.setReplyType("翻译");
-        if (isTextInToDoItemMap(wechatDto.getContent()) != null)
+        else if (isTextInToDoItemMap(wechatDto.getContent()) != null)
             wechatDto.setReplyType("添加待办");
-        wechatDto.setReplyType(wechatDto.getContent());
+        else wechatDto.setReplyType(wechatDto.getContent());
     }
 
     /**
