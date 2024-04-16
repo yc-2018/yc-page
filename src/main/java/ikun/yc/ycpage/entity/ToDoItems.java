@@ -1,6 +1,7 @@
 package ikun.yc.ycpage.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.extension.activerecord.Model;
 import ikun.yc.ycpage.common.BaseContext;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,7 +21,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @TableName("to_do_items")
-public class ToDoItems{
+public class ToDoItems extends Model<ToDoItems> {
 
 
     /** 待办事项ID */

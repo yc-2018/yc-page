@@ -18,8 +18,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.StringReader;
 import java.security.MessageDigest;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 @Slf4j
 @RestController
@@ -35,17 +33,7 @@ public class WechatController {
 
     private final WechatService wechatService;
 
-    private static final Map<String, String>toDoItemMap = new HashMap<>();
-    static {
-        toDoItemMap.put("0 ", "普通");
-        toDoItemMap.put("1 ", "循环");
-        toDoItemMap.put("2 ", "长期");
-        toDoItemMap.put("3 ", "紧急");
-        toDoItemMap.put("4 ", "英语");
-        toDoItemMap.put("5 ", "日记");
-        toDoItemMap.put("6 ", "工作");
-        toDoItemMap.put("7 ", "其他");
-    }
+
 
 
     /**
@@ -63,7 +51,7 @@ public class WechatController {
                            @RequestParam(value = "timestamp", required = false) String timestamp,
                            @RequestParam(value = "nonce", required = false) String nonce,
                            @RequestParam(value = "echostr", required = false) String echostr) throws Exception {
-        log.info("验证微信服务器地址\nsignature:{},\ntimestamp:{},\nnonce:{},\nechostr:{}", signature, timestamp, nonce, echostr);
+        log.info("验证微信服务器地址\n signature:{},\n timestamp:{},\n nonce:{},\n echostr:{}", signature, timestamp, nonce, echostr);
 
         String[] params = new String[]{token, timestamp, nonce};
         Arrays.sort(params);
@@ -106,42 +94,17 @@ public class WechatController {
         String fromUserName = root.getElementsByTagName("FromUserName").item(0).getTextContent();   // 用户微信ID
         String toUserName = root.getElementsByTagName("ToUserName").item(0).getTextContent();       // 公众号ID
 
-        WechatDto wechatDto = new WechatDto(msgType, fromUserName, toUserName, null);
+        WechatDto wechatDto = new WechatDto(msgType, fromUserName, toUserName, null,null);
 
-        if ("image".equals(wechatDto.getMsgType())) return wechatDto.msg("暂不支持图片");
-        if ("voice".equals(wechatDto.getMsgType())) return wechatDto.msg("暂不支持语音");
+        if ("image".equals(msgType)) return wechatDto.msg("暂不支持图片");
+        if ("voice".equals(msgType)) return wechatDto.msg("暂不支持语音");
 
+        // 获取用户输入内容
         String content = root.getElementsByTagName("Content").item(0).getTextContent().trim();
-        // 处理用户输入
         wechatDto.setContent(content);
 
-
-        if (wechatDto.eqAny("登录", "登陆"))   // 登录
-            return wechatDto.msg(wechatService.login(fromUserName));
-
-        String toDoItemType = isTextInToDoItemMap(wechatDto.getContent());
-        if (toDoItemType != null)// 添加待办事项
-            return wechatDto.msg(wechatService.addPending(fromUserName, content, toDoItemType));
-
-        if (wechatDto.eqAny("说明", "sm"))
-            return wechatDto.msg(wechatService.getHelp(toDoItemMap));
-
-        if (wechatDto.startsWithAny("翻译 ", "fy "))
-            return wechatDto.msg(wechatService.getApiData("翻译", wechatDto.getContent()));
-
-        if (wechatDto.eqAny("舔狗日记", "tgrj"))
-            return wechatDto.msg(wechatService.getApiData("舔狗日记", null));
-
-
-        // 王者战力https://api.pearktrue.cn/api/hero/?hero=元歌&type=wx
-        // 鸡汤一言https://api.lucksss.com/api/yiyan?code=json   不写code直接是字符串
-        // 天气https://acid.jiuzige.com.cn/web/index/fcyWeather?city=东莞
-        // 疯狂星期四https://api.pearktrue.cn/api/kfc/
-        // 安慰文案https://v.api.aa1.cn/api/api-wenan-anwei/index.php?type=json
-        // 爱情文案https://v.api.aa1.cn/api/api-wenan-aiqing/index.php?type=json
-        return wechatDto.msg(wechatService.getDefaultMsg());
+        return wechatDto.msg(wechatService.getMsg(wechatDto));
     }
-
 
 
     /**
@@ -157,22 +120,6 @@ public class WechatController {
             sb.append(hex);
         }
         return sb.toString();
-    }
-
-    /**
-     * 判断用户输入是否在待办事项中
-     * @param text 用户信息
-     * @return 开头在就返回值  不在就返回null
-     * @since 2023-12-13
-     * @author 仰晨
-     */
-    private String isTextInToDoItemMap(String text) {
-        return toDoItemMap.entrySet()
-                .stream()
-                .filter(entry -> text.startsWith(entry.getKey()))
-                .findFirst()
-                .map(Map.Entry::getValue)
-                .orElse(null);
     }
 
 }
