@@ -36,7 +36,7 @@ public class StrUtils {
      */
     public static boolean eqOr(String str, String... strings) {
         if (str == null || strings == null) return false;
-        for (String s : strings) return str.equals(s);
+        for (String s : strings) if (str.equals(s)) return true;
         return false;
     }
 
