@@ -51,16 +51,16 @@ public class WechatServiceImpl implements WechatService {
      */
     @Override
     public String getMsg(WechatDto wechatDto) {
-        setReplyType(wechatDto); // 设置回复类型
+        String replyType = setReplyType(wechatDto); // 回复类型
 
         // 处理消息
-        switch (wechatDto.getReplyType()) {
+        switch (replyType) {
             case "登录":
             case "登陆":
                 return this.login(wechatDto.getFromUserName());
 
             case "添加待办":
-                return this.addPending(wechatDto.getFromUserName(), wechatDto.getContent(), wechatDto.getReplyType());
+                return this.addPending(wechatDto.getFromUserName(), wechatDto.getContent(), replyType);
 
             case "sm":
             case "说明":
@@ -147,12 +147,10 @@ public class WechatServiceImpl implements WechatService {
      * 暂时除了添加待办、翻译 要修改，其他都是=内容
      * @param wechatDto 微信DTO
      */
-    private void setReplyType(WechatDto wechatDto) {
-        if (wechatDto.startsWithAny("翻译 ", "fy "))
-            wechatDto.setReplyType("翻译");
-        else if (isTextInToDoItemMap(wechatDto.getContent()) != null)
-            wechatDto.setReplyType("添加待办");
-        else wechatDto.setReplyType(wechatDto.getContent());
+    private String setReplyType(WechatDto wechatDto) {
+        if (wechatDto.startsWithAny("翻译 ", "fy ")) return "翻译";
+        if (isTextInToDoItemMap(wechatDto.getContent()) != null) return "添加待办";
+        return wechatDto.getContent();
     }
 
     /**

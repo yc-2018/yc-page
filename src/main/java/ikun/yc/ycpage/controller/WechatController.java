@@ -94,7 +94,7 @@ public class WechatController {
         String fromUserName = root.getElementsByTagName("FromUserName").item(0).getTextContent();   // 用户微信ID
         String toUserName = root.getElementsByTagName("ToUserName").item(0).getTextContent();       // 公众号ID
 
-        WechatDto wechatDto = new WechatDto(msgType, fromUserName, toUserName, null,null);
+        WechatDto wechatDto = new WechatDto(msgType, fromUserName, toUserName, null);
 
         if ("image".equals(msgType)) return wechatDto.msg("暂不支持图片");
         if ("voice".equals(msgType)) return wechatDto.msg("暂不支持语音");

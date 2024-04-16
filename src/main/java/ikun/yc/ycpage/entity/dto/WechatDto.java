@@ -19,7 +19,6 @@ public class WechatDto {
     private String fromUserName; // 来源用户
     private String toUserName;   // 接收用户(订阅号)
     private String content;      // 内容
-    private String replyType;    // 回复类型(按这个类型给用户回复)
 
 
     /**
