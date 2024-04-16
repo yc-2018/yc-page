@@ -1,5 +1,6 @@
 package ikun.yc.ycpage.entity.dto;
 
+import ikun.yc.ycpage.utils.StrUtils;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -10,7 +11,7 @@ import lombok.experimental.Accessors;
 public class WechatDto {
     private String msgType;      //消息类型
     private String fromUserName; // 来源用户
-    private String toUserName;   // 接收用户
+    private String toUserName;   // 接收用户(订阅号)
     private String content;      // 内容
 
 
@@ -35,9 +36,7 @@ public class WechatDto {
      * 如果主字符串为null或数组为空，同样返回false。
      */
     public boolean eqAny(String... strings) {
-        if (this.content == null || strings == null) return false;
-        for (String s : strings) if (this.content.equals(s)) return true;
-        return false;
+        return StrUtils.eqOr(this.content, strings);
     }
 
     /**
@@ -46,9 +45,7 @@ public class WechatDto {
      * @return 如果给定字符串以可变参数中的任何一个字符串开头，则返回true，否则返回false
      */
     public boolean startsWithAny( String... prefixes) {
-        if (this.content == null || prefixes == null) return false;
-        for (String prefix : prefixes) if (this.content.startsWith(prefix)) return true;
-        return false;
+        return StrUtils.startWithOr(this.content, prefixes);
     }
 
 
