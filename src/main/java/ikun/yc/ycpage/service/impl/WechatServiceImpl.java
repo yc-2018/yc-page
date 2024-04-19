@@ -91,15 +91,48 @@ public class WechatServiceImpl implements WechatService {
                     return "\uD83D\uDE2D接口失效";
                 }
 
+            case "jt":
+            case "鸡汤":
+                try {
+                    // 鸡汤一言https://api.lucksss.com/api/yiyan?code=json   不写code直接是字符串
+                    return restTemplate.getForObject("https://api.lucksss.com/api/yiyan", String.class);
+                } catch (RestClientException exception) {
+                    log.error("鸡汤接口调用失败", exception);
+                    return "\uD83D\uDE2D接口失效";
+                }
+
+            case "60":
+                // 60S读世界，返回当前世界所发生的事情
+                String url60s = "https://api.pearktrue.cn/api/60s/";
+                try {
+                    // 调用翻译接口
+                    String result = restTemplate.getForObject(url60s, String.class);
+                    // 解析接口返回结果
+                    JsonNode jsonNode = new ObjectMapper().readTree(result);
+                    return jsonNode.get("data").asText();
+                } catch (RestClientException | JsonProcessingException exception) {
+                    log.error("60S读世界接口调用失败", exception);
+                    return "\uD83D\uDE2D接口失效";
+                }
+            case "kfc":
+                // 疯狂星期四文案
+                String urlKfc = "https://api.pearktrue.cn/api/kfc/";
+                try {
+                    // 调用翻译接口
+                    String result = restTemplate.getForObject(urlKfc, String.class);
+                    // 解析接口返回结果
+                    JsonNode jsonNode = new ObjectMapper().readTree(result);
+                    return jsonNode.get("text").asText();
+                } catch (RestClientException | JsonProcessingException exception) {
+                    log.error("疯狂星期四接口调用失败", exception);
+                    return "\uD83D\uDE2D接口失效";
+                }
+
             default:
                 return getDefaultMsg();
 
+            //接口介绍：根据英雄名获取其语音文件https://api.pearktrue.cn/api/game/wzyp.php?msg=孙悟空
             // 王者战力https://api.pearktrue.cn/api/hero/?hero=元歌&type=wx
-            // 鸡汤一言https://api.lucksss.com/api/yiyan?code=json   不写code直接是字符串
-            // 天气https://acid.jiuzige.com.cn/web/index/fcyWeather?city=东莞
-            // 疯狂星期四https://api.pearktrue.cn/api/kfc/
-            // 安慰文案https://v.api.aa1.cn/api/api-wenan-anwei/index.php?type=json
-            // 爱情文案https://v.api.aa1.cn/api/api-wenan-aiqing/index.php?type=json
         }
     }
 
