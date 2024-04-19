@@ -18,7 +18,6 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -112,11 +111,10 @@ public class WechatServiceImpl implements WechatService {
                     String result = restTemplate.getForObject(url60s, String.class);
                     // 解析接口返回结果
                     log.info("60S读世界接口返回结果:{}", result);
-                    JsonNode jsonNode = new ObjectMapper().readTree(result);
-                    // 取出数组
-                    log.info("60S读世界接口返回数组:{}", jsonNode.findValuesAsText("data"));
-                    List<String> data = jsonNode.findValuesAsText("data");
-                    return String.join("\n", data);
+                    JsonNode jsonNode = new ObjectMapper().readTree(result).get("data");
+                    StringBuilder sb = new StringBuilder();
+                    for (JsonNode item : jsonNode) sb.append(item.asText()).append("\n");
+                    return sb.toString().trim();
                 } catch (RestClientException | JsonProcessingException exception) {
                     log.error("60S读世界接口调用失败", exception);
                     return "\uD83D\uDE2D接口失效";
