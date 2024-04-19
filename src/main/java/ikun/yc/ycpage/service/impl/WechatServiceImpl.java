@@ -112,10 +112,9 @@ public class WechatServiceImpl implements WechatService {
                     // 解析接口返回结果
                     log.info("60S读世界接口返回结果:{}", result);
                     JsonNode jsonNode = new ObjectMapper().readTree(result).get("data");
-                    StringBuilder sb = new StringBuilder();
-                    for (JsonNode item : jsonNode) sb.append(item.asText()).append("\n");
-                    log.info("█████████60S读世界接口返回结果:{}", sb);
-                    return sb.toString().trim();
+
+                    log.info("█████████60S读世界接口返回结果:{}", jsonNode.toString());
+                    return jsonNode.toString();
                 } catch (Exception exception) {
                     log.error("60S读世界接口调用失败", exception);
                     return "\uD83D\uDE2D接口失效";
