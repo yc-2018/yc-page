@@ -100,25 +100,6 @@ public class WechatServiceImpl implements WechatService {
                     log.error("鸡汤接口调用失败", exception);
                     return "\uD83D\uDE2D接口失效";
                 }
-
-            case "60":
-                log.info("60S读世界");
-                // 60S读世界，返回当前世界所发生的事情
-                String url60s = "https://api.pearktrue.cn/api/60s/";
-                try {
-                    log.info("60S读世界接口调用");
-                    // 调用翻译接口
-                    String result = restTemplate.getForObject(url60s, String.class);
-                    // 解析接口返回结果
-                    log.info("60S读世界接口返回结果:{}", result);
-                    JsonNode jsonNode = new ObjectMapper().readTree(result).get("data");
-
-                    log.info("█████████60S读世界接口返回结果:{}", jsonNode.toString());
-                    return jsonNode.toString();
-                } catch (Exception exception) {
-                    log.error("60S读世界接口调用失败", exception);
-                    return "\uD83D\uDE2D接口失效";
-                }
             case "kfc":
                 // 疯狂星期四文案
                 String urlKfc = "https://api.pearktrue.cn/api/kfc/";
