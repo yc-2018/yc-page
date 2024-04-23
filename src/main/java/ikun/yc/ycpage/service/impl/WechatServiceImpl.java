@@ -46,7 +46,7 @@ public class WechatServiceImpl implements WechatService {
                 return this.login(wechatDto.getFromUserName());
 
             case "添加待办":
-                return this.addPending(wechatDto.getFromUserName(), wechatDto.getContent(), replyType);
+                return this.addPending(wechatDto.getFromUserName(), wechatDto.getContent());
 
             case "sm":
             case "说明":
@@ -129,11 +129,10 @@ public class WechatServiceImpl implements WechatService {
      *
      * @param UserID       用户ID
      * @param content      待办内容
-     * @param toDoItemType 待办类型
      * @return 成功返回id，失败返回失败原因
      * @author 仰晨
      */
-    private String addPending(String UserID, String content, String toDoItemType) {
+    private String addPending(String UserID, String content) {
         // 检查用户是否被禁用
         if (controlAddItemTool.getOneMinuteAddItemById(UserID))
             return "添加待办过于频繁，您已被禁用添加备忘待办5分钟！";
@@ -143,7 +142,7 @@ public class WechatServiceImpl implements WechatService {
         ToDoItems items = new ToDoItems(UserID, parts[1], itemType);             // 待办内容和类型
         boolean save = items.insert();                                          // 保存
         if (!save) return "添加失败";
-        return "添加" + toDoItemType + "待办成功 \n对该待办的增删改查请到<a href=\"https://yc556.cn\" >仰晨: https://yc556.cn</a>";
+        return "添加" + getMemoTypeByText(content) + "待办成功 \n对该待办的增删改查请到<a href=\"https://yc556.cn\" >仰晨: https://yc556.cn</a>";
     }
 
 
@@ -154,7 +153,7 @@ public class WechatServiceImpl implements WechatService {
      */
     private String setReplyType(WechatDto wechatDto) {
         if (wechatDto.startsWithAny("翻译 ", "fy ")) return "翻译";
-        if (isTextInToDoItemMap(wechatDto.getContent()) != null) return "添加待办";
+        if (getMemoTypeByText(wechatDto.getContent()) != null) return "添加待办";
         return wechatDto.getContent();
     }
 
@@ -216,7 +215,7 @@ public class WechatServiceImpl implements WechatService {
      * @author 仰晨
      * @since 2023-12-13
      */
-    private String isTextInToDoItemMap(String text) {
+    private String getMemoTypeByText(String text) {
         for (MemoType value : MemoType.values())
             if (text.startsWith(value.getCode())) return value.getName();
         return null;
