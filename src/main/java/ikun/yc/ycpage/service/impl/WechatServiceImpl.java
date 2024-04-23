@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ikun.yc.ycpage.common.ControlAddItemTool;
 import ikun.yc.ycpage.entity.ToDoItems;
 import ikun.yc.ycpage.entity.dto.WechatDto;
+import ikun.yc.ycpage.entity.enumeration.MemoType;
 import ikun.yc.ycpage.service.WechatService;
 import ikun.yc.ycpage.utils.StrUtils;
 import ikun.yc.ycpage.utils.VerificationCodeUtil;
@@ -17,27 +18,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class WechatServiceImpl implements WechatService {
-    private static final Map<String, String> toDoItemMap = new HashMap<>();
-
-    static {
-        toDoItemMap.put("0 ", "普通");
-        toDoItemMap.put("1 ", "循环");
-        toDoItemMap.put("2 ", "长期");
-        toDoItemMap.put("3 ", "紧急");
-        toDoItemMap.put("4 ", "英语");
-        toDoItemMap.put("5 ", "日记");
-        toDoItemMap.put("6 ", "工作");
-        toDoItemMap.put("7 ", "其他");
-    }
-
     private final RedisTemplate<String, String> redisTemplate;
     private final RestTemplate restTemplate;
     private final ControlAddItemTool controlAddItemTool;
@@ -163,8 +149,8 @@ public class WechatServiceImpl implements WechatService {
     private String getHelp() {
         StringBuilder sb = new StringBuilder();
         sb.append("目前支持的功能有：\n");
-        for (Map.Entry<String, String> entry : toDoItemMap.entrySet())
-            sb.append(StrUtils.joins(entry.getKey(), "+空格+内容 => 添加", entry.getValue(), "待办\n"));
+        for (MemoType value : MemoType.values())
+            sb.append(StrUtils.joins(value.getCode(), "+内容 => 添加", value.getName(), "待办\n"));
 
         sb.append(StrUtils.joins(msgMenu("登录"), "或", msgMenu("登陆"), " => 获取登录验证码\n",
                 msgMenu("翻译 只因你太美", "翻译"), "或", msgMenu("fy hello", "fy"), "+空格+内容=>翻译内容\n",
@@ -212,11 +198,8 @@ public class WechatServiceImpl implements WechatService {
      * @since 2023-12-13
      */
     private String isTextInToDoItemMap(String text) {
-        return toDoItemMap.entrySet()
-                .stream()
-                .filter(entry -> text.startsWith(entry.getKey()))
-                .findFirst()
-                .map(Map.Entry::getValue)
-                .orElse(null);
+        for (MemoType value : MemoType.values())
+            if (text.startsWith(value.getCode())) return value.getName();
+        return null;
     }
 }
