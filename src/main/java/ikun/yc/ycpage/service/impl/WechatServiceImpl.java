@@ -30,15 +30,13 @@ public class WechatServiceImpl implements WechatService {
 
 
     /**
-     * 获取各种第三方api数据
-     *
+     * 回复信息
      * @param wechatDto 微信dto
-     * @return 回复信息
      */
     @Override
     public String getMsg(WechatDto wechatDto) {
         String replyType = setReplyType(wechatDto); // 回复类型
-
+        log.info("回复类型: " + replyType);
         // 处理消息
         switch (replyType) {
             case "登录":
