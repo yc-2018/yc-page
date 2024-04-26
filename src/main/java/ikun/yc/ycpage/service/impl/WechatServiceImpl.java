@@ -75,13 +75,13 @@ public class WechatServiceImpl implements WechatService {
                     return "\uD83D\uDE2D接口失效";
                 }
 
-            case "jt":
-            case "鸡汤":
+            case "yy":
+            case "一言":
                 try {
                     // 鸡汤一言https://api.lucksss.com/api/yiyan?code=json   不写code直接是字符串
                     return restTemplate.getForObject("https://api.lucksss.com/api/yiyan", String.class);
                 } catch (RestClientException exception) {
-                    log.error("鸡汤接口调用失败", exception);
+                    log.error("一言接口调用失败", exception);
                     return "\uD83D\uDE2D接口失效";
                 }
             case "kfc":
@@ -97,13 +97,29 @@ public class WechatServiceImpl implements WechatService {
                     log.error("疯狂星期四接口调用失败", exception);
                     return "\uD83D\uDE2D接口失效";
                 }
+            case "wyy":
+                // 网易云随机音乐
+                String urlWyy = "https://free.wqwlkj.cn/wqwlapi/wyy_random.php?type=json";
+                try {
+                    // 调用翻译接口
+                    String result = restTemplate.getForObject(urlWyy, String.class);
+                    // 解析接口返回结果
+                    JsonNode jsonNode = new ObjectMapper().readTree(result);
+                    String name = jsonNode.get("data").get("name").asText();
+                    String url = jsonNode.get("data").get("url").asText();
+                    String artistsName = jsonNode.get("data").get("artistsname").asText();
+                    return "<a href=\""+url+"\"> ["+artistsName+"]"+ name +"</a>";
+                } catch (RestClientException | JsonProcessingException exception) {
+                    log.error("网易云随机音乐接口调用失败", exception);
+                    return "\uD83D\uDE2D接口失效";
+                }
 
             default:
                 return StrUtils.joins("因为公众号对接了服务器，之前的回复和自定义菜单都失效了，非常抱歉" +
                         "\n如果你要登录Open备忘第一页(仰晨主页)请点击或回复", msgMenu("登录"),
                     "\n如果想看现在支持的功能请输入或点击", msgMenu("说明"), " 或 ", msgMenu("sm"));
 
-            //接口介绍：根据英雄名获取其语音文件https://api.pearktrue.cn/api/game/wzyp.php?msg=孙悟空
+            //接口介绍：根据英雄名获取其语音文件https://api.pearktrue.cn/api/game/wzyp.php?msg=孙悟空  太久了 新英雄一个都没有，而且太长了
             // 王者战力https://api.pearktrue.cn/api/hero/?hero=元歌&type=wx
         }
     }
@@ -171,10 +187,10 @@ public class WechatServiceImpl implements WechatService {
             sb.append(StrUtils.joins(value.getCode(), "+内容 => 添加", value.getName(), "待办\n"));
 
         sb.append(StrUtils.joins(menuOr("登录", "登陆"), " => 获取登录验证码\n",
-            menuOr("翻译 只因你太美", "翻译", "fy hello", "fy"), "+空格+内容=>翻译内容\n",
+            menuOr("翻译 只因你太美", "翻译", "fy hello", "fy"), "+内容=>翻译内容\n",
             msgMenu("kfc"), " => 疯狂星期四文案\n",
             menuOr("舔狗日记", "tgrj"), " => 舔狗日记\n",
-            menuOr("鸡汤", "jt"), " => 随机鸡汤\n",
+            menuOr("一言", "yy"), " => 随机一言\n",
             menuOr("说明", "sm"), " =>显示可用功能\n",
             "仰晨主页:<a href=\"https://yc556.cn\"> https://yc556.cn</a>"
         ));
