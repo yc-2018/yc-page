@@ -101,7 +101,9 @@ public class WechatServiceImpl implements WechatService {
                 }
 
             default:
-                return getDefaultMsg();
+                return StrUtils.joins("因为公众号对接了服务器，之前的回复和自定义菜单都失效了，非常抱歉" +
+                        "\n如果你要登录Open备忘第一页(仰晨主页)请点击或回复", msgMenu("登录"),
+                    "\n如果想看现在支持的功能请输入或点击", msgMenu("说明"), " 或 ", msgMenu("sm"));
 
             //接口介绍：根据英雄名获取其语音文件https://api.pearktrue.cn/api/game/wzyp.php?msg=孙悟空
             // 王者战力https://api.pearktrue.cn/api/hero/?hero=元歌&type=wx
@@ -170,28 +172,27 @@ public class WechatServiceImpl implements WechatService {
         for (MemoType value : MemoType.values())
             sb.append(StrUtils.joins(value.getCode(), "+内容 => 添加", value.getName(), "待办\n"));
 
-        sb.append(StrUtils.joins(msgMenu("登录"), "或", msgMenu("登陆"), " => 获取登录验证码\n",
-                msgMenu("翻译 只因你太美", "翻译"), "或", msgMenu("fy hello", "fy"), "+空格+内容=>翻译内容\n",
-                msgMenu("舔狗日记"), "或", msgMenu("tgrj"), " => 舔狗日记\n",
-                msgMenu("说明"), "或", msgMenu("sm"), " =>显示可用功能\n",
-                "仰晨主页:<a href=\"https://yc556.cn\"> https://yc556.cn</a>"
+        sb.append(StrUtils.joins(menuOr("登录", "登陆"), " => 获取登录验证码\n",
+            menuOr("翻译 只因你太美", "翻译", "fy hello", "fy"), "+空格+内容=>翻译内容\n",
+            msgMenu("kfc"), " => 疯狂星期四文案\n",
+            menuOr("舔狗日记", "tgrj"), " => 舔狗日记\n",
+            menuOr("鸡汤", "jt"), " => 随机鸡汤\n",
+            menuOr("说明", "sm"), " =>显示可用功能\n",
+            "仰晨主页:<a href=\"https://yc556.cn\"> https://yc556.cn</a>"
         ));
 
         return sb.toString();
     }
 
-    /**
-     * 获取默认消息
-     *
-     * @author ChenGuangLong
-     * @since 2024/04/06 17:29:00
-     */
-    private String getDefaultMsg() {
-        return StrUtils.joins("因为公众号对接了服务器，之前的回复和自定义菜单都失效了，非常抱歉" +
-                        "\n如果你要登录Open备忘第一页(仰晨主页)请点击或回复", msgMenu("登录"),
-                "\n如果想看现在支持的功能请输入或点击", msgMenu("说明"), " 或 ", msgMenu("sm"));
+    /** 有2个菜单时使用*/
+    private String menuOr(String msg1, String msg2) {
+        return StrUtils.joins(msgMenu(msg1), "或", msgMenu(msg2));
     }
 
+    /** 有2个菜单时使用消息和回复内容不一样时使用*/
+    private String menuOr(String content1, String msg1, String content2, String msg2) {
+        return StrUtils.joins(msgMenu(content1,msg1), "或", msgMenu(content2,msg2));
+    }
 
     /**
      * 消息菜单
