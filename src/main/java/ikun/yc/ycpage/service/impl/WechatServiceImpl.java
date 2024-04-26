@@ -97,22 +97,6 @@ public class WechatServiceImpl implements WechatService {
                     log.error("疯狂星期四接口调用失败", exception);
                     return "\uD83D\uDE2D接口失效";
                 }
-            case "wyy":
-                // 网易云随机音乐
-                String urlWyy = "https://free.wqwlkj.cn/wqwlapi/wyy_random.php?type=json";
-                try {
-                    // 调用翻译接口
-                    String result = restTemplate.getForObject(urlWyy, String.class);
-                    // 解析接口返回结果
-                    JsonNode jsonNode = new ObjectMapper().readTree(result);
-                    String name = jsonNode.get("data").get("name").asText();
-                    String url = jsonNode.get("data").get("url").asText();
-                    String artistsName = jsonNode.get("data").get("artistsname").asText();
-                    return "<a href=\""+url+"\"> ["+artistsName+"]"+ name +"</a>";
-                } catch (RestClientException | JsonProcessingException exception) {
-                    log.error("网易云随机音乐接口调用失败", exception);
-                    return "\uD83D\uDE2D接口失效";
-                }
 
             default:
                 return StrUtils.joins("因为公众号对接了服务器，之前的回复和自定义菜单都失效了，非常抱歉" +
