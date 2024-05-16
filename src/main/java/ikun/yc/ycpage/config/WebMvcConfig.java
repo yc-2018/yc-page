@@ -13,7 +13,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -38,18 +37,18 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .addPathPatterns("/**")                     //拦截全部路径    /*是一级路径/**是全部路径
                 .excludePathPatterns(
                         "/users/login",
-                        "/ikun说不能让人猜到微信接口",
+                        "/接收微信接口",
                         "/favicon.ico",
                         "/other/run-script",
-                        "/doc.html",                // 放行Swagger
-                        "/docs.html",               // 放行Swagger
-                        "/swagger-ui.html",         // 放行Swagger
-                        "/index.html",              // 放行Swagger
-                        "/v2/api-docs/**",          // 放行Swagger
-                        "/swagger-resources/**",    // 放行Swagger
-                        "/noAuth/**",               // 放行Swagger
-                        "/swagger-ui/**",           // 放行Swagger UI静态资源
-                        "/v3/**",                   // 放行Swagger新API文档路径
+//                        "/doc.html",                // 放行Swagger
+//                        "/docs.html",               // 放行Swagger
+//                        "/swagger-ui.html",         // 放行Swagger
+//                        "/index.html",              // 放行Swagger
+//                        "/v2/api-docs/**",          // 放行Swagger
+//                        "/swagger-resources/**",    // 放行Swagger
+//                        "/noAuth/**",               // 放行Swagger
+//                        "/swagger-ui/**",           // 放行Swagger UI静态资源
+//                        "/v3/**",                   // 放行Swagger新API文档路径
                         "/webjars/**",              // 放行webjars路径下的资源
                         "/css/**",                  // 放行css静态资源
                         "/js/**",                   // 放行js静态资源

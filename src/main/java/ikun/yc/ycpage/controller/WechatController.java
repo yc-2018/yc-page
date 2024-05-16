@@ -23,7 +23,7 @@ import java.util.Arrays;
 @RestController
 @RequiredArgsConstructor
 @Api(tags = "接收微信接口")
-@RequestMapping("/ikun说不能让人猜到微信接口")
+@RequestMapping("/接收微信接口")
 public class WechatController {
     @Value("${wechat.token}")
     private String token;

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ikun.yc.ycpage.common.ControlAddItemTool;
 import ikun.yc.ycpage.entity.ToDoItems;
 import ikun.yc.ycpage.entity.dto.WechatDto;
+import ikun.yc.ycpage.entity.enumeration.MemoType;
 import ikun.yc.ycpage.service.WechatService;
 import ikun.yc.ycpage.utils.StrUtils;
 import ikun.yc.ycpage.utils.VerificationCodeUtil;
@@ -17,42 +18,25 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class WechatServiceImpl implements WechatService {
-    private static final Map<String, String> toDoItemMap = new HashMap<>();
-
-    static {
-        toDoItemMap.put("0 ", "普通");
-        toDoItemMap.put("1 ", "循环");
-        toDoItemMap.put("2 ", "长期");
-        toDoItemMap.put("3 ", "紧急");
-        toDoItemMap.put("4 ", "英语");
-        toDoItemMap.put("5 ", "日记");
-        toDoItemMap.put("6 ", "工作");
-        toDoItemMap.put("7 ", "其他");
-    }
-
     private final RedisTemplate<String, String> redisTemplate;
     private final RestTemplate restTemplate;
     private final ControlAddItemTool controlAddItemTool;
 
 
     /**
-     * 获取各种第三方api数据
-     *
+     * 回复信息
      * @param wechatDto 微信dto
-     * @return 回复信息
      */
     @Override
     public String getMsg(WechatDto wechatDto) {
         String replyType = setReplyType(wechatDto); // 回复类型
-
+        log.info("回复类型: " + replyType);
         // 处理消息
         switch (replyType) {
             case "登录":
@@ -60,7 +44,7 @@ public class WechatServiceImpl implements WechatService {
                 return this.login(wechatDto.getFromUserName());
 
             case "添加待办":
-                return this.addPending(wechatDto.getFromUserName(), wechatDto.getContent(), replyType);
+                return this.addPending(wechatDto.getFromUserName(), wechatDto.getContent());
 
             case "sm":
             case "说明":
@@ -91,13 +75,13 @@ public class WechatServiceImpl implements WechatService {
                     return "\uD83D\uDE2D接口失效";
                 }
 
-            case "jt":
-            case "鸡汤":
+            case "yy":
+            case "一言":
                 try {
                     // 鸡汤一言https://api.lucksss.com/api/yiyan?code=json   不写code直接是字符串
                     return restTemplate.getForObject("https://api.lucksss.com/api/yiyan", String.class);
                 } catch (RestClientException exception) {
-                    log.error("鸡汤接口调用失败", exception);
+                    log.error("一言接口调用失败", exception);
                     return "\uD83D\uDE2D接口失效";
                 }
             case "kfc":
@@ -115,9 +99,11 @@ public class WechatServiceImpl implements WechatService {
                 }
 
             default:
-                return getDefaultMsg();
+                return StrUtils.joins("因为公众号对接了服务器，之前的回复和自定义菜单都失效了，非常抱歉" +
+                        "\n如果你要登录Open备忘第一页(仰晨主页)请点击或回复", msgMenu("登录"),
+                    "\n如果想看现在支持的功能请输入或点击", msgMenu("说明"), " 或 ", msgMenu("sm"));
 
-            //接口介绍：根据英雄名获取其语音文件https://api.pearktrue.cn/api/game/wzyp.php?msg=孙悟空
+            //接口介绍：根据英雄名获取其语音文件https://api.pearktrue.cn/api/game/wzyp.php?msg=孙悟空  太久了 新英雄一个都没有，而且太长了
             // 王者战力https://api.pearktrue.cn/api/hero/?hero=元歌&type=wx
         }
     }
@@ -143,11 +129,10 @@ public class WechatServiceImpl implements WechatService {
      *
      * @param UserID       用户ID
      * @param content      待办内容
-     * @param toDoItemType 待办类型
      * @return 成功返回id，失败返回失败原因
      * @author 仰晨
      */
-    private String addPending(String UserID, String content, String toDoItemType) {
+    private String addPending(String UserID, String content) {
         // 检查用户是否被禁用
         if (controlAddItemTool.getOneMinuteAddItemById(UserID))
             return "添加待办过于频繁，您已被禁用添加备忘待办5分钟！";
@@ -157,7 +142,7 @@ public class WechatServiceImpl implements WechatService {
         ToDoItems items = new ToDoItems(UserID, parts[1], itemType);             // 待办内容和类型
         boolean save = items.insert();                                          // 保存
         if (!save) return "添加失败";
-        return "添加" + toDoItemType + "待办成功 \n对该待办的增删改查请到<a href=\"https://yc556.cn\" >仰晨: https://yc556.cn</a>";
+        return "添加" + getMemoTypeByText(content) + "待办成功 \n对该待办的增删改查请到<a href=\"https://yc556.cn\" >仰晨: https://yc556.cn</a>";
     }
 
 
@@ -168,7 +153,7 @@ public class WechatServiceImpl implements WechatService {
      */
     private String setReplyType(WechatDto wechatDto) {
         if (wechatDto.startsWithAny("翻译 ", "fy ")) return "翻译";
-        if (isTextInToDoItemMap(wechatDto.getContent()) != null) return "添加待办";
+        if (getMemoTypeByText(wechatDto.getContent()) != null) return "添加待办";
         return wechatDto.getContent();
     }
 
@@ -182,31 +167,30 @@ public class WechatServiceImpl implements WechatService {
     private String getHelp() {
         StringBuilder sb = new StringBuilder();
         sb.append("目前支持的功能有：\n");
-        for (Map.Entry<String, String> entry : toDoItemMap.entrySet())
-            sb.append(StrUtils.joins(entry.getKey(), "+空格+内容 => 添加", entry.getValue(), "待办\n"));
+        for (MemoType value : MemoType.values())
+            sb.append(StrUtils.joins(value.getCode(), "+内容 => 添加", value.getName(), "待办\n"));
 
-        sb.append(StrUtils.joins(msgMenu("登录"), "或", msgMenu("登陆"), " => 获取登录验证码\n",
-                msgMenu("翻译 只因你太美", "翻译"), "或", msgMenu("fy hello", "fy"), "+空格+内容=>翻译内容\n",
-                msgMenu("舔狗日记"), "或", msgMenu("tgrj"), " => 舔狗日记\n",
-                msgMenu("说明"), "或", msgMenu("sm"), " =>显示可用功能\n",
-                "仰晨主页:<a href=\"https://yc556.cn\"> https://yc556.cn</a>"
+        sb.append(StrUtils.joins(menuOr("登录", "登陆"), " => 获取登录验证码\n",
+            menuOr("翻译 只因你太美", "翻译", "fy hello", "fy"), "+内容=>翻译内容\n",
+            msgMenu("kfc"), " => 疯狂星期四文案\n",
+            menuOr("舔狗日记", "tgrj"), " => 舔狗日记\n",
+            menuOr("一言", "yy"), " => 随机一言\n",
+            menuOr("说明", "sm"), " =>显示可用功能\n",
+            "仰晨主页:<a href=\"https://yc556.cn\"> https://yc556.cn</a>"
         ));
 
         return sb.toString();
     }
 
-    /**
-     * 获取默认消息
-     *
-     * @author ChenGuangLong
-     * @since 2024/04/06 17:29:00
-     */
-    private String getDefaultMsg() {
-        return StrUtils.joins("因为公众号对接了服务器，之前的回复和自定义菜单都失效了，非常抱歉" +
-                        "\n如果你要登录Open备忘第一页(仰晨主页)请点击或回复", msgMenu("登录"),
-                "\n如果想看现在支持的功能请输入或点击", msgMenu("说明"), " 或 ", msgMenu("sm"));
+    /** 有2个菜单时使用*/
+    private String menuOr(String msg1, String msg2) {
+        return StrUtils.joins(msgMenu(msg1), "或", msgMenu(msg2));
     }
 
+    /** 有2个菜单时使用消息和回复内容不一样时使用*/
+    private String menuOr(String content1, String msg1, String content2, String msg2) {
+        return StrUtils.joins(msgMenu(content1,msg1), "或", msgMenu(content2,msg2));
+    }
 
     /**
      * 消息菜单
@@ -230,12 +214,9 @@ public class WechatServiceImpl implements WechatService {
      * @author 仰晨
      * @since 2023-12-13
      */
-    private String isTextInToDoItemMap(String text) {
-        return toDoItemMap.entrySet()
-                .stream()
-                .filter(entry -> text.startsWith(entry.getKey()))
-                .findFirst()
-                .map(Map.Entry::getValue)
-                .orElse(null);
+    private String getMemoTypeByText(String text) {
+        for (MemoType value : MemoType.values())
+            if (text.startsWith(value.getCode())) return value.getName();
+        return null;
     }
 }
