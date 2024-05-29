@@ -46,7 +46,7 @@ public class LoopMemoTime implements Serializable {
     @TableField(value = "memo_date")
     private LocalDateTime memoDate;
 
-    public LoopMemoTime(ToDoItems item) {
+    public LoopMemoTime(Memo item) {
         this.toDoItemId = item.getId();
         this.memoDate = item.getUpdateTime();
     }

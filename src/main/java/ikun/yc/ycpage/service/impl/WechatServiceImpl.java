@@ -5,7 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ikun.yc.ycpage.common.ControlAddItemTool;
-import ikun.yc.ycpage.entity.ToDoItems;
+import ikun.yc.ycpage.entity.Memo;
 import ikun.yc.ycpage.entity.dto.WechatDto;
 import ikun.yc.ycpage.entity.enumeration.MemoType;
 import ikun.yc.ycpage.service.WechatService;
@@ -139,7 +139,7 @@ public class WechatServiceImpl implements WechatService {
 
         String[] parts = content.split("\\s", 2);                       // 使用正则表达式匹配第一个空格进行分割
         int itemType = Integer.parseInt(parts[0].trim());                         // 转换前缀得到待办类型
-        ToDoItems items = new ToDoItems(UserID, parts[1], itemType);             // 待办内容和类型
+        Memo items = new Memo(UserID, parts[1], itemType);             // 待办内容和类型
         boolean save = items.insert();                                          // 保存
         if (!save) return "添加失败";
         return "添加" + getMemoTypeByText(content) + "待办成功 \n对该待办的增删改查请到<a href=\"https://yc556.cn\" >仰晨: https://yc556.cn</a>";

@@ -5,13 +5,14 @@ import com.baomidou.mybatisplus.extension.activerecord.Model;
 import ikun.yc.ycpage.common.BaseContext;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 
 /**
- * 待办(备忘录)实体类
+ * 备忘录 实体类
  *
  * @author yc
  * @since 2023-12-03 22:31:22
@@ -20,18 +21,19 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 @TableName("to_do_items")
-public class ToDoItems extends Model<ToDoItems> {
+public class Memo extends Model<Memo> {
 
 
-    /** 待办事项ID */
+    /** 备忘录事项ID */
     @TableId(type = IdType.AUTO)
 	private Integer id;
 
     /** 用户ID */
     private String userId;
 
-    /** 待办类型 (0:普通待办，1：循环待办，2：长期待办，3：紧急待办，4：备忘英语，5、日记待办，6、公事待办*/
+    /** 备忘录待办类型 (0:普通待办，1：循环待办，2：长期待办，3：紧急待办，4：备忘英语，5、日记待办，6、公事待办*/
     private Integer itemType;
 
     /** 内容 */
@@ -49,13 +51,13 @@ public class ToDoItems extends Model<ToDoItems> {
     @TableField(fill = FieldFill.UPDATE)//, update = "now()")
 	private LocalDateTime updateTime;
 
-    public ToDoItems(String userId, String content, Integer itemType) {
+    public Memo(String userId, String content, Integer itemType) {
         this.userId = userId;
         this.content = content;
         this.itemType = itemType;
     }
 
-    public ToDoItems(String userId,Integer itemType) {
+    public Memo(String userId, Integer itemType) {
         this.userId = userId;
         this.itemType = itemType;
     }

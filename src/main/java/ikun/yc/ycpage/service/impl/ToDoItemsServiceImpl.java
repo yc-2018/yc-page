@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.R;
 import ikun.yc.ycpage.entity.LoopMemoTime;
-import ikun.yc.ycpage.entity.ToDoItems;
+import ikun.yc.ycpage.entity.Memo;
 import ikun.yc.ycpage.mapper.ToDoItemsMapper;
 import ikun.yc.ycpage.service.LoopMemoTimeService;
 import ikun.yc.ycpage.service.ToDoItemsService;
@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ToDoItemsServiceImpl extends ServiceImpl<ToDoItemsMapper, ToDoItems> implements ToDoItemsService {
+public class ToDoItemsServiceImpl extends ServiceImpl<ToDoItemsMapper, Memo> implements ToDoItemsService {
     private final ToDoItemsMapper toDoItemsMapper;
     private final LoopMemoTimeService loopMemoTimeService;
 
@@ -38,7 +38,7 @@ public class ToDoItemsServiceImpl extends ServiceImpl<ToDoItemsMapper, ToDoItems
      * @return 成功或失败或被禁用。
      */
     @Override
-    public R<Integer> addItem(ToDoItems toDoItem) {
+    public R<Integer> addItem(Memo toDoItem) {
         String userId = BaseContext.getCurrentId();
 
         toDoItem.setCreateTime(null);
@@ -56,7 +56,7 @@ public class ToDoItemsServiceImpl extends ServiceImpl<ToDoItemsMapper, ToDoItems
     @Override
     public Map getGroupToDoItemsCount(Integer type) {
         // 假设这是从MyBatis查询返回的原始列表
-        List<Map> originalList = toDoItemsMapper.selectGroupToDoItemsCount(new ToDoItems(BaseContext.getCurrentId(), type));
+        List<Map> originalList = toDoItemsMapper.selectGroupToDoItemsCount(new Memo(BaseContext.getCurrentId(), type));
 
         // 转换列表为期望的格式
         return originalList.stream()
@@ -75,10 +75,10 @@ public class ToDoItemsServiceImpl extends ServiceImpl<ToDoItemsMapper, ToDoItems
      */
     @Transactional
     @Override
-    public boolean updateItem(ToDoItems toDoItem) {
-        LambdaUpdateWrapper<ToDoItems> updateWrapper = new LambdaUpdateWrapper<ToDoItems>()
-                .eq(ToDoItems::getId, toDoItem.getId())
-                .eq(ToDoItems::getUserId, toDoItem.getUserId());
+    public boolean updateItem(Memo toDoItem) {
+        LambdaUpdateWrapper<Memo> updateWrapper = new LambdaUpdateWrapper<Memo>()
+                .eq(Memo::getId, toDoItem.getId())
+                .eq(Memo::getUserId, toDoItem.getUserId());
 
         // 循环+1 以外的直接更新
         if (toDoItem.getNumberOfRecurrences() == null) return this.update(toDoItem,updateWrapper);

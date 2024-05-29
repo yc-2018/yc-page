@@ -7,7 +7,7 @@ import ikun.yc.ycpage.common.anno.CountControl;
 import ikun.yc.ycpage.common.anno.Log;
 import ikun.yc.ycpage.common.aop.CountControlAspect;
 import ikun.yc.ycpage.common.exception.FieldIsNullException;
-import ikun.yc.ycpage.entity.ToDoItems;
+import ikun.yc.ycpage.entity.Memo;
 import ikun.yc.ycpage.service.ToDoItemsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +37,7 @@ public class ToDoItemsController {
     @Log
     @PostMapping
     @CountControl(operationType = CountControlAspect.ADD, frequency = 10, banMin = 5)
-    public R<Integer> addItem(@RequestBody ToDoItems memo) {
+    public R<Integer> addItem(@RequestBody Memo memo) {
         if (memo.getItemType() == null)throw new FieldIsNullException("待办类型不能为空");
         if (memo.getContent() == null) throw new FieldIsNullException("待办内容不能为空");
 
@@ -60,30 +60,30 @@ public class ToDoItemsController {
      * @return 待办列表
      */
     @GetMapping("/{type}")
-    public R<Page<ToDoItems>> getItem(@RequestParam(defaultValue = "1") Integer page,
-                                      @RequestParam(defaultValue = "10") Integer pageSize,
-                                      @RequestParam(defaultValue = "0") Integer completed,      // 0 未完成 1 已完成 -1 全部
-                                      @RequestParam(defaultValue = "1") Integer orderBy,
-                                      @RequestParam(required = false) String firstLetter,
-                                      @RequestParam(required = false) String keyword,
-                                      //@RequestParam(required = false) List<Date> dateRange,
-                                      @PathVariable Integer type) {
+    public R<Page<Memo>> getItem(@RequestParam(defaultValue = "1") Integer page,
+                                 @RequestParam(defaultValue = "10") Integer pageSize,
+                                 @RequestParam(defaultValue = "0") Integer completed,      // 0 未完成 1 已完成 -1 全部
+                                 @RequestParam(defaultValue = "1") Integer orderBy,
+                                 @RequestParam(required = false) String firstLetter,
+                                 @RequestParam(required = false) String keyword,
+                                 //@RequestParam(required = false) List<Date> dateRange,
+                                 @PathVariable Integer type) {
 
 
-        R<Page<ToDoItems>> pageR = R.success(
+        R<Page<Memo>> pageR = R.success(
             toDoItemsService.lambdaQuery()
-                .eq(ToDoItems::getItemType, type)
-                .eq(ToDoItems::getUserId, BaseContext.getCurrentId())               // 请求头的token 的id
-                .eq(completed != -1, ToDoItems::getCompleted, completed)   // 0 未完成 1 已完成 -1 全部
-                .lt(completed == -1, ToDoItems::getCompleted, 10)      // >=10 已删除
-                .orderByDesc(orderBy == 1, ToDoItems::getUpdateTime)
-                .orderByDesc(orderBy == 3, ToDoItems::getCreateTime)
-                .orderByDesc(orderBy == 6, ToDoItems::getContent)
-                .orderByAsc(orderBy == 2, ToDoItems::getUpdateTime)
-                .orderByAsc(orderBy == 4, ToDoItems::getCreateTime)
-                .orderByAsc(orderBy == 5, ToDoItems::getContent)
-                .likeRight(firstLetter != null, ToDoItems::getContent, firstLetter)
-                .like(keyword != null, ToDoItems::getContent, keyword)
+                .eq(Memo::getItemType, type)
+                .eq(Memo::getUserId, BaseContext.getCurrentId())        // 请求头的token 的id
+                .eq(completed != -1, Memo::getCompleted, completed)     // 0 未完成 1 已完成 -1 全部
+                .lt(completed == -1, Memo::getCompleted, 10)            // >=10 已删除
+                .orderByDesc(orderBy == 1, Memo::getUpdateTime)
+                .orderByDesc(orderBy == 3, Memo::getCreateTime)
+                .orderByDesc(orderBy == 6, Memo::getContent)
+                .orderByAsc(orderBy == 2, Memo::getUpdateTime)
+                .orderByAsc(orderBy == 4, Memo::getCreateTime)
+                .orderByAsc(orderBy == 5, Memo::getContent)
+                .likeRight(firstLetter != null, Memo::getContent, firstLetter)
+                .like(keyword != null, Memo::getContent, keyword)
                 .page(new Page<>(page, pageSize))
         );
 
@@ -102,7 +102,7 @@ public class ToDoItemsController {
     @Log
     @PutMapping
     @CountControl(operationType = CountControlAspect.UPDATE)  // 一分钟请求超出5次，禁用1分钟
-    public R<Boolean> updateItem(@RequestBody ToDoItems toDoItem) {
+    public R<Boolean> updateItem(@RequestBody Memo toDoItem) {
 
         toDoItem.toReviseInfo();   // 不允许更新的字段就不允许更新
 
@@ -121,8 +121,8 @@ public class ToDoItemsController {
     @DeleteMapping("/{id}")
     public R<?> deleteItem(@PathVariable String id) {
         return toDoItemsService.lambdaUpdate()
-            .eq(ToDoItems::getId, id)
-            .eq(ToDoItems::getUserId, BaseContext.getCurrentId())
+            .eq(Memo::getId, id)
+            .eq(Memo::getUserId, BaseContext.getCurrentId())
             .setSql("completed = completed + 10")
             .update() ? R.success(true) : R.error("删除失败");
     }

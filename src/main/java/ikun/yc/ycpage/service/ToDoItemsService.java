@@ -3,7 +3,7 @@ package ikun.yc.ycpage.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import ikun.yc.ycpage.common.R;
-import ikun.yc.ycpage.entity.ToDoItems;
+import ikun.yc.ycpage.entity.Memo;
 
 import java.util.Map;
 
@@ -13,11 +13,11 @@ import java.util.Map;
  * @author yc
  * @since 2023-12-03 22:57:40
  */
-public interface ToDoItemsService extends IService<ToDoItems> {
+public interface ToDoItemsService extends IService<Memo> {
 
-    R<Integer> addItem(ToDoItems toDoItems);
+    R<Integer> addItem(Memo memo);
 
     Map getGroupToDoItemsCount(Integer type);
 
-    boolean updateItem(ToDoItems toDoItem);
+    boolean updateItem(Memo toDoItem);
 }
