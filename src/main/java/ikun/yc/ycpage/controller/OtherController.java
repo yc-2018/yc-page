@@ -1,11 +1,11 @@
 //仰晨study 创建时间2024/1/11 23:51 星期四
 package ikun.yc.ycpage.controller;
 
+import ikun.yc.ycpage.common.R;
 import ikun.yc.ycpage.common.anno.CountControl;
+import ikun.yc.ycpage.entity.DySeeTime;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -49,6 +49,18 @@ public class OtherController {
             log.error(e.getMessage());
             return "执行脚本时出错。";
         }
+    }
+
+    /**
+     * 记录dy看的时间
+     *
+     * @param dySeeTime 看的时间对象
+     * @author ChenGuangLong
+     * @since 2024/05/31 17:46:46
+     */
+    @PostMapping("/dySeeTime")
+    public R<?> saveDySeeTime(@RequestBody DySeeTime dySeeTime) {
+        return R.success(dySeeTime.checkLegal().insert());
     }
 
 }

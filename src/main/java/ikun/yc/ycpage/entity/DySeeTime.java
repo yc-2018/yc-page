@@ -52,19 +52,18 @@ public class DySeeTime extends Model<DySeeTime> implements Serializable {
      */
     private Integer duration;
 
-    public DySeeTime(DySeeTime dySeeTime) {
+
+    /**
+     * 检查合法性 结束时间必须大于开始时间 总时长必须大于0 否则抛出异常  通过就设置id和userId
+     *
+     * @author ChenGuangLong
+     * @since 2024/05/31 17:41:19
+     */
+    public DySeeTime checkLegal() {
+        if (endTime.getTime() <= startTime.getTime() || duration < 0) throw new ParamException("传参异常");
+        this.id = null;
         this.userId = BaseContext.getCurrentId();
-        this.startTime = dySeeTime.startTime;
-        this.endTime = dySeeTime.endTime;
-        this.duration = dySeeTime.duration;
-    }
-
-    // 检查合法性 结束时间必须大于开始时间 总时长必须大于0 否则抛出异常
-    public void checkLegal() {
-        if (endTime.getTime() <= startTime.getTime() || duration < 0) {
-            throw new ParamException("传参异常");
-        }
-
+        return this;
     }
 
 }
