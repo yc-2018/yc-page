@@ -97,6 +97,9 @@ public class WechatServiceImpl implements WechatService {
                     log.error("疯狂星期四接口调用失败", exception);
                     return "\uD83D\uDE2D接口失效";
                 }
+            case "头像是什么": // 之前微信自动回，挺多人问的
+                return "教程是2018年出的了,现在的微信的版本是不支持的了,之前的版本我也没有,就算有 好像在新版活跃度高的账号是不能在旧版本登录的\n"+
+                    "百度网盘2018年的透明头像素材:https://pan.baidu.com/s/13mCwaOmYBdvXdhLLOmteQQ?pwd=d94d";
 
             default:
                 return StrUtils.joins("因为公众号对接了服务器，之前的回复和自定义菜单都失效了，非常抱歉" +
