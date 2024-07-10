@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
+
 /**
  * 待办
  *
@@ -56,7 +58,7 @@ public class ToDoItemsController {
      * @param orderBy  排序方式 1：更新时间↓ 2：更新时间↑ 3：创建时间↓ 4：创建时间↑ 5：A↓ 6：Z↓
      * @param firstLetter 从哪个字母开始查询
      * @param keyword  搜索关键词
-     //* @param dateRange 日期范围
+     * @param dateRange 日期范围: 开始时间戳/结束时间戳/0：修改时间 1：创建时间
      * @return 待办列表
      */
     @GetMapping("/{type}")
@@ -66,9 +68,13 @@ public class ToDoItemsController {
                                  @RequestParam(defaultValue = "1") Integer orderBy,
                                  @RequestParam(required = false) String firstLetter,
                                  @RequestParam(required = false) String keyword,
-                                 //@RequestParam(required = false) List<Date> dateRange,
+                                 @RequestParam(required = false) String dateRange,
                                  @PathVariable Integer type) {
-
+        // ————日期参数———— 下面写times[2]等就算没有在哪个条件也是会报错，因为已经到参数了，所以要先写
+        String[] times = dateRange != null && !dateRange.isEmpty() ? dateRange.split("/") : null;
+        boolean updateFilterDateType = times != null && "0".equals(times[2]);
+        Date startTime = times != null ? new Date(Long.parseLong(times[0])) : null;
+        Date endTime = times != null ? new Date(Long.parseLong(times[1])) : null;
 
         R<Page<Memo>> pageR = R.success(
             toDoItemsService.lambdaQuery()
@@ -76,6 +82,7 @@ public class ToDoItemsController {
                 .eq(Memo::getUserId, BaseContext.getCurrentId())        // 请求头的token 的id
                 .eq(completed != -1, Memo::getCompleted, completed)     // 0 未完成 1 已完成 -1 全部
                 .lt(completed == -1, Memo::getCompleted, 10)            // >=10 已删除
+                .between(times != null, updateFilterDateType ? Memo::getUpdateTime : Memo::getCreateTime, startTime, endTime)
                 .orderByDesc(orderBy == 1, Memo::getUpdateTime)
                 .orderByDesc(orderBy == 3, Memo::getCreateTime)
                 .orderByDesc(orderBy == 6, Memo::getContent)
