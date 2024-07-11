@@ -51,14 +51,14 @@ public class ToDoItemsController {
     /**
      * 获取待办列表
      *
-     * @param page      第几页
-     * @param pageSize  每页多少条
-     * @param completed 想看的完成类型 0 未完成 1 已完成 -1 全部
-     * @param type      待办类型
-     * @param orderBy  排序方式 1：更新时间↓ 2：更新时间↑ 3：创建时间↓ 4：创建时间↑ 5：A↓ 6：Z↓
+     * @param page        第几页
+     * @param pageSize    每页多少条
+     * @param completed   想看的完成类型 0 未完成 1 已完成 -1 全部
+     * @param type        待办类型
+     * @param orderBy     排序方式 1：更新时间↓ 2：更新时间↑ 3：创建时间↓ 4：创建时间↑ 5：A↓ 6：Z↓
      * @param firstLetter 从哪个字母开始查询
-     * @param keyword  搜索关键词
-     * @param dateRange 日期范围: 开始时间戳/结束时间戳/0：修改时间 1：创建时间
+     * @param keyword     搜索关键词
+     * @param dateRange   日期范围: 开始时间戳/结束时间戳/0：修改时间 1：创建时间
      * @return 待办列表
      */
     @GetMapping("/{type}")
@@ -79,9 +79,9 @@ public class ToDoItemsController {
         R<Page<Memo>> pageR = R.success(
             toDoItemsService.lambdaQuery()
                 .eq(Memo::getItemType, type)
-                .eq(Memo::getUserId, BaseContext.getCurrentId())        // 请求头的token 的id
-                .eq(completed != -1, Memo::getCompleted, completed)     // 0 未完成 1 已完成 -1 全部
-                .lt(completed == -1, Memo::getCompleted, 10)            // >=10 已删除
+                .eq(Memo::getUserId, BaseContext.getCurrentId())                // 请求头的token 的id
+                .eq(completed != -1, Memo::getCompleted, completed)    // 0 未完成 1 已完成 -1 全部
+                .lt(completed == -1, Memo::getCompleted, 10)       // >=10 已删除
                 .between(times != null, updateFilterDateType ? Memo::getUpdateTime : Memo::getCreateTime, startTime, endTime)
                 .orderByDesc(orderBy == 1, Memo::getUpdateTime)
                 .orderByDesc(orderBy == 3, Memo::getCreateTime)
