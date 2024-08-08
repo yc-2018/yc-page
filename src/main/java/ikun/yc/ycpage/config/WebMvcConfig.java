@@ -40,6 +40,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/接收微信接口",
                         "/favicon.ico",
                         "/other/run-script",
+                        "/other/startTime",           // 本次服务启动时间
 //                        "/doc.html",                // 放行Swagger
 //                        "/docs.html",               // 放行Swagger
 //                        "/swagger-ui.html",         // 放行Swagger

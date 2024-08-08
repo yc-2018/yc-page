@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  * 其他控制器 不处理数据库相关
@@ -20,6 +22,15 @@ import java.nio.file.Paths;
 @RestController
 @RequestMapping("/other")
 public class OtherController {
+
+    /** 开始运行时间 */
+    private static final String START_RUNNING_TIME = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+
+    @GetMapping("startTime")
+    public String startTime() {
+        return START_RUNNING_TIME;
+    }
+
     @GetMapping("/run-script")
     @CountControl(frequency = 1)
     public String runScript(String scriptName) {
