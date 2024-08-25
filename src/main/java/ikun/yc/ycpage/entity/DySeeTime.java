@@ -26,31 +26,23 @@ import java.util.Date;
 public class DySeeTime extends Model<DySeeTime> implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    /**
-     * 主键
-     */
     @TableId(type = IdType.AUTO)
     private Integer id;
 
-    /**
-     * 用户id
-     */
+    /** 用户微信id */
     private String userId;
 
-    /**
-     * 开始时间
-     */
+    /** 开始时间 */
     private Date startTime;
 
-    /**
-     * 结束时间
-     */
+    /** 结束时间 */
     private Date endTime;
 
-    /**
-     * 当天总时长（开始到结束中间可能有不算的时长）包括各个页面
-     */
+    /** 当天总时长（开始到结束中间可能有不算的时长）包括各个页面 */
     private Integer duration;
+
+    /** 描述 */
+    private String desc;
 
 
     /**
