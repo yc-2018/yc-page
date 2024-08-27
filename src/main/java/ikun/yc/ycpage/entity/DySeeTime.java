@@ -42,7 +42,7 @@ public class DySeeTime extends Model<DySeeTime> implements Serializable {
     private Integer duration;
 
     /** 描述 */
-    private String desc;
+    private String remark;
 
 
     /**
