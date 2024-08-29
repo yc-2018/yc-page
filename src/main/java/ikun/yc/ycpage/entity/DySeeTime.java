@@ -79,6 +79,7 @@ public class DySeeTime extends Model<DySeeTime> implements Serializable {
         if (sqlSeeTime == null) {
             return this.insert();
         }
+        this.id = sqlSeeTime.getId();
         return this.updateById();
     }
 
