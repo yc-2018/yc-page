@@ -69,6 +69,9 @@ public class DySeeTime extends Model<DySeeTime> implements Serializable {
      * @since 2024/08/28 23:02:02
      */
     public boolean updateOrInsert() {
+        // 忽略毫秒（MySQL 中的时间戳则是以秒为单位的）
+        startTime = new Date(startTime.getTime() / 1000 * 1000);
+
         DySeeTime sqlSeeTime = this.selectOne(Wrappers.<DySeeTime>lambdaQuery()
                 .eq(DySeeTime::getUserId, BaseContext.getCurrentId())
                 .eq(DySeeTime::getStartTime, startTime)
