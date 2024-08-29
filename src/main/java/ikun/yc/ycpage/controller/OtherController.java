@@ -71,7 +71,7 @@ public class OtherController {
      */
     @PostMapping("/dySeeTime")
     public R<?> saveDySeeTime(@RequestBody DySeeTime dySeeTime) {
-        return R.success(dySeeTime.checkLegal().insert());
+        return R.success(dySeeTime.checkLegal().updateOrInsert());
     }
 
 }
