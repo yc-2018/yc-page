@@ -39,8 +39,11 @@ public class DySeeTime extends Model<DySeeTime> implements Serializable {
     /** 结束时间 */
     private Date endTime;
 
+    /** 这次看页面的时长（秒） */
+    private Integer thisTime;
+
     /** 当天总时长（开始到结束中间可能有不算的时长）包括各个页面 */
-    private Integer duration;
+    private Integer totalDuration;
 
     /** 描述 */
     private String remark;
@@ -53,7 +56,7 @@ public class DySeeTime extends Model<DySeeTime> implements Serializable {
      * @since 2024/05/31 17:41:19
      */
     public DySeeTime checkLegal() {
-        if (startTime == null || duration == null || duration < 0) throw new ParamException("入参异常");
+        if (startTime == null || thisTime == null || thisTime < 0) throw new ParamException("入参异常");
         if (endTime != null && endTime.getTime() <= startTime.getTime()) throw new ParamException("传参异常");
         this.id = null;
         this.userId = BaseContext.getCurrentId();
@@ -73,8 +76,8 @@ public class DySeeTime extends Model<DySeeTime> implements Serializable {
         startTime = new Date(startTime.getTime() / 1000 * 1000);
 
         DySeeTime sqlSeeTime = this.selectOne(Wrappers.<DySeeTime>lambdaQuery()
-                .eq(DySeeTime::getUserId, BaseContext.getCurrentId())
-                .eq(DySeeTime::getStartTime, startTime)
+                .eq(DySeeTime::getStartTime, startTime)                 // 加了索引
+                .eq(DySeeTime::getUserId, BaseContext.getCurrentId())   // 条件顺序不能变
         );
         if (sqlSeeTime == null) {
             return this.insert();
