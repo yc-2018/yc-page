@@ -12,7 +12,10 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
 
 /**
  * dy看时间
@@ -59,7 +62,6 @@ public class DySeeTime extends Model<DySeeTime> implements Serializable {
         if (startTime == null || thisTime == null || thisTime < 0) throw new ParamException("入参异常");
         if (endTime != null && endTime.getTime() <= startTime.getTime()) throw new ParamException("传参异常");
         this.id = null;
-        this.userId = BaseContext.getCurrentId();
         return this;
     }
 
@@ -85,5 +87,15 @@ public class DySeeTime extends Model<DySeeTime> implements Serializable {
         this.id = sqlSeeTime.getId();
         return this.updateById();
     }
+
+    public List<DySeeTime> getSeeTimeByDate(LocalDate date) {
+        LocalDateTime startOfDay = date.atStartOfDay(); // 这天的开始
+        LocalDateTime endOfDay = date.atTime(23, 59, 59); // 这天的结束
+        return this.selectList(Wrappers.<DySeeTime>lambdaQuery()
+                .eq(DySeeTime::getUserId, BaseContext.getCurrentId())
+                .between(DySeeTime::getStartTime, startOfDay, endOfDay)
+        );
+    }
+
 
 }

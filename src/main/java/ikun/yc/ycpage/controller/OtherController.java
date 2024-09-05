@@ -3,7 +3,9 @@ package ikun.yc.ycpage.controller;
 
 import ikun.yc.ycpage.common.R;
 import ikun.yc.ycpage.common.anno.CountControl;
+import ikun.yc.ycpage.common.anno.UserId;
 import ikun.yc.ycpage.entity.DySeeTime;
+import ikun.yc.ycpage.entity.dto.DateDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 /**
  * 其他控制器 不处理数据库相关
@@ -69,9 +72,19 @@ public class OtherController {
      * @author ChenGuangLong
      * @since 2024/05/31 17:46:46
      */
+    @UserId
     @PostMapping("/dySeeTime")
     public R<?> saveDySeeTime(@RequestBody DySeeTime dySeeTime) {
         return R.success(dySeeTime.checkLegal().updateOrInsert());
+    }
+
+    @PostMapping("/getSeeTime")
+    public R<List<DySeeTime>> getSeeTime(@RequestBody DateDto dateDto) {
+        if(dateDto.getDate()!= null)
+            return R.success(new DySeeTime().getSeeTimeByDate(dateDto.getDate()));
+        if (dateDto.getStartDate()!= null && dateDto.getEndDate()!= null)
+            return null;
+        return null;
     }
 
 }
