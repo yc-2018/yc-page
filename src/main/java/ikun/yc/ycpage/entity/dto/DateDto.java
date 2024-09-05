@@ -3,12 +3,13 @@ package ikun.yc.ycpage.entity.dto;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 public class DateDto {
-    private LocalDate date;
-    private LocalDate startDate;
-    private LocalDate endDate;
+    private LocalDateTime date;
+    private LocalDateTime startDate;
+    private LocalDateTime endDate;
 
 }

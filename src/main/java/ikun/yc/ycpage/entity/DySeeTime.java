@@ -88,7 +88,8 @@ public class DySeeTime extends Model<DySeeTime> implements Serializable {
         return this.updateById();
     }
 
-    public List<DySeeTime> getSeeTimeByDate(LocalDate date) {
+    public List<DySeeTime> getSeeTimeByDate(LocalDateTime dateTime) {
+        LocalDate date = dateTime.toLocalDate();
         LocalDateTime startOfDay = date.atStartOfDay(); // 这天的开始
         LocalDateTime endOfDay = date.atTime(23, 59, 59); // 这天的结束
         return this.selectList(Wrappers.<DySeeTime>lambdaQuery()
