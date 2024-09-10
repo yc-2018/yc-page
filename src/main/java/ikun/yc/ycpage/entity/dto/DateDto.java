@@ -8,7 +8,7 @@ import java.util.Date;
 @Getter
 @Setter
 public class DateDto {
-    private Date date;
+    private Integer seeRange;
     private Date startDate;
     private Date endDate;
 

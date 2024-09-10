@@ -16,7 +16,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
- * 其他控制器 不处理数据库相关
+ * 其他控制器
  *
  * @author ChenGuangLong
  * @since 2024/01/11 23:51:55
@@ -80,10 +80,8 @@ public class OtherController {
 
     @PostMapping("/getSeeTime")
     public R<List<DySeeTime>> getSeeTime(@RequestBody DateDto dateDto) {
-        if(dateDto.getDate()!= null)
-            return R.success(new DySeeTime().getSeeTimeByDate(dateDto.getDate()));
-        if (dateDto.getStartDate()!= null && dateDto.getEndDate()!= null)
-            return null;
+        if(dateDto.getSeeRange()!= null)
+            return R.success(new DySeeTime().getSeeTimeByDate(dateDto));
         return null;
     }
 

@@ -7,15 +7,12 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
 import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.exception.ParamException;
+import ikun.yc.ycpage.entity.dto.DateDto;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 
@@ -90,20 +87,10 @@ public class DySeeTime extends Model<DySeeTime> implements Serializable {
         return this.updateById();
     }
 
-    public List<DySeeTime> getSeeTimeByDate(Date date) {
-        // 将 Date 转换为 LocalDateTime
-        LocalDateTime dateTime = Instant.ofEpochMilli(date.getTime())
-                .atZone(ZoneId.systemDefault())
-                .toLocalDateTime();
-
-        // 获取日期部分
-        LocalDate localDate = dateTime.toLocalDate();
-        LocalDateTime startOfDay = localDate.atStartOfDay(); // 这天的开始
-        LocalDateTime endOfDay = localDate.atTime(23, 59, 59); // 这天的结束
-
+    public List<DySeeTime> getSeeTimeByDate(DateDto dateDto) {
         return this.selectList(Wrappers.<DySeeTime>lambdaQuery()
                 .eq(DySeeTime::getUserId, BaseContext.getCurrentId())
-                .between(DySeeTime::getStartTime, startOfDay, endOfDay)
+                .between(DySeeTime::getStartTime, dateDto.getStartDate(), dateDto.getEndDate())
         );
     }
 
