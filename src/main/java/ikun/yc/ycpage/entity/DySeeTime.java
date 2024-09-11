@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.exception.ParamException;
 import ikun.yc.ycpage.entity.dto.DateDto;
@@ -36,9 +37,11 @@ public class DySeeTime extends Model<DySeeTime> implements Serializable {
     private String userId;
 
     /** 开始时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date startTime;
 
     /** 结束时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date endTime;
 
     /** 这次看页面的时长（秒） */
