@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.exception.ParamException;
 import ikun.yc.ycpage.entity.dto.DateDto;
@@ -34,6 +35,7 @@ public class DySeeTime extends Model<DySeeTime> implements Serializable {
     private Integer id;
 
     /** 用户微信id */
+    @JsonIgnore
     private String userId;
 
     /** 开始时间 */
@@ -92,6 +94,13 @@ public class DySeeTime extends Model<DySeeTime> implements Serializable {
 
     public List<DySeeTime> getSeeTimeByDate(DateDto dateDto) {
         return this.selectList(Wrappers.<DySeeTime>lambdaQuery()
+                .select(
+                        DySeeTime::getId,
+                        DySeeTime::getStartTime,
+                        DySeeTime::getEndTime,
+                        DySeeTime::getThisTime,
+                        DySeeTime::getTotalDuration,
+                        DySeeTime::getRemark)
                 .eq(DySeeTime::getUserId, BaseContext.getCurrentId())
                 .between(DySeeTime::getStartTime, dateDto.getStartDate(), dateDto.getEndDate())
         );
