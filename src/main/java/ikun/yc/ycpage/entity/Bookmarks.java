@@ -3,9 +3,11 @@ package ikun.yc.ycpage.entity;
 import java.io.Serializable;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -30,6 +32,8 @@ public class Bookmarks extends Model<Bookmarks> implements Serializable {
   private Integer id;
 
   /** 用户ID */
+  @JsonIgnore
+  @TableField(select = false)
   private String userId;
 
   /** 名称 */

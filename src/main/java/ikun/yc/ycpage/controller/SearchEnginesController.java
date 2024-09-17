@@ -84,7 +84,8 @@ public class SearchEnginesController {
     public R<?> updateSearchEngines(@RequestBody List<SearchEngines> searchEngineList) {
         if (searchEngineList == null || searchEngineList.isEmpty()) return R.error("乱搞！🤺");
 
-        searchEnginesService.batchUpdate(searchEngineList);
+        Integer i = searchEnginesService.batchUpdate(searchEngineList);
+        if (i == 0) return R.error("更新失败！");
         return R.success(true);
     }
 

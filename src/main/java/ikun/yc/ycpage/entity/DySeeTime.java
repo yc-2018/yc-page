@@ -1,12 +1,13 @@
 package ikun.yc.ycpage.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.exception.ParamException;
 import ikun.yc.ycpage.entity.dto.DateDto;
@@ -15,7 +16,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
 
 /**
@@ -32,19 +33,19 @@ public class DySeeTime extends Model<DySeeTime> implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @TableId(type = IdType.AUTO)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)   // 仅返回给前端，不接收前端传入的数据
     private Integer id;
 
     /** 用户微信id */
     @JsonIgnore
+    @TableField(select = false)
     private String userId;
 
-    /** 开始时间 */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    private Date startTime;
+    /** 开始时间戳 */
+    private Instant startTime;
 
-    /** 结束时间 */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    private Date endTime;
+    /** 结束时间戳 */
+    private Instant endTime;
 
     /** 这次看页面的时长（秒） */
     private Integer thisTime;
@@ -64,8 +65,7 @@ public class DySeeTime extends Model<DySeeTime> implements Serializable {
      */
     public DySeeTime checkLegal() {
         if (startTime == null || thisTime == null || thisTime < 0) throw new ParamException("入参异常");
-        if (endTime != null && endTime.getTime() <= startTime.getTime()) throw new ParamException("传参异常");
-        this.id = null;
+        if (endTime != null && endTime.toEpochMilli() <= startTime.toEpochMilli()) throw new ParamException("传参异常");
         return this;
     }
 
@@ -78,15 +78,14 @@ public class DySeeTime extends Model<DySeeTime> implements Serializable {
      * @since 2024/08/28 23:02:02
      */
     public boolean updateOrInsert() {
-        // 忽略毫秒（MySQL 中的时间戳则是以秒为单位的）
-        startTime = new Date(startTime.getTime() / 1000 * 1000);
-
         DySeeTime sqlSeeTime = this.selectOne(Wrappers.<DySeeTime>lambdaQuery()
                 .eq(DySeeTime::getStartTime, startTime)                 // 加了索引
                 .eq(DySeeTime::getUserId, BaseContext.getCurrentId())   // 条件顺序不能变
         );
-        if (sqlSeeTime == null) {
-            return this.insert();
+        if (sqlSeeTime == null) return this.insert();
+        // 结束时间不能小于已存在的结束时间
+        if (sqlSeeTime.getEndTime().toEpochMilli() > this.getEndTime().toEpochMilli()) {
+            throw new ParamException("参数异常");
         }
         this.id = sqlSeeTime.getId();
         return this.updateById();
@@ -94,13 +93,6 @@ public class DySeeTime extends Model<DySeeTime> implements Serializable {
 
     public List<DySeeTime> getSeeTimeByDate(DateDto dateDto) {
         return this.selectList(Wrappers.<DySeeTime>lambdaQuery()
-                .select(
-                        DySeeTime::getId,
-                        DySeeTime::getStartTime,
-                        DySeeTime::getEndTime,
-                        DySeeTime::getThisTime,
-                        DySeeTime::getTotalDuration,
-                        DySeeTime::getRemark)
                 .eq(DySeeTime::getUserId, BaseContext.getCurrentId())
                 .between(DySeeTime::getStartTime, dateDto.getStartDate(), dateDto.getEndDate())
         );

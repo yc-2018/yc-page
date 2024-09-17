@@ -24,8 +24,8 @@ public class SearchEnginesServiceImpl extends ServiceImpl<SearchEnginesMapper, S
     private final SearchEnginesMapper searchEnginesMapper;
 
     @Override
-    public void batchUpdate(List<SearchEngines> searchEngineList) {
+    public Integer batchUpdate(List<SearchEngines> searchEngineList) {
         searchEngineList.forEach(searchEngines -> searchEngines.setUserId(BaseContext.getCurrentId()));
-        searchEnginesMapper.batchUpdateSearchEngines(searchEngineList);
+        return searchEnginesMapper.batchUpdateSearchEngines(searchEngineList);
     }
 }

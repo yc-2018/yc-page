@@ -14,6 +14,6 @@ import java.util.List;
 */
 @Mapper
 public interface SearchEnginesMapper extends BaseMapper<SearchEngines> {
-    void batchUpdateSearchEngines(List<SearchEngines> searchEngineList);
+    Integer batchUpdateSearchEngines(List<SearchEngines> searchEngineList);
 
 }

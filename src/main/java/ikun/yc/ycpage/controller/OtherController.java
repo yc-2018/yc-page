@@ -80,7 +80,7 @@ public class OtherController {
 
     @PostMapping("/getSeeTime")
     public R<List<DySeeTime>> getSeeTime(@RequestBody DateDto dateDto) {
-        if(dateDto.getSeeRange()!= null)
+        if (dateDto.getSeeRange() == 1)
             return R.success(new DySeeTime().getSeeTimeByDate(dateDto));
         return null;
     }

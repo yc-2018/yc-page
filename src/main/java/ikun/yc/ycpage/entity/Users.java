@@ -4,9 +4,11 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import ikun.yc.ycpage.common.BaseContext;
 import io.swagger.annotations.ApiModel;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
@@ -24,6 +26,7 @@ import java.time.LocalDateTime;
 @Accessors(chain = true)
 @TableName("users")
 @ApiModel("Users对象")
+@EqualsAndHashCode(callSuper = false)
 public class Users extends Model<Users> implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -41,9 +44,11 @@ public class Users extends Model<Users> implements Serializable {
     private String phoneNumber;
 
     /** 密码 */
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     /** 创建时间 */
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private LocalDateTime createTime;
 
     /** 修改时间 */

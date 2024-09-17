@@ -2,6 +2,8 @@ package ikun.yc.ycpage.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import ikun.yc.ycpage.common.BaseContext;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -31,6 +33,8 @@ public class Memo extends Model<Memo> {
 	private Integer id;
 
     /** 用户ID */
+    @JsonIgnore
+    @TableField(select = false)
     private String userId;
 
     /** 备忘录待办类型 (0:普通待办，1：循环待办，2：长期待办，3：紧急待办，4：备忘英语，5、日记待办，6、公事待办*/
@@ -45,6 +49,7 @@ public class Memo extends Model<Memo> {
     private Integer numberOfRecurrences;
 
     /** 创建时间 */
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private LocalDateTime createTime;
 
     /** 修改时间 */
@@ -67,7 +72,6 @@ public class Memo extends Model<Memo> {
      */
     public void toReviseInfo(){
         userId = BaseContext.getCurrentId();
-        createTime = null;
         // 更新时间 不为空的情况下允许在7+1天内，不在7+1天内不允许 设置为空
         if (updateTime != null && (updateTime.isBefore(LocalDateTime.now().minusDays(8))|| updateTime.isAfter(LocalDateTime.now().plusDays(1))) ) {
             updateTime = null;

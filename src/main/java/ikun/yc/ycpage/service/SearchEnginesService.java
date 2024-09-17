@@ -14,5 +14,5 @@ import java.util.List;
  */
 public interface SearchEnginesService extends IService<SearchEngines> {
 
-    void batchUpdate(List<SearchEngines> searchEngineList);
+    Integer batchUpdate(List<SearchEngines> searchEngineList);
 }

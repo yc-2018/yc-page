@@ -2,10 +2,13 @@ package ikun.yc.ycpage.entity;
 
 import java.io.Serializable;
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
@@ -19,6 +22,7 @@ import lombok.experimental.Accessors;
 @NoArgsConstructor
 @Accessors(chain = true)
 @TableName("page_parameters")
+@EqualsAndHashCode(callSuper = false)
 public class PageParameters extends Model<PageParameters> implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -27,6 +31,8 @@ public class PageParameters extends Model<PageParameters> implements Serializabl
 	private Integer id;
 
     /** 用户ID，与users表关联 */
+    @JsonIgnore
+    @TableField(select = false)
     private String userId;
 
     /** 边宽 */
