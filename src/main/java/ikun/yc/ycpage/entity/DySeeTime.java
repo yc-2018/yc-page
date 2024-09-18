@@ -50,6 +50,10 @@ public class DySeeTime extends Model<DySeeTime> implements Serializable {
     @TableField(exist = false)      // 不是数据库字段，但是数据库能注入到这
     private String date;            // 聚合时的日期
 
+    /** 聚合计次 */
+    @TableField(exist = false)      // 不是数据库字段，但是数据库能注入到这
+    private Integer count;          // 聚合时的计次
+
     /** 开始时间戳 */
     private Instant startTime;
 
@@ -120,7 +124,7 @@ public class DySeeTime extends Model<DySeeTime> implements Serializable {
         if (dateDto.getSeeRange() == WEEK.getValue()) {
             if (durationInSeconds > 604800L) throw new IllegalArgumentException("开始时间和结束时间不能超过一周");
             return this.selectList(Wrappers.<DySeeTime>query()
-                    .select("DATE(start_time) AS date", "SUM(this_time) AS this_time")
+                    .select("DATE(start_time) AS date", "SUM(this_time) AS this_time", "COUNT(*) AS count")
                     .eq("user_id", BaseContext.getCurrentId())
                     .between("start_time", dateDto.getStartDate(), dateDto.getEndDate())
                     .groupBy("DATE(start_time)")
@@ -130,7 +134,7 @@ public class DySeeTime extends Model<DySeeTime> implements Serializable {
         if (dateDto.getSeeRange() == MONTH.getValue()) {
             if (durationInSeconds > 2678400L) throw new IllegalArgumentException("开始时间和结束时间不能超过一个月");
             return this.selectList(Wrappers.<DySeeTime>query()
-                    .select("DATE(start_time) AS date", "SUM(this_time) AS this_time")
+                    .select("DATE(start_time) AS date", "SUM(this_time) AS this_time", "COUNT(*) AS count")
                     .eq("user_id", BaseContext.getCurrentId())
                     .between("start_time", dateDto.getStartDate(), dateDto.getEndDate())
                     .groupBy("DATE(start_time)")
@@ -140,7 +144,7 @@ public class DySeeTime extends Model<DySeeTime> implements Serializable {
         if (dateDto.getSeeRange() == YEAR.getValue()) {
             if (durationInSeconds > 31622400L) throw new IllegalArgumentException("开始时间和结束时间不能超过一年");
             return this.selectList(Wrappers.<DySeeTime>query()
-                    .select("DATE_FORMAT(start_time, '%Y-%m') AS date", "SUM(this_time) AS this_time")
+                    .select("DATE_FORMAT(start_time, '%Y-%m') AS date", "SUM(this_time) AS this_time", "COUNT(*) AS count")
                     .eq("user_id", BaseContext.getCurrentId())
                     .between("start_time", dateDto.getStartDate(), dateDto.getEndDate())
                     .groupBy("DATE_FORMAT(start_time, '%Y-%m')")
