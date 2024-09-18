@@ -80,9 +80,11 @@ public class OtherController {
 
     @PostMapping("/getSeeTime")
     public R<List<DySeeTime>> getSeeTime(@RequestBody DateDto dateDto) {
-        if (dateDto.getSeeRange() == 1)
-            return R.success(new DySeeTime().getSeeTimeByDate(dateDto));
-        return null;
+        if (dateDto == null || dateDto.getStartDate() == null || dateDto.getEndDate() == null)
+            throw new IllegalArgumentException("<X_X>");
+        if (dateDto.getSeeRange() == null || dateDto.getSeeRange() <= 0 || dateDto.getSeeRange() > 4)
+            throw new IllegalArgumentException("《X_X》");
+        return R.success(new DySeeTime().getSeeTimeByDate(dateDto));
     }
 
 }
