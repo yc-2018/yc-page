@@ -18,6 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -105,9 +107,12 @@ public class WechatServiceImpl implements WechatService {
                     String[] strArr = wechatDto.getContent().split(" ");
                     if (strArr.length == 1) return "请输入要查询的工号";
                     if (strArr[1].length() != 5) return "工号格式输入有误";
+                    strArr[1] = strArr[1].toUpperCase();    // 统一转为大写
                     url += strArr[1];
                     if (strArr.length == 3) url += "&date=" + strArr[2];
-                    return restTemplate.getForObject(url, String.class);
+                    List result = restTemplate.getForObject(url, List.class);
+                    if (result == null || result.isEmpty()) return "未查询到该工号信息";
+                    return String.join("\n", result);
                 } catch (RestClientException exception) {
                     log.error("钉钉接口调用失败", exception);
                     return "\uD83D\uDE2D接口失效";
