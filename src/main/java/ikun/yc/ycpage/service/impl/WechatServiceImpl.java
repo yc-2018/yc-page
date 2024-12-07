@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -103,15 +104,24 @@ public class WechatServiceImpl implements WechatService {
                     "百度网盘2018年的透明头像素材:https://pan.baidu.com/s/13mCwaOmYBdvXdhLLOmteQQ?pwd=d94d";
             case "时捷":
                 try {
+                    String userId = wechatDto.getFromUserName();
+                    if (!userId.equals("onVH31THivT_M69ylsWwhtX5-erQ") && !userId.equals("onVH31VTaClY09WSZH0CQBF2RivM")) {
+                        Boolean isBanned = redisTemplate.hasKey("sj_ban:" + userId);    // 1. 判断该用户是否被 ban
+                        if (isBanned) return "该功能一小时只能使用一次";
+                        // 2. 在操作完成后设置用户为 ban，持续时间为 1 小时
+                        else redisTemplate.opsForValue().set("sj_ban:" + userId, "banned", Duration.ofHours(1));
+                    }
+
                     String url = "http://localhost:9999/check_attendance?id=";
                     String[] strArr = wechatDto.getContent().split(" ");
                     if (strArr.length == 1) return "请输入要查询的工号";
                     if (strArr[1].length() != 5) return "工号格式输入有误";
                     strArr[1] = strArr[1].toUpperCase();    // 统一转为大写
                     url += strArr[1];
-                    if (strArr.length == 3) url += "&date=" + strArr[2];
+                    if (strArr.length >= 3) url += "&date=" + strArr[2];
                     List result = restTemplate.getForObject(url, List.class);
-                    if (result == null || result.isEmpty()) return "未查询到该工号信息";
+                    if (result == null || result.isEmpty())
+                        return (strArr.length >= 3 ? strArr[2] : "今天") + "未查询到该工号信息";
                     return String.join("\n", result);
                 } catch (RestClientException exception) {
                     log.error("钉钉接口调用失败", exception);
