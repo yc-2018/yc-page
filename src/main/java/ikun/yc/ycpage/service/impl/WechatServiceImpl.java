@@ -84,8 +84,7 @@ public class WechatServiceImpl implements WechatService {
                     log.error("一言接口调用失败", exception);
                     return "\uD83D\uDE2D接口失效";
                 }
-            case "kfc":
-                // 疯狂星期四文案
+            case "kfc":  // 疯狂星期四文案
                 String urlKfc = "https://api.pearktrue.cn/api/kfc/";
                 try {
                     // 调用翻译接口
@@ -100,6 +99,20 @@ public class WechatServiceImpl implements WechatService {
             case "头像是什么": // 之前微信自动回，挺多人问的
                 return "教程是2018年出的了,现在的微信的版本是不支持的了,之前的版本我也没有,就算有 好像在新版活跃度高的账号是不能在旧版本登录的\n"+
                     "百度网盘2018年的透明头像素材:https://pan.baidu.com/s/13mCwaOmYBdvXdhLLOmteQQ?pwd=d94d";
+            case "时捷":
+                try {
+                    String url = "http://localhost:9999/check_attendance?id=";
+                    String[] strArr = wechatDto.getContent().split(" ");
+                    if (strArr.length == 1) return "请输入要查询的工号";
+                    if (strArr[1].length() != 5) return "工号格式输入有误";
+                    url += strArr[1];
+                    if (strArr.length == 3) url += "&date=" + strArr[2];
+                    return restTemplate.getForObject(url, String.class);
+                } catch (RestClientException exception) {
+                    log.error("钉钉接口调用失败", exception);
+                    return "\uD83D\uDE2D接口失效";
+                }
+
 
             default:
                 return StrUtils.joins("因为公众号对接了服务器，之前的回复和自定义菜单都失效了，非常抱歉" +
@@ -156,6 +169,7 @@ public class WechatServiceImpl implements WechatService {
      */
     private String setReplyType(WechatDto wechatDto) {
         if (wechatDto.startsWithAny("翻译 ", "fy ")) return "翻译";
+        if (wechatDto.startsWithAny("sj ", "SJ ")) return "时捷";
         if (getMemoTypeByText(wechatDto.getContent()) != null) return "添加待办";
         return wechatDto.getContent();
     }

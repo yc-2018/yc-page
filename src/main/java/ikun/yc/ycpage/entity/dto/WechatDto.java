@@ -46,11 +46,12 @@ public class WechatDto {
     }
 
     /**
-    检查给定字符串是否以可变参数中的任何一个字符串开头。
+     * 检查给定字符串是否以可变参数中的任何一个字符串开头。
+     *
      * @param prefixes 可变参数，字符串数组
      * @return 如果给定字符串以可变参数中的任何一个字符串开头，则返回true，否则返回false
      */
-    public boolean startsWithAny( String... prefixes) {
+    public boolean startsWithAny(String... prefixes) {
         return StrUtils.startWithOr(this.content, prefixes);
     }
 
