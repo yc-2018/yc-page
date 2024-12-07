@@ -107,7 +107,7 @@ public class WechatServiceImpl implements WechatService {
                     String userId = wechatDto.getFromUserName();
                     if (!userId.equals("onVH31THivT_M69ylsWwhtX5-erQ") && !userId.equals("onVH31VTaClY09WSZH0CQBF2RivM")) {
                         Boolean isBanned = redisTemplate.hasKey("sj_ban:" + userId);    // 1. 判断该用户是否被 ban
-                        if (isBanned) return "该功能一小时只能使用一次";
+                        if (isBanned) return "此功能一小时只能使用一次";
                         // 2. 在操作完成后设置用户为 ban，持续时间为 1 小时
                         else redisTemplate.opsForValue().set("sj_ban:" + userId, "banned", Duration.ofHours(1));
                     }
@@ -121,7 +121,7 @@ public class WechatServiceImpl implements WechatService {
                     if (strArr.length >= 3) url += "&date=" + strArr[2];
                     List result = restTemplate.getForObject(url, List.class);
                     if (result == null || result.isEmpty())
-                        return (strArr.length >= 3 ? strArr[2] : "今天") + "未查询到该工号信息";
+                        return (strArr.length >= 3 ? strArr[2] : "今天") + "无记录";
                     return String.join("\n", result);
                 } catch (RestClientException exception) {
                     log.error("钉钉接口调用失败", exception);
