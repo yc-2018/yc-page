@@ -46,8 +46,14 @@ public class LoopMemoTime implements Serializable {
     @TableField(value = "memo_date")
     private LocalDateTime memoDate;
 
+    /** 备忘录日期  数据库有创建时赋当前为默认值 */
+    @ApiModelProperty(value = "循环时可备注文本")
+    @TableField(value = "loop_text")
+    private String loopText;
+
     public LoopMemoTime(Memo item) {
         this.toDoItemId = item.getId();
         this.memoDate = item.getUpdateTime();
+        this.loopText = item.getOkText();
     }
 }
