@@ -85,7 +85,9 @@ public class ToDoItemsServiceImpl extends ServiceImpl<ToDoItemsMapper, Memo> imp
 
         // 循环（如果 NumberOfRecurrences 不为空，则在数据库层面增加 1）
         toDoItem.setNumberOfRecurrences(null); // 避免更新时替换掉本来的值再加一
+        String okText = toDoItem.getOkText();  // 保存一下，后面要使用
+        toDoItem.setOkText(null);              // 避免+1时替换掉完成的值
         return this.update(toDoItem, updateWrapper.setSql("number_of_recurrences = COALESCE(number_of_recurrences, 0) + 1"))
-                && loopMemoTimeService.save(new LoopMemoTime(toDoItem));
+            && loopMemoTimeService.save(new LoopMemoTime(toDoItem.setOkText(okText)));
     }
 }
