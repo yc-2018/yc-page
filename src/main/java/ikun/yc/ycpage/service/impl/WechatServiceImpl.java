@@ -21,6 +21,7 @@ import org.springframework.web.client.RestTemplate;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -128,6 +129,29 @@ public class WechatServiceImpl implements WechatService {
                     return "\uD83D\uDE2D接口失效";
                 }
 
+            case "短剧":
+                try {
+                    String url = "https://api.kuleu.com/api/action?text=";
+                    String[] strArr = wechatDto.getContent().split(" ");
+                    if (strArr.length == 1) return "请输入要查询剧名";
+                    String result = restTemplate.getForObject(url + strArr[1], String.class);
+                    // 解析接口返回结果
+                    JsonNode jsonNode = new ObjectMapper().readTree(result);
+                    // 消息不是搜索成功就是失败了吧
+                    if (!"搜索成功".equals(jsonNode.get("msg").asText())) return jsonNode.get("msg").asText();
+                    // 获取数据
+                    JsonNode data = jsonNode.get("data");
+                    StringBuilder sb = new StringBuilder(); // 拼接结果
+                    for (JsonNode item : data) {
+                        String name = item.get("name").asText();
+                        String viewlink = item.get("viewlink").asText();
+                        sb.append(name).append(" ").append(viewlink).append("\n");
+                    }
+                    return sb.toString();
+                } catch (RestClientException | JsonProcessingException exception) {
+                    log.error("钉钉接口调用失败", exception);
+                    return "\uD83D\uDE2D接口失效";
+                }
 
             default:
                 return StrUtils.joins("因为公众号对接了服务器，之前的回复和自定义菜单都失效了，非常抱歉" +
@@ -185,6 +209,7 @@ public class WechatServiceImpl implements WechatService {
     private String setReplyType(WechatDto wechatDto) {
         if (wechatDto.startsWithAny("翻译 ", "fy ")) return "翻译";
         if (wechatDto.startsWithAny("sj ", "SJ ")) return "时捷";
+        if (wechatDto.startsWithAny("dj ", "dj ", "短剧 ")) return "短剧";
         if (getMemoTypeByText(wechatDto.getContent()) != null) return "添加待办";
         return wechatDto.getContent();
     }
