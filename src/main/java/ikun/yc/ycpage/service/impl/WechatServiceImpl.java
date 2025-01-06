@@ -129,7 +129,7 @@ public class WechatServiceImpl implements WechatService {
                     return "\uD83D\uDE2D接口失效";
                 }
 
-            case "短剧":
+            case "短剧":  // 文档： https://www.free-api.com/doc/645
                 try {
                     String url = "https://api.kuleu.com/api/action?text=";
                     String[] strArr = wechatDto.getContent().split(" ");
