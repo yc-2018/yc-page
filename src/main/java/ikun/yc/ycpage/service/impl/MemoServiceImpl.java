@@ -6,9 +6,9 @@ import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.R;
 import ikun.yc.ycpage.entity.LoopMemoTime;
 import ikun.yc.ycpage.entity.Memo;
-import ikun.yc.ycpage.mapper.ToDoItemsMapper;
+import ikun.yc.ycpage.mapper.MemoMapper;
 import ikun.yc.ycpage.service.LoopMemoTimeService;
-import ikun.yc.ycpage.service.ToDoItemsService;
+import ikun.yc.ycpage.service.MemoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,25 +27,25 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ToDoItemsServiceImpl extends ServiceImpl<ToDoItemsMapper, Memo> implements ToDoItemsService {
-    private final ToDoItemsMapper toDoItemsMapper;
+public class MemoServiceImpl extends ServiceImpl<MemoMapper, Memo> implements MemoService {
+    private final MemoMapper memoMapper;
     private final LoopMemoTimeService loopMemoTimeService;
 
 
     /**
      * 添加待办
-     * @param toDoItem 待办事项请全体
+     * @param memo 待办事项请全体
      * @return 成功或失败或被禁用。
      */
     @Override
-    public R<Integer> addItem(Memo toDoItem) {
+    public R<Integer> addItem(Memo memo) {
         String userId = BaseContext.getCurrentId();
 
-        toDoItem.setCreateTime(null);
-        toDoItem.setUserId(userId);
+        memo.setCreateTime(null);
+        memo.setUserId(userId);
 
-        boolean save = this.save(toDoItem);
-        return save ? R.success(toDoItem.getId()) : R.error("添加失败");
+        boolean save = this.save(memo);
+        return save ? R.success(memo.getId()) : R.error("添加失败");
     }
 
 
@@ -54,9 +54,9 @@ public class ToDoItemsServiceImpl extends ServiceImpl<ToDoItemsMapper, Memo> imp
      * @return 分组统计加在标签上面 未完成的条数。但是不包括 2长期、1循环、4英语、5日记、和当前的
      */
     @Override
-    public Map getGroupToDoItemsCount(Integer type) {
+    public Map getGroupMemoCount(Integer type) {
         // 假设这是从MyBatis查询返回的原始列表
-        List<Map> originalList = toDoItemsMapper.selectGroupToDoItemsCount(new Memo(BaseContext.getCurrentId(), type));
+        List<Map> originalList = memoMapper.selectGroupMemoCount(new Memo(BaseContext.getCurrentId(), type));
 
         // 转换列表为期望的格式
         return originalList.stream()
@@ -70,24 +70,24 @@ public class ToDoItemsServiceImpl extends ServiceImpl<ToDoItemsMapper, Memo> imp
     /**
      * 更新备忘录item
      *
-     * @param toDoItem 要修改的item信息
+     * @param memo 要修改的item信息
      * @return 成功与否
      */
     @Transactional
     @Override
-    public boolean updateItem(Memo toDoItem) {
+    public boolean updateItem(Memo memo) {
         LambdaUpdateWrapper<Memo> updateWrapper = new LambdaUpdateWrapper<Memo>()
-                .eq(Memo::getId, toDoItem.getId())
-                .eq(Memo::getUserId, toDoItem.getUserId());
+                .eq(Memo::getId, memo.getId())
+                .eq(Memo::getUserId, memo.getUserId());
 
         // 完成或编辑(循环+1 以外的直接更新)
-        if (toDoItem.getNumberOfRecurrences() == null) return this.update(toDoItem, updateWrapper);
+        if (memo.getNumberOfRecurrences() == null) return this.update(memo, updateWrapper);
 
         // 循环（如果 NumberOfRecurrences 不为空，则在数据库层面增加 1）
-        toDoItem.setNumberOfRecurrences(null); // 避免更新时替换掉本来的值再加一
-        String okText = toDoItem.getOkText();  // 保存一下，后面要使用
-        toDoItem.setOkText(null);              // 避免+1时替换掉完成的值
-        return this.update(toDoItem, updateWrapper.setSql("number_of_recurrences = COALESCE(number_of_recurrences, 0) + 1"))
-            && loopMemoTimeService.save(new LoopMemoTime(toDoItem.setOkText(okText)));
+        memo.setNumberOfRecurrences(null); // 避免更新时替换掉本来的值再加一
+        String okText = memo.getOkText();  // 保存一下，后面要使用
+        memo.setOkText(null);              // 避免+1时替换掉完成的值
+        return this.update(memo, updateWrapper.setSql("number_of_recurrences = COALESCE(number_of_recurrences, 0) + 1"))
+            && loopMemoTimeService.save(new LoopMemoTime(memo.setOkText(okText)));
     }
 }

@@ -8,7 +8,7 @@ import ikun.yc.ycpage.common.anno.Log;
 import ikun.yc.ycpage.common.aop.CountControlAspect;
 import ikun.yc.ycpage.common.exception.FieldIsNullException;
 import ikun.yc.ycpage.entity.Memo;
-import ikun.yc.ycpage.service.ToDoItemsService;
+import ikun.yc.ycpage.service.MemoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -25,8 +25,8 @@ import java.util.Date;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/toDoItems")
-public class ToDoItemsController {
-    private final ToDoItemsService toDoItemsService;
+public class MemoController {
+    private final MemoService memoService;
 
     /**
      * 添加待办
@@ -45,7 +45,7 @@ public class ToDoItemsController {
 
         memo.toReviseInfo();   // 不允许更新的字段就不允许更新
 
-        return toDoItemsService.addItem(memo);
+        return memoService.addItem(memo);
     }
 
     /**
@@ -77,7 +77,7 @@ public class ToDoItemsController {
         Date endTime = times != null ? new Date(Long.parseLong(times[1])) : null;
 
         R<Page<Memo>> pageR = R.success(
-            toDoItemsService.lambdaQuery()
+            memoService.lambdaQuery()
                 .eq(Memo::getItemType, type)
                 .eq(Memo::getUserId, BaseContext.getCurrentId())                // 请求头的token 的id
                 .eq(completed != -1, Memo::getCompleted, completed)    // 0 未完成 1 已完成 -1 全部
@@ -97,23 +97,23 @@ public class ToDoItemsController {
 
         // 如果是查询未完成的 而且不是英语的，统计数量
         if (completed == 0 && type != 4)
-            pageR.add("groupToDoItemsCounts", toDoItemsService.getGroupToDoItemsCount(type));
+            pageR.add("groupToDoItemsCounts", memoService.getGroupMemoCount(type));
 
         return pageR;
     }
 
     /**
      * 修改待办
-     * @param toDoItem 待办对象
+     * @param memo 待办对象
      */
     @Log
     @PutMapping
     @CountControl(operationType = CountControlAspect.UPDATE)  // 一分钟请求超出5次，禁用1分钟
-    public R<Boolean> updateItem(@RequestBody Memo toDoItem) {
+    public R<Boolean> updateItem(@RequestBody Memo memo) {
 
-        toDoItem.toReviseInfo();   // 不允许更新的字段就不允许更新
+        memo.toReviseInfo();   // 不允许更新的字段就不允许更新
 
-        boolean updateSuccess = toDoItemsService.updateItem(toDoItem);
+        boolean updateSuccess = memoService.updateItem(memo);
 
         return updateSuccess ? R.success(true) : R.error("修改失败");
     }
@@ -127,7 +127,7 @@ public class ToDoItemsController {
     @CountControl(operationType = CountControlAspect.DELETE)
     @DeleteMapping("/{id}")
     public R<?> deleteItem(@PathVariable String id) {
-        return toDoItemsService.lambdaUpdate()
+        return memoService.lambdaUpdate()
             .eq(Memo::getId, id)
             .eq(Memo::getUserId, BaseContext.getCurrentId())
             .setSql("completed = completed + 10")

@@ -13,11 +13,11 @@ import java.util.Map;
  * @author yc
  * @since 2023-12-03 22:57:40
  */
-public interface ToDoItemsService extends IService<Memo> {
+public interface MemoService extends IService<Memo> {
 
     R<Integer> addItem(Memo memo);
 
-    Map getGroupToDoItemsCount(Integer type);
+    Map getGroupMemoCount(Integer type);
 
-    boolean updateItem(Memo toDoItem);
+    boolean updateItem(Memo memo);
 }

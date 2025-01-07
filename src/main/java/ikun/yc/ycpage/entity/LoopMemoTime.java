@@ -37,7 +37,7 @@ public class LoopMemoTime implements Serializable {
     private Integer id;
 
     /** 待办事项id */
-    @ApiModelProperty(value = "备忘组件")
+    @ApiModelProperty(value = "备忘主键")
     @TableField("to_do_item_id")
     private Integer toDoItemId;
 
