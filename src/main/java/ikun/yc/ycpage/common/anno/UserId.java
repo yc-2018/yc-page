@@ -13,4 +13,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)         // 允许写在方法上
 public @interface UserId {
     int value() default 0;
+    String fieldName() default "userId"; // 新增字段名参数，默认为userId
 }

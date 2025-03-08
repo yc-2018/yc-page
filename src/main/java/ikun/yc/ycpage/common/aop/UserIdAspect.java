@@ -24,13 +24,14 @@ public class UserIdAspect {
         int index = userIdAnnotation.value() - 1; // 获取注解中的value属性，减1以匹配数组索引
         MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature(); // 获取方法签名（包括方法的名称、修饰符、返回类型、参数类型等)
         Class<?>[] parameterTypes = methodSignature.getMethod().getParameterTypes();  // 获取方法参数类型
+        String fieldName = userIdAnnotation.fieldName(); // 获取注解中配置的字段名
 
         // 给的参数索引不正常，则遍历所有参数
         if (index < 0 || index >= args.length)
             for (int i = 0; i < args.length; i++) {
                 Object arg = args[i];
                 Class<?> parameterType = parameterTypes[i];
-                Field idField = getIdField(parameterType);
+                Field idField = getIdField(parameterType, fieldName);   // 传递字段名
                 if (idField != null && arg != null) {
                     setId(idField, arg);
                 }
@@ -38,7 +39,7 @@ public class UserIdAspect {
         else {  // 给的参数索引正常
             Object arg = args[index];
             Class<?> parameterType = parameterTypes[index];
-            Field idField = getIdField(parameterType);
+            Field idField = getIdField(parameterType, fieldName);   // 传递字段名
             if (idField != null && arg != null) {
                 setId(idField, arg);
             }
@@ -46,10 +47,10 @@ public class UserIdAspect {
     }
 
     // 获取userId字段
-    private Field getIdField(Class<?> clazz) {
+    private Field getIdField(Class<?> clazz, String fieldName) {
         Field[] fields = clazz.getDeclaredFields();
         return Arrays.stream(fields)
-                .filter(field -> field.getName().equals("userId"))
+                .filter(field -> field.getName().equals(fieldName))
                 .findFirst()
                 .orElse(null);
     }
