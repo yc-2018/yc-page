@@ -37,6 +37,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .addPathPatterns("/**")                     //拦截全部路径    /*是一级路径/**是全部路径
                 .excludePathPatterns(
                         "/users/login",
+                        "/mini/login",
                         "/接收微信接口",
                         "/favicon.ico",
                         "/other/run-script",
