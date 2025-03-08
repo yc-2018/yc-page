@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ikun.yc.ycpage.mapper.CheckinRecordsMapper">
+
+    <resultMap id="BaseResultMap" type="ikun.yc.ycpage.entity.CheckinRecords">
+            <id property="id" column="id" jdbcType="INTEGER"/>
+            <result property="userOpenid" column="user_openid" jdbcType="VARCHAR"/>
+            <result property="longitude" column="longitude" jdbcType="DECIMAL"/>
+            <result property="latitude" column="latitude" jdbcType="DECIMAL"/>
+            <result property="name" column="name" jdbcType="VARCHAR"/>
+            <result property="address" column="address" jdbcType="VARCHAR"/>
+            <result property="remark" column="remark" jdbcType="VARCHAR"/>
+            <result property="checkinTime" column="checkin_time" jdbcType="TIMESTAMP"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+            <result property="isDeleted" column="is_deleted" jdbcType="TINYINT"/>
+            <result property="locationType" column="location_type" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,user_openid,longitude,
+        latitude,name,address,
+        remark,checkin_time,update_time,
+        is_deleted,location_type
+    </sql>
+</mapper>
