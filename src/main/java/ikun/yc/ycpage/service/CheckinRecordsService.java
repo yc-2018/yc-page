@@ -12,5 +12,4 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface CheckinRecordsService extends IService<CheckinRecords> {
 
-  CheckinRecords checkin(CheckinRecords checkinRecord);
 }

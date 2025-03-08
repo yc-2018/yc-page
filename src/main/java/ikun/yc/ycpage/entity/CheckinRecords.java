@@ -1,28 +1,28 @@
 package ikun.yc.ycpage.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.io.Serializable;
-import java.math.BigDecimal;
-import java.util.Date;
-
+import com.baomidou.mybatisplus.extension.activerecord.Model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
+import javax.validation.constraints.NotNull;
+import java.math.BigDecimal;
+import java.util.Date;
+
 /**
- * 打卡记录表
+ * 微信小程序打卡记录表
  * TableName checkin_records
  */
 @Data
 @Accessors(chain = true)    //chain = true 生成setter方法返回this //https://blog.csdn.net/qs_xf/article/details/123876948
 @TableName(value ="checkin_records")
 @EqualsAndHashCode(callSuper = false)
-public class CheckinRecords implements Serializable {
+public class CheckinRecords extends Model<CheckinRecords> {
     /** 记录ID  */
     @TableId(type = IdType.AUTO)
     private Integer id;
@@ -32,9 +32,11 @@ public class CheckinRecords implements Serializable {
     private String userOpenid;
 
     /** 经度（-180.000000到180.000000）  */
+    @NotNull(message = "经度不能为空")
     private BigDecimal longitude;
 
     /** 纬度（-90.000000到90.000000）  */
+    @NotNull(message = "纬度不能为空")
     private BigDecimal latitude;
 
     /** 地点名称（如：北京故宫）  */
@@ -61,7 +63,4 @@ public class CheckinRecords implements Serializable {
 
     /** 地点类型  */
     private String locationType;
-
-    @TableField(exist = false)
-    private static final long serialVersionUID = 1L;
 }

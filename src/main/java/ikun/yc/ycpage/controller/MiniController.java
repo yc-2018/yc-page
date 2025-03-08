@@ -1,12 +1,15 @@
 package ikun.yc.ycpage.controller;
 
 import ikun.yc.ycpage.common.R;
+import ikun.yc.ycpage.common.anno.UserId;
 import ikun.yc.ycpage.entity.CheckinRecords;
 import ikun.yc.ycpage.service.MiniUsersService;
 import ikun.yc.ycpage.service.CheckinRecordsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
 
 /**
  * 小程序控制器
@@ -35,8 +38,9 @@ public class MiniController {
      * @author ChenGuangLong
      * @since 2025/03/08 17:33:38
      */
+    @UserId(fieldName = "userOpenid")
     @PostMapping("/checkin")
-    public R<CheckinRecords> checkin(@RequestBody CheckinRecords checkinRecord) {
-        return R.success(checkinRecordsService.checkin(checkinRecord));
+    public R<Boolean> checkin(@RequestBody @Valid CheckinRecords checkinRecord) {
+        return R.success(checkinRecord.insert());
     }
 }

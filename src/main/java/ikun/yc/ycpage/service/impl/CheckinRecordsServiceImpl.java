@@ -14,11 +14,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class CheckinRecordsServiceImpl extends ServiceImpl<CheckinRecordsMapper, CheckinRecords> implements CheckinRecordsService{
 
-  @Override
-  public CheckinRecords checkin(CheckinRecords checkinRecord) {
-     this.save(checkinRecord);
-    return null;
-  }
 }
 
 
