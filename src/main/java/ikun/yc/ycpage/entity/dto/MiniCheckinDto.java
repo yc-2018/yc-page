@@ -14,7 +14,7 @@ import java.time.Instant;
 @Getter
 @Setter
 public class MiniCheckinDto {
-    private Instant startTime;
+    private Instant startTime;  // 开始时间，时间戳类型mysql对应秒 前端生成毫秒要除1000
     private Instant endTime;
 
     private String address;

@@ -6,13 +6,15 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import ikun.yc.ycpage.common.LocalDateTimeSerializer;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /**
  * 微信小程序打卡记录表
@@ -50,11 +52,13 @@ public class CheckinRecords extends Model<CheckinRecords> {
 
     /** 打卡时间  */
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)   // 仅返回给前端，不接收前端传入的数据
-    private Date checkinTime;
+    @JsonSerialize(using = LocalDateTimeSerializer.class)   // 自定义处理序列化（只会影响序列化 序列化就是对象变json）
+    private LocalDateTime checkinTime;
 
     /** 更新时间  */
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)   // 仅返回给前端，不接收前端传入的数据
-    private Date updateTime;
+    @JsonSerialize(using = LocalDateTimeSerializer.class)   // 自定义处理序列化（只会影响序列化 序列化就是对象变json）
+    private LocalDateTime updateTime;
 
     /** 删除标记 0-正常 1-删除  */
     @JsonIgnore
