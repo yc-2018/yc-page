@@ -1,15 +1,19 @@
 package ikun.yc.ycpage.controller;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.R;
 import ikun.yc.ycpage.common.anno.UserId;
 import ikun.yc.ycpage.entity.CheckinRecords;
+import ikun.yc.ycpage.entity.dto.MiniCheckinDto;
 import ikun.yc.ycpage.service.MiniUsersService;
-import ikun.yc.ycpage.service.CheckinRecordsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.time.LocalDate;
 
 /**
  * 小程序控制器
@@ -23,7 +27,6 @@ import javax.validation.Valid;
 @RequestMapping("/mini")
 public class MiniController {
     private final MiniUsersService miniUsersService;
-    private final CheckinRecordsService checkinRecordsService;
 
     @PostMapping("/login")
     public R<String> wechatLogin(String code) {
@@ -40,7 +43,43 @@ public class MiniController {
      */
     @UserId(fieldName = "userOpenid")
     @PostMapping("/checkin")
-    public R<Boolean> checkin(@RequestBody @Valid CheckinRecords checkinRecord) {
+    public R<?> checkin(@RequestBody @Valid CheckinRecords checkinRecord) {
+        // 先从数据库获取今天的这个用户这个经纬度是否已经打卡
+        CheckinRecords sqlCheckin = checkinRecord.selectOne(Wrappers.<CheckinRecords>lambdaQuery()
+                .select(CheckinRecords::getId)
+                .eq(CheckinRecords::getUserOpenid, checkinRecord.getUserOpenid())
+                .eq(CheckinRecords::getLongitude, checkinRecord.getLongitude())
+                .eq(CheckinRecords::getLatitude, checkinRecord.getLatitude())
+                .ge(CheckinRecords::getCheckinTime, LocalDate.now().atStartOfDay())
+        );
+        if (sqlCheckin != null) return R.error("此处今日已打卡");
+
+        // 判断今天打卡是否超过100次
+        if (checkinRecord.selectCount(Wrappers.<CheckinRecords>lambdaQuery()
+                .eq(CheckinRecords::getUserOpenid, checkinRecord.getUserOpenid())
+                .ge(CheckinRecords::getCheckinTime, LocalDate.now().atStartOfDay())
+        ) > 100) return R.error("今日打卡超百次");
+
         return R.success(checkinRecord.insert());
+    }
+
+    /**
+     * 获取打卡列表
+     *
+     * @param checkinDto 小程序打卡搜索列表请求参数
+     * @param page       第几页
+     */
+    @PostMapping("/checkinList")
+    public R<Page<CheckinRecords>> checkinList(@RequestBody @Valid MiniCheckinDto checkinDto, @RequestParam(defaultValue = "1") Integer page) {
+        Page<CheckinRecords> pages = new Page<>(page, 10);
+        Page<CheckinRecords> recordsPage = new CheckinRecords().selectPage(pages, Wrappers.<CheckinRecords>lambdaQuery()
+                .eq(CheckinRecords::getUserOpenid, BaseContext.getCurrentId())
+                .between(checkinDto.getStartTime() != null && checkinDto.getEndTime() != null, CheckinRecords::getCheckinTime, checkinDto.getStartTime(), checkinDto.getEndTime())
+                .and(checkinDto.getAddress() != null, wrapper -> wrapper.like(CheckinRecords::getAddress, checkinDto.getAddress()).or().like(CheckinRecords::getName, checkinDto.getAddress()))
+                .like(checkinDto.getRemark() != null, CheckinRecords::getRemark, checkinDto.getRemark())
+                .eq(checkinDto.getLocationType() != null, CheckinRecords::getLocationType, checkinDto.getLocationType())
+                .orderByDesc(CheckinRecords::getCheckinTime)
+        );
+        return R.success(recordsPage);
     }
 }
