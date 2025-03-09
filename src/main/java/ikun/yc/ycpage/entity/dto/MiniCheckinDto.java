@@ -3,6 +3,8 @@ package ikun.yc.ycpage.entity.dto;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.Instant;
+
 /**
  * 小程序打卡搜索列表请求参数
  *
@@ -12,8 +14,8 @@ import lombok.Setter;
 @Getter
 @Setter
 public class MiniCheckinDto {
-    private Integer startTime;
-    private Integer endTime;
+    private Instant startTime;
+    private Instant endTime;
 
     private String address;
     private String remark;

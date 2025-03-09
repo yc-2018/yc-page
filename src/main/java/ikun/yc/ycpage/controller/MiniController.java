@@ -10,6 +10,7 @@ import ikun.yc.ycpage.entity.dto.MiniCheckinDto;
 import ikun.yc.ycpage.service.MiniUsersService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -68,6 +69,8 @@ public class MiniController {
      *
      * @param checkinDto 小程序打卡搜索列表请求参数
      * @param page       第几页
+     * @author ChenGuangLong
+     * @since 2025/03/09
      */
     @PostMapping("/checkinList")
     public R<Page<CheckinRecords>> checkinList(@RequestBody @Valid MiniCheckinDto checkinDto, @RequestParam(defaultValue = "1") Integer page) {
@@ -75,9 +78,9 @@ public class MiniController {
         Page<CheckinRecords> recordsPage = new CheckinRecords().selectPage(pages, Wrappers.<CheckinRecords>lambdaQuery()
                 .eq(CheckinRecords::getUserOpenid, BaseContext.getCurrentId())
                 .between(checkinDto.getStartTime() != null && checkinDto.getEndTime() != null, CheckinRecords::getCheckinTime, checkinDto.getStartTime(), checkinDto.getEndTime())
-                .and(checkinDto.getAddress() != null, wrapper -> wrapper.like(CheckinRecords::getAddress, checkinDto.getAddress()).or().like(CheckinRecords::getName, checkinDto.getAddress()))
-                .like(checkinDto.getRemark() != null, CheckinRecords::getRemark, checkinDto.getRemark())
-                .eq(checkinDto.getLocationType() != null, CheckinRecords::getLocationType, checkinDto.getLocationType())
+                .and(StringUtils.hasText(checkinDto.getAddress()), wrapper -> wrapper.like(CheckinRecords::getAddress, checkinDto.getAddress()).or().like(CheckinRecords::getName, checkinDto.getAddress()))
+                .like(StringUtils.hasText(checkinDto.getRemark()), CheckinRecords::getRemark, checkinDto.getRemark())
+                .eq(StringUtils.hasText(checkinDto.getLocationType()), CheckinRecords::getLocationType, checkinDto.getLocationType())
                 .orderByDesc(CheckinRecords::getCheckinTime)
         );
         return R.success(recordsPage);
