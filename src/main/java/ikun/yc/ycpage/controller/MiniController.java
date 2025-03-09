@@ -78,6 +78,7 @@ public class MiniController {
         Page<CheckinRecords> recordsPage = new CheckinRecords().selectPage(pages, Wrappers.<CheckinRecords>lambdaQuery()
                 .eq(CheckinRecords::getUserOpenid, BaseContext.getCurrentId())
                 .between(checkinDto.getStartTime() != null && checkinDto.getEndTime() != null, CheckinRecords::getCheckinTime, checkinDto.getStartTime(), checkinDto.getEndTime())
+                .eq(CheckinRecords::getIsDeleted, 0)
                 .and(StringUtils.hasText(checkinDto.getAddress()), wrapper -> wrapper.like(CheckinRecords::getAddress, checkinDto.getAddress()).or().like(CheckinRecords::getName, checkinDto.getAddress()))
                 .like(StringUtils.hasText(checkinDto.getRemark()), CheckinRecords::getRemark, checkinDto.getRemark())
                 .eq(StringUtils.hasText(checkinDto.getLocationType()), CheckinRecords::getLocationType, checkinDto.getLocationType())
