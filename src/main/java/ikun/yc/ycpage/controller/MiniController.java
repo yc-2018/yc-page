@@ -17,7 +17,7 @@ import javax.validation.Valid;
 import java.time.LocalDate;
 
 /**
- * 小程序控制器
+ * 小程序【在这打卡】控制器
  *
  * @author yc
  * @since 2025-3-8
@@ -85,5 +85,35 @@ public class MiniController {
                 .orderByDesc(CheckinRecords::getCheckinTime)
         );
         return R.success(recordsPage);
+    }
+
+    /**
+     * 删除打卡记录
+     *
+     * @param id 打卡记录 id
+     * @author ChenGuangLong
+     * @since 2025/03/11
+     */
+    @PostMapping("/checkin/{id}")
+    public R<?> deleteCheckin(@PathVariable Integer id) {
+        boolean updateOk = new CheckinRecords().update(Wrappers.<CheckinRecords>lambdaUpdate()
+                .set(CheckinRecords::getIsDeleted, 1)
+                .eq(CheckinRecords::getUserOpenid, BaseContext.getCurrentId())
+                .eq(CheckinRecords::getId, id)
+        );
+        return updateOk ? R.success(true) : R.error("删除失败");
+    }
+
+    @PostMapping("/updateCheckin")
+    public R<?> updateCheckin(@RequestBody CheckinRecords checkinRecords) {
+        if (checkinRecords.getId() == null) return R.error("数据有误！");
+        boolean updateOk = checkinRecords.update(Wrappers.<CheckinRecords>lambdaUpdate()
+                .set(StringUtils.hasText(checkinRecords.getName()), CheckinRecords::getName, checkinRecords.getName())
+                .set(StringUtils.hasText(checkinRecords.getAddress()), CheckinRecords::getAddress, checkinRecords.getAddress())
+                .set(StringUtils.hasText(checkinRecords.getRemark()), CheckinRecords::getRemark, checkinRecords.getRemark())
+                .eq(CheckinRecords::getId, checkinRecords.getId())
+                .eq(CheckinRecords::getUserOpenid, BaseContext.getCurrentId())
+        );
+        return updateOk ? R.success(true) : R.error("修改失败");
     }
 }
