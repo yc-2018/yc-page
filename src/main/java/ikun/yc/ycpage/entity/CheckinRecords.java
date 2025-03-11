@@ -4,12 +4,11 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import ikun.yc.ycpage.common.BigDecimalScale6Deserializer;
-import ikun.yc.ycpage.common.LocalDateTimeSerializer;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
@@ -58,18 +57,18 @@ public class CheckinRecords extends Model<CheckinRecords> {
     /** 详细地址  */
     private String address;
 
-    /** 备注（最长255字符）  */
-    @Size(max = 255)
+    /** 备注（最长255个字符）  */
+    @Size(max = 255, message = "备注不能超过255个字符")
     private String remark;
 
     /** 打卡时间  */
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)   // 仅返回给前端，不接收前端传入的数据
-    @JsonSerialize(using = LocalDateTimeSerializer.class)   // 自定义处理序列化（只会影响序列化 序列化就是对象变json）
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime checkinTime;
 
     /** 更新时间  */
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)   // 仅返回给前端，不接收前端传入的数据
-    @JsonSerialize(using = LocalDateTimeSerializer.class)   // 自定义处理序列化（只会影响序列化 序列化就是对象变json）
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updateTime;
 
     /** 删除标记 0-正常 1-删除  */
