@@ -104,6 +104,13 @@ public class MiniController {
         return updateOk ? R.success(true) : R.error("删除失败");
     }
 
+    /**
+     * 修改打卡数据
+     *
+     * @param checkinRecords 打卡记录
+     * @author ChenGuangLong
+     * @since 2025/03/11
+     */
     @PostMapping("/updateCheckin")
     public R<?> updateCheckin(@RequestBody CheckinRecords checkinRecords) {
         if (checkinRecords.getId() == null) return R.error("数据有误！");
@@ -111,6 +118,8 @@ public class MiniController {
                 .set(StringUtils.hasText(checkinRecords.getName()), CheckinRecords::getName, checkinRecords.getName())
                 .set(StringUtils.hasText(checkinRecords.getAddress()), CheckinRecords::getAddress, checkinRecords.getAddress())
                 .set(StringUtils.hasText(checkinRecords.getRemark()), CheckinRecords::getRemark, checkinRecords.getRemark())
+                .set(StringUtils.hasText(checkinRecords.getLocationType()), CheckinRecords::getLocationType, checkinRecords.getLocationType())
+                .set( CheckinRecords::getUpdateTime, LocalDate.now())
                 .eq(CheckinRecords::getId, checkinRecords.getId())
                 .eq(CheckinRecords::getUserOpenid, BaseContext.getCurrentId())
         );
