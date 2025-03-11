@@ -72,8 +72,8 @@ public class MiniController {
      * @author ChenGuangLong
      * @since 2025/03/09
      */
-    @PostMapping("/checkinList")
-    public R<Page<CheckinRecords>> checkinList(@RequestBody MiniCheckinDto checkinDto, @RequestParam(defaultValue = "1") Integer page) {
+    @PostMapping("/checkinList/{page}")
+    public R<Page<CheckinRecords>> checkinList(@RequestBody MiniCheckinDto checkinDto, @PathVariable Integer page) {
         Page<CheckinRecords> pages = new Page<>(page, 10);
         Page<CheckinRecords> recordsPage = new CheckinRecords().selectPage(pages, Wrappers.<CheckinRecords>lambdaQuery()
                 .eq(CheckinRecords::getUserOpenid, BaseContext.getCurrentId())
