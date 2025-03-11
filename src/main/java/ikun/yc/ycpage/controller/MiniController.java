@@ -94,7 +94,7 @@ public class MiniController {
      * @author ChenGuangLong
      * @since 2025/03/11
      */
-    @PostMapping("/checkin/{id}")
+    @PostMapping("/deleteCheckin/{id}")
     public R<?> deleteCheckin(@PathVariable Integer id) {
         boolean updateOk = new CheckinRecords().update(Wrappers.<CheckinRecords>lambdaUpdate()
                 .set(CheckinRecords::getIsDeleted, 1)
