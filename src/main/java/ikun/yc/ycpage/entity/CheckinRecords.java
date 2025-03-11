@@ -6,13 +6,18 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import ikun.yc.ycpage.common.BigDecimalScale6Deserializer;
 import ikun.yc.ycpage.common.LocalDateTimeSerializer;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
+import javax.validation.constraints.DecimalMax;
+import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -34,11 +39,17 @@ public class CheckinRecords extends Model<CheckinRecords> {
     private String userOpenid;
 
     /** 经度（-180.000000到180.000000）  */
+    @JsonDeserialize(using = BigDecimalScale6Deserializer.class) // 绑定反序列化器
     @NotNull(message = "经度不能为空")
+    @DecimalMin("-180.000000")
+    @DecimalMax("180.000000")
     private BigDecimal longitude;
 
     /** 纬度（-90.000000到90.000000）  */
+    @JsonDeserialize(using = BigDecimalScale6Deserializer.class) // 绑定反序列化器
     @NotNull(message = "纬度不能为空")
+    @DecimalMin("-90.000000")
+    @DecimalMax("90.000000")
     private BigDecimal latitude;
 
     /** 地点名称（如：北京故宫）  */
@@ -48,6 +59,7 @@ public class CheckinRecords extends Model<CheckinRecords> {
     private String address;
 
     /** 备注（最长255字符）  */
+    @Size(max = 255)
     private String remark;
 
     /** 打卡时间  */
