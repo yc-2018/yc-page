@@ -46,14 +46,15 @@ public class MiniController {
     @PostMapping("/checkin")
     public R<?> checkin(@RequestBody @Valid CheckinRecords checkinRecord) {
         // 先从数据库获取今天的这个用户这个经纬度是否已经打卡
-        CheckinRecords sqlCheckin = checkinRecord.selectOne(Wrappers.<CheckinRecords>lambdaQuery()
+        long count = checkinRecord.selectCount(Wrappers.<CheckinRecords>lambdaQuery()
                 .select(CheckinRecords::getId)
                 .eq(CheckinRecords::getUserOpenid, checkinRecord.getUserOpenid())
+                .eq(CheckinRecords::getIsDeleted, 0)
                 .eq(CheckinRecords::getLongitude, checkinRecord.getLongitude())
                 .eq(CheckinRecords::getLatitude, checkinRecord.getLatitude())
                 .ge(CheckinRecords::getCheckinTime, LocalDate.now().atStartOfDay())
         );
-        if (sqlCheckin != null) return R.error("此处今日已打卡");
+        if (count != 0) return R.error("此处今日已打卡");
 
         // 判断今天打卡是否超过100次
         if (checkinRecord.selectCount(Wrappers.<CheckinRecords>lambdaQuery()
