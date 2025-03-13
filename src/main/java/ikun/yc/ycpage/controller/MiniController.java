@@ -4,7 +4,9 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.R;
+import ikun.yc.ycpage.common.anno.CountControl;
 import ikun.yc.ycpage.common.anno.UserId;
+import ikun.yc.ycpage.common.aop.CountControlAspect;
 import ikun.yc.ycpage.entity.CheckinRecords;
 import ikun.yc.ycpage.entity.dto.MiniCheckinDto;
 import ikun.yc.ycpage.service.MiniUsersService;
@@ -42,6 +44,7 @@ public class MiniController {
      * @author ChenGuangLong
      * @since 2025/03/08 17:33:38
      */
+    @CountControl(operationType = CountControlAspect.ADD, msg = "频率过快 ==")  // 一分钟请求超出5次，禁用1分钟
     @UserId(fieldName = "userOpenid")
     @PostMapping("/checkin")
     public R<?> checkin(@RequestBody @Valid CheckinRecords checkinRecord) {

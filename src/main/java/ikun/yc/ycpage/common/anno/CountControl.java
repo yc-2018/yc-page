@@ -31,7 +31,7 @@ public @interface CountControl {
     int expireTime() default 1;
 
     /**
-     * 控制频率
+     * 控制频率 x分钟/y次 中的y
      * @author ChenGuangLong
      * @since 2024/01/23 11:36:11
      */
@@ -43,4 +43,13 @@ public @interface CountControl {
      * @since 2024/01/23 14:49
      */
     int banMin() default 1;
+
+
+    /**
+     * 可以指定错误信息
+     *
+     * @author ChenGuangLong
+     * @since 2025/03/13 10:50:18
+     */
+    String msg() default "";
 }

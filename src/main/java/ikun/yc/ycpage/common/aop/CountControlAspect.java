@@ -56,6 +56,8 @@ public class CountControlAspect {
         int controlFrequency = countControlAnnotation.frequency();          // 控制频率（次）
         int banTime = countControlAnnotation.banMin();                      // 禁用时间（分钟）
         int expireTime = countControlAnnotation.expireTime();               // 超时时间（分钟）
+        String msg = countControlAnnotation.msg();                          // 提示信息
+        String massage = msg.isEmpty() ? "请求次数超过限制，请" + banTime + "分钟后再试试" : msg;
 
         // 组装Redis的key
         String key =  "-"+ operationType + controlFrequency + banTime+ expireTime + userId;
@@ -63,7 +65,7 @@ public class CountControlAspect {
         String countKey = "count" + key;
         // 检查用户是否被禁用
         if (Boolean.TRUE.equals(redisTemplate.hasKey(banKey)))
-            throw new RuntimeException("请求已被限制，请" + banTime + "分钟后再试试");
+            throw new RuntimeException(massage);
 
         // 使用RedisTemplate进行自增操作，不存在会当成0进行自增变成1
         Long requestCount = redisTemplate.opsForValue().increment(countKey);
