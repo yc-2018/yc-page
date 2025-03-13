@@ -44,7 +44,7 @@ public class MiniController {
      * @author ChenGuangLong
      * @since 2025/03/08 17:33:38
      */
-    @CountControl(operationType = CountControlAspect.ADD, msg = "频率过快 ==")  // 一分钟请求超出5次，禁用1分钟
+    @CountControl(operationType = CountControlAspect.ADD, msg = "频率过快 冷却一分钟")  // 一分钟请求超出5次，禁用1分钟
     @UserId(fieldName = "userOpenid")
     @PostMapping("/checkin")
     public R<?> checkin(@RequestBody @Valid CheckinRecords checkinRecord) {
