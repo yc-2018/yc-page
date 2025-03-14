@@ -1,6 +1,8 @@
 package ikun.yc.ycpage.common;
 
-import com.alibaba.fastjson.JSON;
+//import com.alibaba.fastjson.JSON;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import ikun.yc.ycpage.common.exception.LoginException;
 import ikun.yc.ycpage.entity.dto.MiniSessionDTO;
 import lombok.RequiredArgsConstructor;
@@ -23,12 +25,13 @@ import java.util.Map;
 // 微信接口服务封装
 public class WechatMiniAuthService {
   private final RestTemplate restTemplate;
+  private final ObjectMapper objectMapper;
   @Value("${mini.appid}")
   private String appid;
   @Value("${mini.secret}")
   private String secret;
 
-  public MiniSessionDTO getSessionInfo(String code) {
+  public MiniSessionDTO getSessionInfo(String code) throws JsonProcessingException {
     String url = "https://api.weixin.qq.com/sns/jscode2session" +
         "?appid={appid}&secret={secret}&js_code={code}&grant_type=authorization_code";
 
@@ -38,7 +41,7 @@ public class WechatMiniAuthService {
     params.put("code", code);
 
     ResponseEntity<String> response = restTemplate.getForEntity(url, String.class, params);
-    MiniSessionDTO session = JSON.parseObject(response.getBody(), MiniSessionDTO.class);
+    MiniSessionDTO session = objectMapper.readValue(response.getBody(), MiniSessionDTO.class);
 
     if (session.getErrcode() != null) {
       throw new LoginException("微信登录失败: " + session.getErrmsg());
