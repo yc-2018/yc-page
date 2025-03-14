@@ -22,7 +22,7 @@ public class R<T> implements Serializable {
     private T data; //数据
 
     @ApiModelProperty("动态数据")
-    private Map map = new HashMap(); //动态数据
+    private Map<String, Object> map = new HashMap<>(); //动态数据
 
     public static <T> R<T> success(T object) {
         R<T> r = new R<>();
