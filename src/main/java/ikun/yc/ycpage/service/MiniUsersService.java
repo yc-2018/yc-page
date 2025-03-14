@@ -1,5 +1,6 @@
 package ikun.yc.ycpage.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import ikun.yc.ycpage.entity.MiniUsers;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -10,5 +11,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface MiniUsersService extends IService<MiniUsers> {
 
-  String miniLogin(String code);
+  String miniLogin(String code) throws JsonProcessingException;
 }

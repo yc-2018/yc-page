@@ -2,6 +2,7 @@ package ikun.yc.ycpage.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import ikun.yc.ycpage.common.BaseContext;
@@ -11,6 +12,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 
@@ -27,7 +29,8 @@ import java.time.LocalDateTime;
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
 @TableName("to_do_items")
-public class Memo extends Model<Memo> {
+public class Memo extends Model<Memo> implements Serializable {
+    private static final long serialVersionUID = 1L;
     /** 备忘录事项ID */
     @TableId(type = IdType.AUTO)
 	  private Integer id;
@@ -48,9 +51,11 @@ public class Memo extends Model<Memo> {
     private String okText;
     /** 创建时间 */
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
     /** 修改时间 */
     @TableField(fill = FieldFill.UPDATE)//, update = "now()")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	  private LocalDateTime updateTime;
 
     public Memo(String userId, String content, Integer itemType) {
