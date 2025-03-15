@@ -2,8 +2,10 @@ package ikun.yc.ycpage.controller;
 
 import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.R;
+import ikun.yc.ycpage.common.anno.CacheEvict;
 import ikun.yc.ycpage.common.anno.CountControl;
 import ikun.yc.ycpage.common.anno.Log;
+import ikun.yc.ycpage.common.anno.RedisCache;
 import ikun.yc.ycpage.common.aop.CountControlAspect;
 import ikun.yc.ycpage.entity.SearchEngines;
 import ikun.yc.ycpage.service.SearchEnginesService;
@@ -38,6 +40,7 @@ public class SearchEnginesController {
      * @since 2023/12/23 16:53:55
      */
     @GetMapping("/list")
+    @RedisCache("searchEngines") // 缓存 默认一天
     public R<List<SearchEngines>> getListByUserId(@RequestParam(required = false) Integer type) {
         Map<String, Object> map = new HashMap<>();
         map.put("user_id", BaseContext.getCurrentId());
@@ -57,6 +60,7 @@ public class SearchEnginesController {
      */
     @Log
     @PostMapping
+    @CacheEvict("searchEngines")    // 删除缓存
     @CountControl(operationType = CountControlAspect.ADD, frequency = 10)
     public R<?> addSearchEngines(@RequestBody SearchEngines searchEngines) {
         Assert.notNull(searchEngines.getEngineUrl(), "URL不允许为空");
@@ -80,6 +84,7 @@ public class SearchEnginesController {
      */
     @Log
     @PutMapping
+    @CacheEvict("searchEngines")    // 删除缓存
     @CountControl(operationType = CountControlAspect.UPDATE)
     public R<?> updateSearchEngines(@RequestBody List<SearchEngines> searchEngineList) {
         if (searchEngineList == null || searchEngineList.isEmpty()) return R.error("乱搞！🤺");
@@ -100,6 +105,7 @@ public class SearchEnginesController {
      */
     @Log
     @DeleteMapping
+    @CacheEvict("searchEngines")    // 删除缓存
     public R<Boolean> deleteSearchEngines(@RequestBody List<Integer> ids) {
         return searchEnginesService.lambdaUpdate()
             .in(SearchEngines::getId, ids)
