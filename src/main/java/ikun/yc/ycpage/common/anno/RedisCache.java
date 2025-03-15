@@ -17,5 +17,5 @@ import java.util.concurrent.TimeUnit;
 public @interface RedisCache {
     int expireTime() default 1;                     // 缓存过期时间
     TimeUnit timeUnit() default TimeUnit.DAYS;      // 时间单位
-    String region();// default "global";               // 区域分类
+    String value(); //region();// default "global"; // 区域分类
 }

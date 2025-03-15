@@ -1,7 +1,7 @@
 //仰晨study 创建时间2023/4/25 20:45 星期二
 package ikun.yc.ycpage.common.aop;
 
-//import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.JSONObject;
 import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.entity.OperateLog;
 import ikun.yc.ycpage.mapper.OperateLogMapper;
@@ -12,7 +12,6 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -24,7 +23,6 @@ import java.util.Arrays;
 @Order(2) // 设置执行顺序，数值越小优先级越高
 public class LogAspect {
     private final OperateLogMapper operateLogMapper;
-    private final ObjectMapper objectMapper;
 
     /**
      * 记录日志
@@ -59,7 +57,7 @@ public class LogAspect {
         long end = System.currentTimeMillis();
 
         //方法返回值
-        String returnValue = objectMapper.writeValueAsString(result);
+        String returnValue = JSONObject.toJSONString(result);
 
         //操作时间
         Long countTime = end - begin;

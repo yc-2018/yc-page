@@ -13,6 +13,6 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD) // 只能用在方法上
 @Retention(RetentionPolicy.RUNTIME) // 运行时生效
 public @interface CacheEvict {
-    /** 要清理的缓存区域（必须与@RedisCache的region对应） */
-    String region();
+    /** 要清理的缓存区域（必须与@RedisCache的value对应） */
+    String value();
 }

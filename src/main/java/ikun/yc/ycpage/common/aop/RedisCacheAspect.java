@@ -92,7 +92,7 @@ public class RedisCacheAspect {
 
         // 构建Key字符串
         StringBuilder keyBuilder = new StringBuilder();
-        keyBuilder.append(userId).append(":").append(redisCache.region()).append(":").append(methodName);
+        keyBuilder.append(userId).append(":").append(redisCache.value()).append(":").append(methodName);
 
         for (int i = 0; i < args.length; i++) {
             String paramName = (i < paramNames.length) ? paramNames[i] : "arg" + i;

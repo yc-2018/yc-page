@@ -50,7 +50,7 @@ public class CacheEvictAspect {
      * 执行实际的缓存清理
      */
     private void doClean(CacheEvict cacheEvict) {
-        String region = cacheEvict.region();
+        String region = cacheEvict.value();
         String userId = BaseContext.getCurrentId();
 
         // 自动清理该用户在该区域的所有缓存

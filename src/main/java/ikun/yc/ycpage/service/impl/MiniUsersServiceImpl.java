@@ -1,7 +1,6 @@
 package ikun.yc.ycpage.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import ikun.yc.ycpage.common.WechatMiniAuthService;
 import ikun.yc.ycpage.entity.MiniUsers;
 import ikun.yc.ycpage.entity.dto.MiniSessionDTO;
@@ -26,7 +25,7 @@ public class MiniUsersServiceImpl extends ServiceImpl<MiniUsersMapper, MiniUsers
 
 
   @Override
-  public String miniLogin(String code) throws JsonProcessingException {
+  public String miniLogin(String code) {
     // 步骤1：通过code换取openid和session_key
     MiniSessionDTO sessionInfo = wechatMiniAuthService.getSessionInfo(code);
 

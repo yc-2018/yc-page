@@ -2,7 +2,6 @@ package ikun.yc.ycpage.controller;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.R;
 import ikun.yc.ycpage.common.anno.CountControl;
@@ -33,7 +32,7 @@ public class MiniController {
     private final MiniUsersService miniUsersService;
 
     @PostMapping("/login")
-    public R<String> wechatLogin(String code) throws JsonProcessingException {
+    public R<String> wechatLogin(String code) {
         return R.success(miniUsersService.miniLogin(code));
     }
 
