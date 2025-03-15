@@ -38,7 +38,7 @@ public class RedisCacheAspect {
     @Around("@annotation(redisCache)")
     public Object around(ProceedingJoinPoint joinPoint, RedisCache redisCache) throws Throwable {
         // 生成唯一缓存Key
-        String cacheKey = generateCacheKey(joinPoint);
+        String cacheKey = generateCacheKey(joinPoint,redisCache);
 
         // 检查缓存是否存在
         Object cachedValue = redisTemplate.opsForValue().get(cacheKey);
@@ -71,7 +71,7 @@ public class RedisCacheAspect {
      * @author DeepSeek & yc
      * @since 2025/03/14 14:37:01
      */
-    private String generateCacheKey(ProceedingJoinPoint joinPoint) {
+    private String generateCacheKey(ProceedingJoinPoint joinPoint, RedisCache redisCache) {
         // 获取用户ID
         String userId = BaseContext.getCurrentId();
 
@@ -92,7 +92,7 @@ public class RedisCacheAspect {
 
         // 构建Key字符串
         StringBuilder keyBuilder = new StringBuilder();
-        keyBuilder.append(userId).append(":").append(methodName);
+        keyBuilder.append(userId).append(":").append(redisCache.region()).append(":").append(methodName);
 
         for (int i = 0; i < args.length; i++) {
             String paramName = (i < paramNames.length) ? paramNames[i] : "arg" + i;
