@@ -3,6 +3,7 @@ package ikun.yc.ycpage.common;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -10,6 +11,7 @@ import java.util.Map;
 /**通用返回结果，服务端响应的数据最终都会封装成此对象Result*/
 @Data
 @ApiModel("返回结果")
+@NoArgsConstructor
 public class R<T> implements Serializable {
 
     @ApiModelProperty("编码")
