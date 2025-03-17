@@ -30,7 +30,7 @@ import java.util.TimeZone;
 @RequiredArgsConstructor
 public class WebMvcConfig implements WebMvcConfigurer {
     private final LoginInterceptor loginInterceptor;
-    private static final String DATE_TIME_FORMAT = "[yyyy-MM-dd HH:mm:ss][yyyy-MM-dd'T'HH:mm:ss]";  // 支持多格式解析
+    private static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
     private static final String DATE_FORMAT = "yyyy-MM-dd";
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
@@ -78,10 +78,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
      * 定义全局默认时间序列化
      * 配置完后，格式如 "createTime": "2023-12-05 20:43:20",
      * 没配置时，格式如 "createTime": [2023,12,11,9,25,12]
-     * <br/>
-     * 如果需要 支持多格式解析
-     * DateTimeFormatter formatter = DateTimeFormatter.ofPattern("[yyyy-MM-dd HH:mm:ss][yyyy-MM-dd'T'HH:mm:ss]");
-     * .deserializers(new LocalDateTimeDeserializer(formatter))
      */
     @Override
     public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
