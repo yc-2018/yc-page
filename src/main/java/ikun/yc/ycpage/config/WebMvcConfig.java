@@ -1,11 +1,12 @@
 //仰晨study 创建时间2023/12/4 0:06 星期一
 package ikun.yc.ycpage.config;
 
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
-import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import ikun.yc.ycpage.interceptor.LoginInterceptor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,9 +17,9 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.TimeZone;
 
 /**
  * 继承 WebMvcConfigurationSupport 时，Spring Boot的自动配置特性会被禁用，包括静态资源处理。
@@ -75,22 +76,26 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     /**
      * 定义全局默认时间序列化
-     * 配置完后，格式如 "createTime": "2023-12-05T20:43:20",
+     * 配置完后，格式如 "createTime": "2023-12-05 20:43:20",
      * 没配置时，格式如 "createTime": [2023,12,11,9,25,12]
      */
     @Override
     public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
         Jackson2ObjectMapperBuilder builder = new Jackson2ObjectMapperBuilder()
-                .indentOutput(true)
-                .dateFormat(new SimpleDateFormat(DATE_FORMAT))
-                .simpleDateFormat(DATE_TIME_FORMAT)
-                .serializers(new LocalDateTimeSerializer(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT)))
-                .serializers(new LocalDateSerializer(DateTimeFormatter.ofPattern(DATE_FORMAT)))
-                .deserializers(new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT)))
-                .deserializers(new LocalDateDeserializer(DateTimeFormatter.ofPattern(DATE_FORMAT)))
-                .modulesToInstall(new ParameterNamesModule());
-        converters.add(new MappingJackson2HttpMessageConverter(builder.build()));
-    }
+            .indentOutput(true)
+            .timeZone(TimeZone.getTimeZone("Asia/Shanghai")) // 设置时区
+            .featuresToDisable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS) // 禁用时间戳
+            .modulesToInstall(new JavaTimeModule()) // 关键：注册 JavaTimeModule
+            .serializers(
+                new LocalDateTimeSerializer(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT)),
+                new LocalDateSerializer(DateTimeFormatter.ofPattern(DATE_FORMAT))
+            )
+            .deserializers(
+                new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT)),
+                new LocalDateDeserializer(DateTimeFormatter.ofPattern(DATE_FORMAT))
+            );
 
+        converters.add(0, new MappingJackson2HttpMessageConverter(builder.build()));
+    }
 
 }
