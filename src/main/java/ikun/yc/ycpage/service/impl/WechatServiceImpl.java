@@ -155,7 +155,7 @@ public class WechatServiceImpl implements WechatService {
 
             default:
                 String yy = restTemplate.getForObject("https://api.lucksss.com/api/yiyan", String.class);
-                return StrUtils.joins("每天一句:\n", yy, "\n————————\n想了解其他的?", msgMenu("说明"));
+                return StrUtils.joins("未识别指令///每天一句:\n", yy, "\n————————\n想了解其他的?", msgMenu("说明"));
 
             //接口介绍：根据英雄名获取其语音文件https://api.pearktrue.cn/api/game/wzyp.php?msg=孙悟空  太久了 新英雄一个都没有，而且太长了
             // 王者战力https://api.pearktrue.cn/api/hero/?hero=元歌&type=wx
