@@ -62,7 +62,7 @@ public class MiniController {
         // 判断今天打卡是否超过100次
         if (checkinRecord.selectCount(Wrappers.<CheckinRecords>lambdaQuery()
                 .eq(CheckinRecords::getUserOpenid, checkinRecord.getUserOpenid())
-                .ge(CheckinRecords::getCheckinTime, LocalDate.now().atStartOfDay())
+                .ge(CheckinRecords::getCreateTime, LocalDate.now().atStartOfDay())
         ) > 100) return R.error("今日打卡超百次");
 
         return R.success(checkinRecord.insert());
@@ -123,6 +123,7 @@ public class MiniController {
                 .set(StringUtils.hasText(checkinRecords.getAddress()), CheckinRecords::getAddress, checkinRecords.getAddress())
                 .set(StringUtils.hasText(checkinRecords.getRemark()), CheckinRecords::getRemark, checkinRecords.getRemark())
                 .set(StringUtils.hasText(checkinRecords.getLocationType()), CheckinRecords::getLocationType, checkinRecords.getLocationType())
+                .set(checkinRecords.getCheckinTime() != null, CheckinRecords::getCheckinTime, checkinRecords.getCheckinTime())
                 .set( CheckinRecords::getUpdateTime, LocalDate.now())
                 .eq(CheckinRecords::getId, checkinRecords.getId())
                 .eq(CheckinRecords::getUserOpenid, BaseContext.getCurrentId())
