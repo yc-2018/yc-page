@@ -48,8 +48,8 @@ public class JwtUtils {
      * @return JWT第二部分负载 payload 中存储的内容
      */
     public static Claims parseJWT(String jwt){
-        // 不检查就去除 'Bearer ' 前缀
-        jwt = jwt.substring(7);
+        // 检查去除 'Bearer ' 前缀
+        if (jwt.startsWith("Bearer ")) jwt = jwt.substring(7);
 
         return Jwts.parser()
                 .setSigningKey(SIGN_KEY)

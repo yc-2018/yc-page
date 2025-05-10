@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.R;
 import ikun.yc.ycpage.common.anno.CountControl;
+import ikun.yc.ycpage.common.anno.PassToken;
 import ikun.yc.ycpage.common.anno.UserId;
 import ikun.yc.ycpage.common.aop.CountControlAspect;
 import ikun.yc.ycpage.entity.CheckinRecords;
@@ -31,6 +32,7 @@ import java.time.LocalDate;
 public class MiniController {
     private final MiniUsersService miniUsersService;
 
+    @PassToken
     @PostMapping("/login")
     public R<String> wechatLogin(String code) {
         return R.success(miniUsersService.miniLogin(code));

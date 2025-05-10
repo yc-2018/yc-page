@@ -1,6 +1,7 @@
 //仰晨:微信接口 创建时间2023/11/28 1:30 星期二
 package ikun.yc.ycpage.controller;
 
+import ikun.yc.ycpage.common.anno.PassToken;
 import ikun.yc.ycpage.entity.dto.WechatDto;
 import ikun.yc.ycpage.service.WechatService;
 import io.swagger.annotations.Api;
@@ -20,6 +21,7 @@ import java.security.MessageDigest;
 import java.util.Arrays;
 
 @Slf4j
+@PassToken  // 忽略token验证
 @RestController
 @RequiredArgsConstructor
 @Api(tags = "接收微信接口")

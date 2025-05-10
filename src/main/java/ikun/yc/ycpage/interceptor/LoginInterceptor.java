@@ -2,6 +2,7 @@
 package ikun.yc.ycpage.interceptor;
 
 import ikun.yc.ycpage.common.BaseContext;
+import ikun.yc.ycpage.common.anno.PassToken;
 import ikun.yc.ycpage.common.exception.LoginException;
 import ikun.yc.ycpage.common.exception.PathException;
 import ikun.yc.ycpage.utils.JwtUtils;
@@ -9,28 +10,37 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.lang.reflect.Method;
+
 @Slf4j
 @Component
 public class LoginInterceptor implements HandlerInterceptor {
     @Override   //目标资源方法运行前运行，返回true: 放行，放回false，不放行
     public boolean preHandle(HttpServletRequest req, HttpServletResponse resp, Object handler) {
-
         // 检查是否是OPTIONS请求(跨域)
-//        if (req.getMethod().equals(HttpMethod.OPTIONS.name())) {
-//            return true; // 允许OPTIONS请求通过
-//        }
+//        if (req.getMethod().equals(HttpMethod.OPTIONS.name()))  return true; // 允许OPTIONS请求通过
+
+        // 如果不是映射到方法直接通过 == 放行静态资源
+        if(!(handler instanceof HandlerMethod)) return true;
+
+        // 检查方法或类是否有@PassToken注解
+        HandlerMethod handlerMethod = (HandlerMethod) handler;
+        Method method = handlerMethod.getMethod();
+        if (method.isAnnotationPresent(PassToken.class)
+            || method.getDeclaringClass().isAnnotationPresent(PassToken.class)) {
+            return true; // 放行
+        }
 
         String uri = req.getRequestURI();
         log.info("请求路径：{}", uri);
         // error路径处理
         if (uri.equals("/error")) throw new PathException("请求失败");
-        // 对 /login 和 /wechat 之外的请求进行拦截(这里不写也行，一般来说注册机里面写了就好了
-        if (uri.startsWith("/mini/login") ||uri.startsWith("/users/login") || uri.equals("/接收微信接口")) return true;
 
         String jwt = req.getHeader("Authorization");
 

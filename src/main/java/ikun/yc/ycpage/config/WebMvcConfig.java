@@ -35,14 +35,14 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(loginInterceptor)       //注册拦截器
-                .addPathPatterns("/**")                     //拦截全部路径    /*是一级路径/**是全部路径
-                .excludePathPatterns(
-                        "/users/login",
-                        "/mini/login",
-                        "/接收微信接口",
-                        "/favicon.ico",
-                        "/other/run-script",
-                        "/other/startTime",           // 本次服务启动时间
+                .addPathPatterns("/**");                //拦截全部路径    /*是一级路径/**是全部路径
+//                .excludePathPatterns(
+//                        "/users/login"
+//                        "/mini/login",
+//                        "/接收微信接口",
+//                        "/favicon.ico",
+//                        "/other/run-script",
+//                        "/other/startTime",         // 本次服务启动时间
 //                        "/doc.html",                // 放行Swagger
 //                        "/docs.html",               // 放行Swagger
 //                        "/swagger-ui.html",         // 放行Swagger
@@ -52,11 +52,11 @@ public class WebMvcConfig implements WebMvcConfigurer {
 //                        "/noAuth/**",               // 放行Swagger
 //                        "/swagger-ui/**",           // 放行Swagger UI静态资源
 //                        "/v3/**",                   // 放行Swagger新API文档路径
-                        "/webjars/**",              // 放行webjars路径下的资源
-                        "/css/**",                  // 放行css静态资源
-                        "/js/**",                   // 放行js静态资源
-                        "/images/**"                // 放行images静态资源
-                );  // 排除 (不拦截的路径)
+//                        "/webjars/**",              // 放行webjars路径下的资源
+//                        "/css/**",                  // 放行css静态资源
+//                        "/js/**",                   // 放行js静态资源
+//                        "/images/**"                // 放行images静态资源
+//                );  // 排除 (不拦截的路径)
     }
 
 //    /**

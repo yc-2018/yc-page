@@ -3,6 +3,7 @@ package ikun.yc.ycpage.controller;
 
 import ikun.yc.ycpage.common.R;
 import ikun.yc.ycpage.common.anno.CountControl;
+import ikun.yc.ycpage.common.anno.PassToken;
 import ikun.yc.ycpage.common.anno.UserId;
 import ikun.yc.ycpage.entity.DySeeTime;
 import ikun.yc.ycpage.entity.dto.DateDto;
@@ -29,11 +30,13 @@ public class OtherController {
     /** 开始运行时间 */
     private static final String START_RUNNING_TIME = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
+    @PassToken
     @GetMapping("startTime")
     public String startTime() {
         return START_RUNNING_TIME;
     }
 
+    @PassToken
     @GetMapping("/run-script")
     @CountControl(frequency = 1)
     public String runScript(String scriptName) {

@@ -1,6 +1,7 @@
 package ikun.yc.ycpage.controller;
 
 import ikun.yc.ycpage.common.R;
+import ikun.yc.ycpage.common.anno.PassToken;
 import ikun.yc.ycpage.entity.Users;
 import ikun.yc.ycpage.service.UsersService;
 import ikun.yc.ycpage.utils.JwtUtils;
@@ -32,6 +33,7 @@ public class UsersController {
      * @param expireTime 登录超时时间
      * @return jwt
      */
+    @PassToken
     @PostMapping("login")
     public R<?> login(HttpServletRequest request, String key, @RequestParam(defaultValue = "bt") String expireTime ) {
         return usersService.login(request, key,expireTime);
