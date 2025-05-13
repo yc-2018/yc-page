@@ -67,13 +67,13 @@ public class LoopMemoTimeController {
     /**
      * 删除循环备忘录
      *
-     * @param loopId 循环id
      * @param memoId 备忘录id
+     * @param loopId 循环id
      * @return {@code R<Boolean> }
      */
     @Transactional
     @DeleteMapping("/{memoId}/{loopId}")
-    public R<Boolean> deleteLoopMemoTime(@PathVariable Integer loopId, @PathVariable String memoId) {
+    public R<Boolean> deleteLoopMemoTime(@PathVariable String memoId, @PathVariable Integer loopId) {
         // 待办减一
         boolean b = memoService.lambdaUpdate()
                 .eq(Memo::getUserId, BaseContext.getCurrentId())
