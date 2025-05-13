@@ -13,9 +13,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
- * <p>
- * 目前作为:循环代办的历史时间。
- * </p>
+ * 循环备忘记录
  *
  * @author chengguanglong
  * @since 2023-12-20
@@ -31,28 +29,30 @@ public class LoopMemoTime implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    /** 循环代办时间id */
     @ApiModelProperty(value = "主键")
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
 
-    /** 待办事项id */
     @ApiModelProperty(value = "备忘主键")
-    @TableField("to_do_item_id")
-    private Integer toDoItemId;
+    private Integer memoId;
 
-    /** 备忘录日期  数据库有创建时赋当前为默认值 */
     @ApiModelProperty(value = "循环时间")
     @TableField(value = "memo_date")
     private LocalDateTime memoDate;
 
-    /** 备忘录日期  数据库有创建时赋当前为默认值 */
+    @ApiModelProperty(value = "创建时间")
+    private LocalDateTime createTime;
+
+    @TableField(fill = FieldFill.UPDATE)
+    @ApiModelProperty(value = "更新时间")
+    private LocalDateTime updateTime;
+
     @ApiModelProperty(value = "循环时可备注文本")
     @TableField(value = "loop_text")
     private String loopText;
 
     public LoopMemoTime(Memo item) {
-        this.toDoItemId = item.getId();
+        this.memoId = item.getId();
         this.memoDate = item.getUpdateTime();
         this.loopText = item.getOkText();
     }

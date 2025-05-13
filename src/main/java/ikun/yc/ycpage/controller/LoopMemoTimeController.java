@@ -22,7 +22,7 @@ public class LoopMemoTimeController {
     private final LoopMemoTimeService loopMemoTimeService;
 
     /**
-     * 获取循环备忘录时间列表
+     * 获取循环备忘记录列表
      *
      * @param page     第几页
      * @param pageSize 页面大小
@@ -37,9 +37,11 @@ public class LoopMemoTimeController {
                                               @PathVariable Integer itemId) {
 
         return R.success(loopMemoTimeService.lambdaQuery()
-            .eq(LoopMemoTime::getToDoItemId, itemId)
+            .eq(LoopMemoTime::getMemoId, itemId)
             .orderByDesc(LoopMemoTime::getMemoDate)
             .page(new Page<>(page, pageSize))
         );
     }
+
+
 }
