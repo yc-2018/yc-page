@@ -1,6 +1,7 @@
 package ikun.yc.ycpage.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -40,9 +41,11 @@ public class LoopMemoTime implements Serializable {
     @TableField(value = "memo_date")
     private LocalDateTime memoDate;
 
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)    // 仅返回给前端，不接收前端传入的数据
     @ApiModelProperty(value = "创建时间")
     private LocalDateTime createTime;
 
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)    // 仅返回给前端，不接收前端传入的数据
     @TableField(fill = FieldFill.UPDATE)
     @ApiModelProperty(value = "更新时间")
     private LocalDateTime updateTime;
