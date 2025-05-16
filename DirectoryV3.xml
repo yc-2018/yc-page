@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+ <trees>
+     <tree path="/src/main/java/ikun/yc/ycpage/common/anno" title="注解"/>
+     <tree path="/src/main/java/ikun/yc/ycpage/common/exception" icon="XmlBrowsersCanary" textColor="255,238,85"
+           title="异常类" extension="" presentableText="" tooltipTitle="" backgroundColor=""/>
+     <tree path="/src/main/java/ikun/yc/ycpage/common/anno/UserId.java" title="自动注入id"/>
+     <tree path="/src/main/java/ikun/yc/ycpage/common/anno/Log.java" title="记录日志"/>
+     <tree path="/src/main/java/ikun/yc/ycpage/common/anno/PassToken.java" title="无需Token 请求"/>
+     <tree path="/src/main/java/ikun/yc/ycpage/common/anno/RedisCache.java" title="redis缓存"/>
+     <tree path="/src/main/java/ikun/yc/ycpage/common/anno/CacheEvict.java" title="清除 redis 缓存"/>
+     <tree path="/src/main/java/ikun/yc/ycpage/common/exception/PathException.java" title="路径异常" extension=""
+           presentableText="" tooltipTitle="" icon="" textColor="" backgroundColor=""/>
+     <tree path="/src/main/java/ikun/yc/ycpage/common/exception/GlobalExceptionHandler.java" title="全局异常捕捉"/>
+    <tree path="/src/main/java/ikun/yc/ycpage/common/BaseContext.java" title="一次请求上下文内容"/>
+    <tree path="/src/main/java/ikun/yc/ycpage/common/anno/CountControl.java" title="请求控制"/>
+</trees>
