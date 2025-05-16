@@ -28,18 +28,18 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
-@TableName("to_do_items")
+@TableName("memo")
 public class Memo extends Model<Memo> implements Serializable {
     private static final long serialVersionUID = 1L;
     /** 备忘录事项ID */
     @TableId(type = IdType.AUTO)
-	  private Integer id;
+    private Integer id;
 
     /** 用户ID */
     @JsonIgnore
     @TableField(select = false)
     private String userId;
-    /** 备忘录待办类型 (0:普通待办，1：循环待办，2：长期待办，3：紧急待办，4：备忘英语，5、日记待办，6、公事待办*/
+    /** 备忘录待办类型 (0:普通待办，1：循环待办，2：长期待办，3：紧急待办，4：备忘英语，5、日记待办，6、公事待办 */
     private Integer itemType;
     /** 内容 */
     private String content;
@@ -54,9 +54,12 @@ public class Memo extends Model<Memo> implements Serializable {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
     /** 修改时间 */
-    @TableField(fill = FieldFill.UPDATE)//, update = "now()")
+    @TableField(fill = FieldFill.UPDATE)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-	  private LocalDateTime updateTime;
+    private LocalDateTime updateTime;
+    /** 完成时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime okTime;
 
     public Memo(String userId, String content, Integer itemType) {
         this.userId = userId;
@@ -69,14 +72,12 @@ public class Memo extends Model<Memo> implements Serializable {
         this.itemType = itemType;
     }
 
-    /**
-     * 修改待办信息 防止恶意修改
-     */
-    public void toReviseInfo(){
+    /** 修改待办信息 防止恶意修改 */
+    public void toReviseInfo() {
         userId = BaseContext.getCurrentId();
         // 更新时间 不为空的情况下允许在30+1天内，不在30+1天内不允许 设置为空
-        if (updateTime != null && (updateTime.isBefore(LocalDateTime.now().minusDays(31))|| updateTime.isAfter(LocalDateTime.now().plusDays(1))) ) {
-            updateTime = null;
+        if (okTime != null && (okTime.isBefore(LocalDateTime.now().minusDays(31)) || okTime.isAfter(LocalDateTime.now().plusDays(1)))) {
+            okTime = null;
         }
     }
 

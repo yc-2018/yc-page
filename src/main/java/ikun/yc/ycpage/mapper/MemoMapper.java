@@ -19,7 +19,7 @@ public interface MemoMapper extends BaseMapper<Memo> {
 
     // 分组统计加在标签上面 未完成的条数。但是不包括 2长期、1循环、4英语、5日记、7其他、和当前的
     @Select("SELECT item_type,count(*) " +
-            "FROM to_do_items " +
+            "FROM memo " +
             "WHERE user_id=#{userId} AND completed=0 AND item_type NOT IN (1, 2, 4, 5, 7, #{itemType}) " +
             "group by item_type")
     List<Map> selectGroupMemoCount(Memo memo);

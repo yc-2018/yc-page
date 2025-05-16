@@ -56,7 +56,7 @@ public class LoopMemoTime implements Serializable {
 
     public LoopMemoTime(Memo item) {
         this.memoId = item.getId();
-        this.memoDate = item.getUpdateTime();
+        this.memoDate = item.getOkTime();
         this.loopText = item.getOkText();
     }
 }

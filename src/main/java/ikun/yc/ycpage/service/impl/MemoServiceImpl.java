@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -81,13 +82,16 @@ public class MemoServiceImpl extends ServiceImpl<MemoMapper, Memo> implements Me
                 .eq(Memo::getUserId, memo.getUserId());
 
         // 完成或编辑(循环+1 以外的直接更新)
-        if (memo.getNumberOfRecurrences() == null) return this.update(memo, updateWrapper);
+        if (memo.getNumberOfRecurrences() == null) {
+            if (memo.getCompleted() == 1 && memo.getOkTime() == null) { // 完成没提供时间，选择当前时间
+                memo.setOkTime(LocalDateTime.now());
+            }
+            return this.update(memo, updateWrapper);
+        }
 
-        // 循环（如果 NumberOfRecurrences 不为空，则在数据库层面增加 1）
-        memo.setNumberOfRecurrences(null); // 避免更新时替换掉本来的值再加一
-        String okText = memo.getOkText();  // 保存一下，后面要使用
-        memo.setOkText(null);              // 避免+1时替换掉完成的值
-        return this.update(memo, updateWrapper.setSql("number_of_recurrences = COALESCE(number_of_recurrences, 0) + 1"))
-            && loopMemoTimeService.save(new LoopMemoTime(memo.setOkText(okText)));
+        return this.update(updateWrapper
+                .setSql("number_of_recurrences = COALESCE(number_of_recurrences, 0) + 1")
+                .set(Memo::getUpdateTime, LocalDateTime.now())  // 更新时间( 没有备忘录对象作为第一个参数 MyBatisPlus不会自动更新时间
+        ) && loopMemoTimeService.save(new LoopMemoTime(memo.setOkText(memo.getOkText())));
     }
 }
