@@ -83,7 +83,7 @@ public class MemoServiceImpl extends ServiceImpl<MemoMapper, Memo> implements Me
 
         // 完成或编辑(循环+1 以外的直接更新)
         if (memo.getNumberOfRecurrences() == null) {
-            if (memo.getCompleted() == 1 && memo.getOkTime() == null) { // 完成没提供时间，选择当前时间
+            if (memo.getCompleted() != null && memo.getCompleted() == 1 && memo.getOkTime() == null) { // 完成没提供时间，选择当前时间
                 memo.setOkTime(LocalDateTime.now());
             }
             return this.update(memo, updateWrapper);
