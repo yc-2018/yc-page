@@ -17,6 +17,9 @@ public class R<T> implements Serializable {
     @ApiModelProperty("编码")
     private Integer code; //编码：1成功，0和其它数字为失败
 
+    @ApiModelProperty("是否成功")
+    private Boolean success; // 成功true 其他null 方便前端判断
+
     @ApiModelProperty("错误信息")
     private String msg; //错误信息
 
@@ -26,8 +29,13 @@ public class R<T> implements Serializable {
     @ApiModelProperty("动态数据")
     private Map<String, Object> map = new HashMap<>(); //动态数据
 
+    public static <T> R<T> success() {
+        return success(null);
+    }
+
     public static <T> R<T> success(T object) {
         R<T> r = new R<>();
+        r.success = true;
         r.data = object;
         r.code = 1;
         return r;
@@ -35,7 +43,7 @@ public class R<T> implements Serializable {
 
 
     public static <T> R<T> error(String msg) {
-        R r = new R();
+        R<T> r = new R<>();
         r.msg = msg;
         r.code = 0;
         return r;
