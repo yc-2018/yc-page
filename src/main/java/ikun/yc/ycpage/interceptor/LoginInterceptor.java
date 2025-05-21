@@ -4,7 +4,6 @@ package ikun.yc.ycpage.interceptor;
 import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.anno.PassToken;
 import ikun.yc.ycpage.common.exception.LoginException;
-import ikun.yc.ycpage.common.exception.PathException;
 import ikun.yc.ycpage.utils.JwtUtils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -40,14 +39,10 @@ public class LoginInterceptor implements HandlerInterceptor {
         String uri = req.getRequestURI();
         log.info("请求路径：{}", uri);
 
-        // error路径处理
-//        if (uri.equals("/error")) true;
-
         String jwt = req.getHeader("Authorization");
 
         // 检查 JWT 是否存在
         if (jwt == null || jwt.isEmpty()) throw new LoginException("未登录");
-
         try {
             // 尝试解析 JWT
             Claims claims = JwtUtils.parseJWT(jwt);
