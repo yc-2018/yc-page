@@ -8,6 +8,8 @@ import org.springframework.web.client.RestTemplate;
 
 @Configuration
 public class Config {
+
+    /** 注册RESTful服务客户端 */
     @Bean
     public RestTemplate restTemplate() {
         RestTemplate restTemplate = new RestTemplate();
