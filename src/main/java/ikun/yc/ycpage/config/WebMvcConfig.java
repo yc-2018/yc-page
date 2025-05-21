@@ -35,8 +35,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(loginInterceptor)       //注册拦截器
-                .addPathPatterns("/**");                //拦截全部路径    /*是一级路径/**是全部路径
-//                .excludePathPatterns(
+                .addPathPatterns("/**")                 //拦截全部路径    /*是一级路径/**是全部路径
+                .excludePathPatterns(
+                        "/error"
 //                        "/users/login"
 //                        "/mini/login",
 //                        "/接收微信接口",
@@ -56,7 +57,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
 //                        "/css/**",                  // 放行css静态资源
 //                        "/js/**",                   // 放行js静态资源
 //                        "/images/**"                // 放行images静态资源
-//                );  // 排除 (不拦截的路径)
+                );  // 排除 (不拦截的路径)
     }
 
 //    /**

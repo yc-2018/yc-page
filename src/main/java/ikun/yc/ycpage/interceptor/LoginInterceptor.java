@@ -39,8 +39,9 @@ public class LoginInterceptor implements HandlerInterceptor {
 
         String uri = req.getRequestURI();
         log.info("请求路径：{}", uri);
+
         // error路径处理
-        if (uri.equals("/error")) throw new PathException("请求失败");
+//        if (uri.equals("/error")) true;
 
         String jwt = req.getHeader("Authorization");
 
