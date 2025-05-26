@@ -75,8 +75,8 @@ public class Memo extends Model<Memo> implements Serializable {
     /** 修改待办信息 防止恶意修改 */
     public void toReviseInfo() {
         userId = BaseContext.getCurrentId();
-        // 更新时间 不为空的情况下允许在30+1天内，不在30+1天内不允许 设置为空
-        if (okTime != null && (okTime.isBefore(LocalDateTime.now().minusDays(31)) || okTime.isAfter(LocalDateTime.now().plusDays(1)))) {
+        // 更新时间 不为空的情况下允许在36+1天内，不在60+1天内不允许 设置为空
+        if (okTime != null && (okTime.isBefore(LocalDateTime.now().minusDays(61)) || okTime.isAfter(LocalDateTime.now().plusDays(1)))) {
             okTime = null;
         }
     }
