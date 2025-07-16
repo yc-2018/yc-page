@@ -38,7 +38,6 @@ public class DySeeTime extends Model<DySeeTime> implements Serializable {
 
     /** 主键 */
     @TableId(type = IdType.AUTO)
-    @TableField(select = false)
     private Integer id;
 
     /** 用户微信id */
