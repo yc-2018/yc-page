@@ -54,9 +54,6 @@ public class LoopMemoItem implements Serializable {
     @TableField(value = "loop_text")
     private String loopText;
 
-    public LoopMemoItem(Memo item) {
-        this.memoId = item.getId();
-        this.memoDate = item.getOkTime();
-        this.loopText = item.getOkText();
-    }
+    @ApiModelProperty(value = "循环时可备注图片用,分割")
+    private String imgArr;
 }

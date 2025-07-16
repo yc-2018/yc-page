@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.R;
+import ikun.yc.ycpage.common.exception.SqlSaveException;
+import ikun.yc.ycpage.common.exception.SqlUpdateException;
 import ikun.yc.ycpage.entity.LoopMemoItem;
 import ikun.yc.ycpage.entity.Memo;
 import ikun.yc.ycpage.service.LoopMemoItemService;
@@ -12,6 +14,8 @@ import ikun.yc.ycpage.service.MemoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
 
 /**
  * 循环备忘录时间控制器
@@ -21,7 +25,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/loopMemoTime")
+@RequestMapping("/loopMemoItem")
 public class LoopMemoItemController {
 
     private final LoopMemoItemService loopMemoItemService;
@@ -38,9 +42,10 @@ public class LoopMemoItemController {
      * @since 2024/01/02 19:45:50
      */
     @GetMapping("/{itemId}")
-    public R<Page<LoopMemoItem>> getLoopMemoTimeList(@RequestParam(defaultValue = "1") Integer page,
-                                                     @RequestParam(defaultValue = "20") Integer pageSize,
-                                                     @PathVariable Integer itemId) {
+    public R<Page<LoopMemoItem>> getLoopMemoItemList(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "20") Integer pageSize,
+            @PathVariable Integer itemId) {
         return R.success(loopMemoItemService.lambdaQuery()
             .eq(LoopMemoItem::getMemoId, itemId)
             .orderByDesc(LoopMemoItem::getMemoDate)
@@ -48,20 +53,39 @@ public class LoopMemoItemController {
         );
     }
 
-
     /**
-     * 更新循环备忘录
+     * 添加循环备忘录时间
      *
-     * @param loopMemoItem 循环备忘录对象
-     * @return {@code R<Boolean> }
+     * @param loopMemoItem 循环备注明细项
+     * @return {@code LoopMemoItem }
+     * @author ChenGuangLong
+     * @since 2025/07/16 20:59
      */
+    @PostMapping
+    @Transactional
+    public R<LoopMemoItem> addLoopMemoItem(@RequestBody LoopMemoItem loopMemoItem) {
+        boolean update = memoService.update(Wrappers.<Memo>lambdaUpdate()
+                .eq(Memo::getId, loopMemoItem.getMemoId())
+                .eq(Memo::getUserId, BaseContext.getCurrentId())
+                .set(Memo::getUpdateTime, LocalDateTime.now())  // 更新时间
+                .setSql("number_of_recurrences = COALESCE(number_of_recurrences, 0) + 1")
+        );
+        if (!update) throw new SqlUpdateException("+1失败");
+        boolean save = loopMemoItemService.save(loopMemoItem);
+        if (!save) throw new SqlSaveException("保存失败");
+        return R.success(loopMemoItem);
+    }
+
+
+    /** 更新循环备忘录 */
     @PutMapping
-    public R<Boolean> updateLoopMemoTime(@RequestBody LoopMemoItem loopMemoItem) {
+    public R<LoopMemoItem> updateLoopMemoItem(@RequestBody LoopMemoItem loopMemoItem) {
         boolean b = loopMemoItemService.update(loopMemoItem, Wrappers.<LoopMemoItem>lambdaUpdate()
                 .eq(LoopMemoItem::getId, loopMemoItem.getId())
                 .eq(LoopMemoItem::getMemoId, loopMemoItem.getMemoId())
         );
-        return R.success(b);
+        if (!b) throw new SqlUpdateException("修改失败");
+        return R.success(loopMemoItem);
     }
 
     /**
@@ -73,7 +97,7 @@ public class LoopMemoItemController {
      */
     @Transactional
     @DeleteMapping("/{memoId}/{loopId}")
-    public R<Boolean> deleteLoopMemoTime(@PathVariable String memoId, @PathVariable Integer loopId) {
+    public R<Boolean> deleteLoopMemoItem(@PathVariable String memoId, @PathVariable Integer loopId) {
         // 待办减一
         boolean b = memoService.lambdaUpdate()
                 .eq(Memo::getUserId, BaseContext.getCurrentId())

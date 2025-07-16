@@ -1,13 +1,11 @@
 package ikun.yc.ycpage.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.R;
-import ikun.yc.ycpage.entity.LoopMemoItem;
 import ikun.yc.ycpage.entity.Memo;
 import ikun.yc.ycpage.mapper.MemoMapper;
-import ikun.yc.ycpage.service.LoopMemoItemService;
 import ikun.yc.ycpage.service.MemoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -30,7 +29,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class MemoServiceImpl extends ServiceImpl<MemoMapper, Memo> implements MemoService {
     private final MemoMapper memoMapper;
-    private final LoopMemoItemService loopMemoItemService;
 
 
     /**
@@ -77,21 +75,13 @@ public class MemoServiceImpl extends ServiceImpl<MemoMapper, Memo> implements Me
     @Transactional
     @Override
     public boolean updateItem(Memo memo) {
-        LambdaUpdateWrapper<Memo> updateWrapper = new LambdaUpdateWrapper<Memo>()
-                .eq(Memo::getId, memo.getId())
-                .eq(Memo::getUserId, memo.getUserId());
-
-        // 完成或编辑(循环+1 以外的直接更新)
-        if (memo.getNumberOfRecurrences() == null) {
-            if (memo.getCompleted() != null && memo.getCompleted() == 1 && memo.getOkTime() == null) { // 完成没提供时间，选择当前时间
-                memo.setOkTime(LocalDateTime.now());
-            }
-            return this.update(memo, updateWrapper);
+        if (Objects.equals(memo.getCompleted(), 1) && Objects.isNull(memo.getOkTime())) { // 完成没提供时间，选择当前时间
+            memo.setOkTime(LocalDateTime.now());
         }
-
-        return this.update(updateWrapper
-                .setSql("number_of_recurrences = COALESCE(number_of_recurrences, 0) + 1")
-                .set(Memo::getUpdateTime, LocalDateTime.now())  // 更新时间( 没有备忘录对象作为第一个参数 MyBatisPlus不会自动更新时间
-        ) && loopMemoItemService.save(new LoopMemoItem(memo.setOkText(memo.getOkText())));
+        return this.update(memo, Wrappers.<Memo>lambdaUpdate()
+                .eq(Memo::getId, memo.getId())
+                .eq(Memo::getUserId, memo.getUserId())
+        );
     }
+
 }
