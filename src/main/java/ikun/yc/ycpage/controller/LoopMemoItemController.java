@@ -5,9 +5,9 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.R;
-import ikun.yc.ycpage.entity.LoopMemoTime;
+import ikun.yc.ycpage.entity.LoopMemoItem;
 import ikun.yc.ycpage.entity.Memo;
-import ikun.yc.ycpage.service.LoopMemoTimeService;
+import ikun.yc.ycpage.service.LoopMemoItemService;
 import ikun.yc.ycpage.service.MemoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,9 +22,9 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/loopMemoTime")
-public class LoopMemoTimeController {
+public class LoopMemoItemController {
 
-    private final LoopMemoTimeService loopMemoTimeService;
+    private final LoopMemoItemService loopMemoItemService;
     private final MemoService memoService;
 
     /**
@@ -38,12 +38,12 @@ public class LoopMemoTimeController {
      * @since 2024/01/02 19:45:50
      */
     @GetMapping("/{itemId}")
-    public R<Page<LoopMemoTime>> getLoopMemoTimeList(@RequestParam(defaultValue = "1") Integer page,
+    public R<Page<LoopMemoItem>> getLoopMemoTimeList(@RequestParam(defaultValue = "1") Integer page,
                                                      @RequestParam(defaultValue = "20") Integer pageSize,
                                                      @PathVariable Integer itemId) {
-        return R.success(loopMemoTimeService.lambdaQuery()
-            .eq(LoopMemoTime::getMemoId, itemId)
-            .orderByDesc(LoopMemoTime::getMemoDate)
+        return R.success(loopMemoItemService.lambdaQuery()
+            .eq(LoopMemoItem::getMemoId, itemId)
+            .orderByDesc(LoopMemoItem::getMemoDate)
             .page(new Page<>(page, pageSize))
         );
     }
@@ -52,14 +52,14 @@ public class LoopMemoTimeController {
     /**
      * 更新循环备忘录
      *
-     * @param loopMemoTime 循环备忘录对象
+     * @param loopMemoItem 循环备忘录对象
      * @return {@code R<Boolean> }
      */
     @PutMapping
-    public R<Boolean> updateLoopMemoTime(@RequestBody LoopMemoTime loopMemoTime) {
-        boolean b = loopMemoTimeService.update(loopMemoTime, Wrappers.<LoopMemoTime>lambdaUpdate()
-                .eq(LoopMemoTime::getId, loopMemoTime.getId())
-                .eq(LoopMemoTime::getMemoId, loopMemoTime.getMemoId())
+    public R<Boolean> updateLoopMemoTime(@RequestBody LoopMemoItem loopMemoItem) {
+        boolean b = loopMemoItemService.update(loopMemoItem, Wrappers.<LoopMemoItem>lambdaUpdate()
+                .eq(LoopMemoItem::getId, loopMemoItem.getId())
+                .eq(LoopMemoItem::getMemoId, loopMemoItem.getMemoId())
         );
         return R.success(b);
     }
@@ -82,9 +82,9 @@ public class LoopMemoTimeController {
                 .update();
         if (b) {
             // 删除循环备忘录
-            b = loopMemoTimeService.remove(Wrappers.<LoopMemoTime>lambdaUpdate()
-                    .eq(LoopMemoTime::getId, loopId)
-                    .eq(LoopMemoTime::getMemoId, memoId)
+            b = loopMemoItemService.remove(Wrappers.<LoopMemoItem>lambdaUpdate()
+                    .eq(LoopMemoItem::getId, loopId)
+                    .eq(LoopMemoItem::getMemoId, memoId)
             );
         }
         return R.success(b);
