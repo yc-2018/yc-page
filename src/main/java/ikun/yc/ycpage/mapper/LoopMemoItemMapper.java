@@ -1,6 +1,6 @@
 package ikun.yc.ycpage.mapper;
 
-import ikun.yc.ycpage.entity.LoopMemoTime;
+import ikun.yc.ycpage.entity.LoopMemoItem;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -13,6 +13,6 @@ import org.apache.ibatis.annotations.Mapper;
  * @since 2023-12-20
  */
 @Mapper
-public interface LoopMemoTimeMapper extends BaseMapper<LoopMemoTime> {
+public interface LoopMemoItemMapper extends BaseMapper<LoopMemoItem> {
 
 }

@@ -1,9 +1,9 @@
 package ikun.yc.ycpage.service.impl;
 
-import ikun.yc.ycpage.entity.LoopMemoTime;
-import ikun.yc.ycpage.mapper.LoopMemoTimeMapper;
+import ikun.yc.ycpage.entity.LoopMemoItem;
+import ikun.yc.ycpage.mapper.LoopMemoItemMapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import ikun.yc.ycpage.service.LoopMemoTimeService;
+import ikun.yc.ycpage.service.LoopMemoItemService;
 import org.springframework.stereotype.Service;
 
 /**
@@ -15,6 +15,6 @@ import org.springframework.stereotype.Service;
  * @since 2023-12-20
  */
 @Service
-public class LoopMemoTimeServiceImpl extends ServiceImpl<LoopMemoTimeMapper, LoopMemoTime> implements LoopMemoTimeService {
+public class LoopMemoItemServiceImpl extends ServiceImpl<LoopMemoItemMapper, LoopMemoItem> implements LoopMemoItemService {
 
 }

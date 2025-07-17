@@ -1,6 +1,6 @@
 package ikun.yc.ycpage.service;
 
-import ikun.yc.ycpage.entity.LoopMemoTime;
+import ikun.yc.ycpage.entity.LoopMemoItem;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
@@ -11,6 +11,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * @author chengguanglong
  * @since 2023-12-20
  */
-public interface LoopMemoTimeService extends IService<LoopMemoTime> {
+public interface LoopMemoItemService extends IService<LoopMemoItem> {
 
 }

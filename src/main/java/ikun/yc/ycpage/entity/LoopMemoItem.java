@@ -22,11 +22,11 @@ import java.time.LocalDateTime;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
-@TableName("loop_memo_time")
+@TableName("loop_memo_item")
 @NoArgsConstructor
 @AllArgsConstructor
 @ApiModel(value="LoopMemoTime对象", description="目前作为:循环代办的历史时间。")
-public class LoopMemoTime implements Serializable {
+public class LoopMemoItem implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -54,9 +54,6 @@ public class LoopMemoTime implements Serializable {
     @TableField(value = "loop_text")
     private String loopText;
 
-    public LoopMemoTime(Memo item) {
-        this.memoId = item.getId();
-        this.memoDate = item.getOkTime();
-        this.loopText = item.getOkText();
-    }
+    @ApiModelProperty(value = "循环时可备注图片用,分割")
+    private String imgArr;
 }

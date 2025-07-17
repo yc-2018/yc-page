@@ -24,7 +24,7 @@ import java.util.Date;
 @Slf4j
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/toDoItems")
+@RequestMapping("/memo")
 public class MemoController {
     private final MemoService memoService;
 
@@ -97,7 +97,7 @@ public class MemoController {
 
         // 如果是查询未完成的 而且不是英语的，统计数量
         if (completed == 0 && type != 4)
-            pageR.add("groupToDoItemsCounts", memoService.getGroupMemoCount(type));
+            pageR.add("groupMemosCounts", memoService.getGroupMemoCount(type));
 
         return pageR;
     }
