@@ -41,7 +41,4 @@ public class PageParameters extends Model<PageParameters> implements Serializabl
     /** 背景URL */
     private String backgroundUrl;
 
-    /** 背景透明度 */
-    private Integer backgroundTransparency;
-
 }
