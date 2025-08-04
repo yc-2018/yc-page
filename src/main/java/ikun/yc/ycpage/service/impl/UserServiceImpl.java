@@ -1,18 +1,18 @@
 package ikun.yc.ycpage.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import ikun.yc.ycpage.utils.JwtUtils;
 import ikun.yc.ycpage.common.R;
 import ikun.yc.ycpage.common.SearchEngineDataInitializer;
 import ikun.yc.ycpage.common.exception.LoginException;
 import ikun.yc.ycpage.entity.Bookmarks;
-import ikun.yc.ycpage.entity.PageParameters;
-import ikun.yc.ycpage.entity.Users;
-import ikun.yc.ycpage.mapper.UsersMapper;
+import ikun.yc.ycpage.entity.User;
+import ikun.yc.ycpage.entity.UserConfig;
+import ikun.yc.ycpage.mapper.UserMapper;
 import ikun.yc.ycpage.service.BookmarksService;
-import ikun.yc.ycpage.service.PageParametersService;
 import ikun.yc.ycpage.service.SearchEnginesService;
-import ikun.yc.ycpage.service.UsersService;
+import ikun.yc.ycpage.service.UserConfigService;
+import ikun.yc.ycpage.service.UserService;
+import ikun.yc.ycpage.utils.JwtUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -34,11 +34,11 @@ import static ikun.yc.ycpage.controller.BookmarksController.BOOKMARK_ROOT;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements UsersService {
+public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
     private final RedisTemplate<String, String> redisTemplate;
     private final SearchEnginesService searchEnginesService;
     private final SearchEngineDataInitializer searchEngineDataInitializer;
-    private final PageParametersService pageParametersService;
+    private final UserConfigService userConfigService;
     private final BookmarksService bookmarksService;
 
 
@@ -85,18 +85,18 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
             }
 
             // 校验验证码成功，判断是否是新用户
-            Users user = this.getById(userId);
+            User user = this.getById(userId);
             if (user == null) {
-                user = new Users();
+                user = new User();
                 log.info("{}是新用户",userId);
                 this.save(user.setId(userId));
                 bookmarksService.save(new Bookmarks().setUserId(userId).setType(BOOKMARK_ROOT));  // 保存默认的书签根
-                pageParametersService.save(new PageParameters().setUserId(userId));   // 保存默认的页面参数
+                userConfigService.save(new UserConfig().setUserId(userId));   // 保存默认用户参数
                 searchEnginesService.saveBatch(searchEngineDataInitializer.getInitialSearchEngines(userId));  // 保存初始搜索引擎
             }
 
             log.info("用户：{},登录", userId);
-            Users loginUser = user;     // 不重新赋值会报错 有点神奇
+            User loginUser = user;     // 不重新赋值会报错 有点神奇
             String generateJwt = JwtUtils.generateJwt(new HashMap<String, Object>() {{
                 put("userId", userId);
                 put("username", loginUser.getUsername());

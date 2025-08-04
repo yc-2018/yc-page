@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import ikun.yc.ycpage.common.BaseContext;
 import io.swagger.annotations.ApiModel;
@@ -27,7 +28,8 @@ import java.time.LocalDateTime;
 @TableName("users")
 @ApiModel("Users对象")
 @EqualsAndHashCode(callSuper = false)
-public class Users extends Model<Users> implements Serializable {
+@JsonInclude(JsonInclude.Include.NON_EMPTY)              // 如果为空字符串或 null，这个字段不会返回给前端
+public class User extends Model<User> implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** 用户ID */
@@ -61,8 +63,8 @@ public class Users extends Model<Users> implements Serializable {
     /** 头像 */
     private String avatar;
 
-    public Users getNameAndAvatar() {
-        return new Users()
+    public User getNameAndAvatar() {
+        return new User()
                 .setId(BaseContext.getCurrentId())
                 .setUsername(username)
                 .setAvatar(avatar);

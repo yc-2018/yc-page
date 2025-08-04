@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ikun.yc.ycpage.mapper.UserConfigMapper">
+
+    <resultMap id="BaseResultMap" type="ikun.yc.ycpage.entity.UserConfig">
+            <id property="id" column="id" />
+            <result property="userId" column="user_id" />
+            <result property="backgroundUrl" column="background_url" />
+            <result property="searchSort" column="search_sort" />
+            <result property="lowSearchSort" column="low_search_sort" />
+            <result property="homeBookmarkSort" column="home_bookmark_sort" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,user_id,avatar_url,background_url,search_sort,low_search_sort,
+        home_bookmark_sort
+    </sql>
+</mapper>
