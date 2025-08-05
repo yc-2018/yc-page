@@ -6,7 +6,6 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import ikun.yc.ycpage.common.BaseContext;
 import io.swagger.annotations.ApiModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -63,10 +62,4 @@ public class User extends Model<User> implements Serializable {
     /** 头像 */
     private String avatar;
 
-    public User getNameAndAvatar() {
-        return new User()
-                .setId(BaseContext.getCurrentId())
-                .setUsername(username)
-                .setAvatar(avatar);
-    }
 }
