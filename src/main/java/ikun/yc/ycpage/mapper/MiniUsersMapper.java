@@ -2,7 +2,6 @@ package ikun.yc.ycpage.mapper;
 
 import ikun.yc.ycpage.entity.MiniUsers;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import org.apache.ibatis.annotations.Mapper;
 
 /**
 * author 陈光龙
@@ -10,7 +9,6 @@ import org.apache.ibatis.annotations.Mapper;
 * createDate 2025-03-08 14:22:41
 * Entity ikun.yc.ycpage.entity.MiniUsers
 */
-@Mapper
 public interface MiniUsersMapper extends BaseMapper<MiniUsers> {
 
 }
