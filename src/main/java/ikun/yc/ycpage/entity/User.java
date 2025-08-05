@@ -57,8 +57,8 @@ public class User extends Model<User> implements Serializable {
     @TableField(update = "now()")
     private LocalDateTime updateTime;
 
-    /** 是否已删除 */
-    private Integer isDeleted;
+//    /** 是否已删除 */
+//    private Integer isDeleted;
 
     /** 头像 */
     private String avatar;
