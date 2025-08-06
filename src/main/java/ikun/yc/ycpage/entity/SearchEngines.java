@@ -1,16 +1,17 @@
 package ikun.yc.ycpage.entity;
 
-import java.io.Serializable;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
+import java.io.Serializable;
+import java.time.LocalDateTime;
 
 /**
  * (search_engines)实体类
@@ -31,6 +32,7 @@ public class SearchEngines extends Model<SearchEngines> implements Serializable 
 	private Integer id;
 
     /** 搜索引擎URL  */
+    @Pattern(regexp = "^https?://.*$", message = "搜索引擎URL格式不正确")
     private String engineUrl;
 
     /** 是否快速搜索 1快 0普通  */
@@ -40,6 +42,7 @@ public class SearchEngines extends Model<SearchEngines> implements Serializable 
     private Integer lowUsage;
 
     /** 名称  */
+    @NotNull(message = "名称不可为空")  // 验证非空且长度 > 0（去空格后）
     private String name;
 
     /** 图标URL  */
@@ -47,7 +50,9 @@ public class SearchEngines extends Model<SearchEngines> implements Serializable 
 
     /** 用户id  */
     @JsonIgnore
-    @TableField(select = false)
     private String userId;
 
+    @JsonIgnore
+    @TableField(fill = FieldFill.UPDATE, select = false)
+    private LocalDateTime updateTime;
 }

@@ -10,4 +10,9 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface UserConfigService extends IService<UserConfig> {
 
+    String getSearchEngineSort(Boolean isLowUsage);
+
+    void removeIdFromSortString(String userId, Integer id, boolean b);
+
+    void appendIdToSortString(String userId, Integer id, boolean isLowUsage);
 }
