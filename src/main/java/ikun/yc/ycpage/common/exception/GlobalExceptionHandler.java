@@ -37,6 +37,13 @@ public class GlobalExceptionHandler {
         return R.error("参数错误: " + errorMsg);
     }
 
+    // 空指针错误处理方法
+    @ExceptionHandler(NullPointerException.class)
+    public R<String> handleException(NullPointerException ex) {
+        log.error("\n↓↓↓↓↓↓↓↓↓↓↓↓\n{}\n↑↑↑↑↑↑↑↑↑↑↑\n" ,ex.getMessage());
+        return R.error("空指针错误: " + ex.getMessage());
+    }
+
     /** 兜底异常处理方法 */
     @ExceptionHandler({RuntimeException.class}) // 捕获所有继承自RuntimeException的异常
     public R<String> exceptionHandler(RuntimeException ex) {
