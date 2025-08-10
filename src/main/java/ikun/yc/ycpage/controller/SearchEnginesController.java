@@ -92,25 +92,6 @@ public class SearchEnginesController {
         return R.success(sortedList);
     }
 
-//    /**
-//     * 按用户id获取列表
-//     *
-//     * @param type 类型（可选）
-//     * @return 搜索引擎列表
-//     * @author ChenGuangLong
-//     * @since 2023/12/23 16:53:55
-//     */
-//    @GetMapping("/list")
-//    @RedisCache("searchEngines") // 缓存 默认一天
-//    public R<List<SearchEngines>> getListByUserId(@RequestParam(required = false) Integer type) {
-//        Map<String, Object> map = new HashMap<>();
-//        map.put("user_id", BaseContext.getCurrentId());
-//        if (type!= null) map.put("is_quick_search", type);
-//
-//        return R.success(searchEnginesService.listByMap(map));
-//    }
-
-
     /**
      * 添加搜索引擎
      *
@@ -167,27 +148,6 @@ public class SearchEnginesController {
         return R.success(searchEngines);
     }
 
-
-//    /**
-//     * 批量更新搜索引擎
-//     *
-//     * @param searchEngineList 搜索引擎列表
-//     * @return 返回拼接的循环进去的true或false
-//     * @author ChenGuangLong
-//     * @since 2023/12/23
-//     */
-//    @Log
-//    @PutMapping
-//    @CacheEvict("searchEngines")    // 删除缓存
-//    @CountControl(operationType = CountControlAspect.UPDATE)
-//    public R<?> updateSearchEngines(@RequestBody List<SearchEngines> searchEngineList) {
-//        if (searchEngineList == null || searchEngineList.isEmpty()) return R.error("乱搞！🤺");
-//
-//        Integer i = searchEnginesService.batchUpdate(searchEngineList);
-//        if (i == 0) return R.error("更新失败！");
-//        return R.success(true);
-//    }
-
     /**
      * 编辑搜索引擎
      *
@@ -226,29 +186,6 @@ public class SearchEnginesController {
         }
         return R.success(updatedEngine);
     }
-
-
-
-//
-//
-//    /**
-//     * 批量删除搜索引擎
-//     *
-//     * @param ids 引擎id
-//     * @return 成功返回true，失败返回提示信息
-//     * @author ChenGuangLong
-//     * @since 2023/12/23
-//     */
-//    @Log
-//    @DeleteMapping
-//    @CacheEvict("searchEngines")    // 删除缓存
-//    public R<Boolean> deleteSearchEngines(@RequestBody List<Integer> ids) {
-//        return searchEnginesService.lambdaUpdate()
-//            .in(SearchEngines::getId, ids)
-//            .eq(SearchEngines::getUserId, BaseContext.getCurrentId())
-//            .remove()? R.success(true) : R.error("删除失败");
-//    }
-
 
     /**
      * 删除搜索引擎
