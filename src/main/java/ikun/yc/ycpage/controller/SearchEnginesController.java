@@ -18,6 +18,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Pattern;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -57,20 +58,7 @@ public class SearchEnginesController {
         // 获取排序字段 格式 id/id/id
         String sortField = userConfigService.getSearchEngineSort(isLowUsage);
 
-        if (!StringUtils.hasText(sortField))
-            return R.success(enginesList);
-//        String[] sortIdArr = sortField.split("/");
-//        List<SearchEngines> sortEnginesList = new ArrayList<>(sortIdArr.length);
-//        for (String sortId : sortIdArr) {
-//            Optional<SearchEngines> first = enginesList.stream()
-//                    .filter(engine -> engine.getId().equals(Integer.parseInt(sortId)))
-//                    .findFirst();
-//            if (first.isPresent()) {
-//                sortEnginesList.add(first.get());
-//                enginesList.remove(first.get());
-//            }
-//        }
-//        enginesList.addAll(sortEnginesList);
+        if (!StringUtils.hasText(sortField)) return R.success(enginesList);
 
         // 3. 使用Map优化查找性能 O(1)
         Map<Integer, SearchEngines> engineMap = enginesList.stream()
@@ -227,5 +215,46 @@ public class SearchEnginesController {
         }
 
         return R.success(true);
+    }
+
+    /**
+     * 排序搜索引擎
+     *
+     * @param sort       排序
+     * @param isLowUsage 是否是不常用的列表排序？
+     * @author 𝑐𝒽𝑒𝑛𝐺𝑢𝑎𝑛𝑔𝐿𝑜𝑛𝑔
+     * @since 2025/08/10 21:29:10
+     */
+    @Log
+    @PostMapping("/sort")
+    @CacheEvict("searchEngines")    // 删除缓存
+    public R<Boolean> sortSearchEngines(
+            @Pattern(regexp = "(\\d+)(/\\d+)*", message = "排序参数格式有误") String sort,
+            @RequestParam(defaultValue = "false") Boolean isLowUsage
+    ) {
+        List<String> searchIds = searchEnginesService.lambdaQuery()
+                .select(SearchEngines::getId)
+                .eq(SearchEngines::getUserId, BaseContext.getCurrentId())
+                .eq(SearchEngines::getLowUsage, isLowUsage ? 1 : 0)
+                .list()
+                .stream()
+                .map(SearchEngines::getId)
+                .map(Object::toString)
+                .collect(Collectors.toList());
+
+        // 如果一一存在，那就重新设置排序字段，否则报错
+        List<String> sortIds = Arrays.asList(sort.split("/"));
+        if (sortIds.size() != searchIds.size()) throw new RuntimeException("数据和云端不匹对,请刷新后重试");
+        for (String sortId : sortIds) {
+            if (!searchIds.contains(sortId)) throw new RuntimeException("排序数据有误,请刷新后重试");
+        }
+
+        boolean update = userConfigService.lambdaUpdate()
+                .eq(UserConfig::getUserId, BaseContext.getCurrentId())
+                .set(!isLowUsage, UserConfig::getSearchSort, sort)
+                .set(isLowUsage, UserConfig::getLowSearchSort, sort)
+                .update();
+
+        return R.success(update);
     }
 }
