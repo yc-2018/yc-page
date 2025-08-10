@@ -13,6 +13,7 @@ import ikun.yc.ycpage.service.SearchEnginesService;
 import ikun.yc.ycpage.service.UserConfigService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -120,7 +121,8 @@ public class SearchEnginesController {
      */
     @Log
     @PostMapping
-    @CacheEvict("searchEngines")    // 删除缓存
+    @Transactional
+    @CacheEvict("searchEngines")    // 清除缓存
     @CountControl(operationType = CountControlAspect.ADD, frequency = 10)
     public R<SearchEngines> addSearchEngines(@RequestBody @Valid SearchEngines searchEngines) {
         searchEngines.setUserId(BaseContext.getCurrentId());
@@ -194,7 +196,8 @@ public class SearchEnginesController {
      */
     @Log
     @PutMapping
-    @CacheEvict("searchEngines")    // 删除缓存
+    @Transactional
+    @CacheEvict("searchEngines")    // 清除缓存
     public R<SearchEngines> updateSearchEngines(@RequestBody @Valid SearchEngines updatedEngine) {
         // 1. 获取当前用户ID
         String userId = BaseContext.getCurrentId();
@@ -255,6 +258,7 @@ public class SearchEnginesController {
      * @since 2025/08/07 00:23:07
      */
     @Log
+    @Transactional
     @DeleteMapping("/{id}")
     @CacheEvict("searchEngines")    // 删除缓存
     public R<Boolean> deleteSearchEngines(@PathVariable Integer id) {
