@@ -238,15 +238,16 @@ public class SearchEnginesController {
                 .eq(SearchEngines::getLowUsage, isLowUsage ? 1 : 0)
                 .list()
                 .stream()
-                .map(SearchEngines::getId)
-                .map(Object::toString)
+                .map(se -> se.getId().toString())
                 .collect(Collectors.toList());
 
         // 如果一一存在，那就重新设置排序字段，否则报错
         List<String> sortIds = Arrays.asList(sort.split("/"));
         if (sortIds.size() != searchIds.size()) throw new RuntimeException("数据和云端不匹对,请刷新后重试");
-        for (String sortId : sortIds) {
-            if (!searchIds.contains(sortId)) throw new RuntimeException("排序数据有误,请刷新后重试");
+        // 使用HashSet优化存在性检查
+        Set<String> validIdSet = new HashSet<>(searchIds);
+        for (String sortId : searchIds) {
+            if (!validIdSet.contains(sortId)) throw new RuntimeException("排序数据有误,请刷新后重试");
         }
 
         boolean update = userConfigService.lambdaUpdate()
