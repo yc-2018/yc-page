@@ -35,9 +35,6 @@ public class SearchEngines extends Model<SearchEngines> implements Serializable 
     @Pattern(regexp = "^https?://.*$", message = "搜索引擎URL格式不正确")
     private String engineUrl;
 
-    /** 是否快速搜索 1快 0普通  */
-    private Integer isQuickSearch;
-
     /** 不常用 1是 0否  */
     private Integer lowUsage;
 
