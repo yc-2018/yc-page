@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.*;
 
@@ -48,8 +49,8 @@ public class BookmarksServiceImpl extends ServiceImpl<BookmarksMapper, Bookmarks
             this.save(bookmarks);
 
             // 给书签组排序字段追加上当前书签的id
-            bookmarkGroup.setSort(bookmarkGroup.getSort() == null || bookmarkGroup.getSort().isEmpty() ?
-                    bookmarks.getId().toString() : bookmarkGroup.getSort() + "/" + bookmarks.getId()
+            bookmarkGroup.setSort(StringUtils.hasText(bookmarkGroup.getSort()) ?
+                    bookmarkGroup.getSort() + "/" + bookmarks.getId() : bookmarks.getId().toString()
             );
             this.updateById(bookmarkGroup);
             // 如果增加的是书签组
