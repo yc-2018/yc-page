@@ -57,6 +57,10 @@ public class CheckinRecords extends Model<CheckinRecords> {
     /** 详细地址  */
     private String address;
 
+    /** 图片列表 用,分隔  */
+    @Size(max = 999)
+    private String imgs;
+
     /** 备注（最长255个字符）  */
     @Size(max = 255, message = "备注不能超过255个字符")
     private String remark;
