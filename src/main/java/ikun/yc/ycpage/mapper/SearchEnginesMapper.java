@@ -1,9 +1,7 @@
 package ikun.yc.ycpage.mapper;
 
-import ikun.yc.ycpage.entity.SearchEngines;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-
-import java.util.List;
+import ikun.yc.ycpage.entity.SearchEngines;
 
 /**
  * (search_engines)数据Mapper
@@ -12,6 +10,4 @@ import java.util.List;
  * @since 2023-12-03 22:31:22
 */
 public interface SearchEnginesMapper extends BaseMapper<SearchEngines> {
-    Integer batchUpdateSearchEngines(List<SearchEngines> searchEngineList);
-
 }
