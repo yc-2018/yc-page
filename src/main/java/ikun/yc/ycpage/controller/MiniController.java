@@ -9,8 +9,9 @@ import ikun.yc.ycpage.common.anno.PassToken;
 import ikun.yc.ycpage.common.anno.UserId;
 import ikun.yc.ycpage.common.aop.CountControlAspect;
 import ikun.yc.ycpage.entity.CheckinRecords;
+import ikun.yc.ycpage.entity.MiniUser;
 import ikun.yc.ycpage.entity.dto.MiniCheckinDto;
-import ikun.yc.ycpage.service.MiniUsersService;
+import ikun.yc.ycpage.service.MiniUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
@@ -30,12 +31,12 @@ import java.time.LocalDate;
 @RestController
 @RequestMapping("/mini")
 public class MiniController {
-    private final MiniUsersService miniUsersService;
+    private final MiniUserService miniUserService;
 
     @PassToken
     @PostMapping("/login")
     public R<String> wechatLogin(String code) {
-        return R.success(miniUsersService.miniLogin(code));
+        return R.success(miniUserService.miniLogin(code));
     }
 
     /**
@@ -131,5 +132,39 @@ public class MiniController {
                 .eq(CheckinRecords::getUserOpenid, BaseContext.getCurrentId())
         );
         return updateOk ? R.success(true) : R.error("修改失败");
+    }
+
+    /**
+     * 获取用户信息(头像、名称)
+     *
+     * @param miniUser 迷你用户
+     * @author ChenGuangLong
+     * @since 2025/09/02 01:29:02
+     */
+    @PostMapping("/getUserInfo")
+    public R<MiniUser> getUserInfo(@RequestBody MiniUser miniUser) {
+        return R.success(miniUser.selectOne(Wrappers.<MiniUser>lambdaQuery()
+                .select(MiniUser::getNickname, MiniUser::getAvatarUrl)
+                .eq(MiniUser::getOpenid, BaseContext.getCurrentId())
+        ));
+    }
+
+    /**
+     * 更新用户信息（头像、名称）
+     *
+     * @param miniUser 微信用户
+     * @author ChenGuangLong
+     * @since 2025/09/02 01:36:02
+     */
+    @PostMapping("/updateUserInfo")
+    public R<?> updateUserInfo(@RequestBody MiniUser miniUser) {
+        if (StringUtils.hasText(miniUser.getNickname()) && StringUtils.hasText(miniUser.getAvatarUrl())) return R.error("没数！");
+
+        miniUser.update(Wrappers.<MiniUser>lambdaUpdate()
+                .set(StringUtils.hasText(miniUser.getNickname()), MiniUser::getNickname, miniUser.getNickname())
+                .set(StringUtils.hasText(miniUser.getAvatarUrl()), MiniUser::getAvatarUrl, miniUser.getAvatarUrl())
+                .eq(MiniUser::getOpenid, BaseContext.getCurrentId())
+        );
+        return R.success(miniUser);
     }
 }

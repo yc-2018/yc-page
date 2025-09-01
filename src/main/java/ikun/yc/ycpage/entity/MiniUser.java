@@ -16,11 +16,11 @@ import lombok.experimental.Accessors;
  * 微信小程序用户表
  * TableName mini_users
  */
-@TableName(value ="mini_users")
+@TableName(value ="mini_user")
 @Data
 @Accessors(chain = true)
 @EqualsAndHashCode(callSuper = false)
-public class MiniUsers extends Model<MiniUsers> implements Serializable {
+public class MiniUser extends Model<MiniUser> implements Serializable {
     /** 自增主键 */
     @TableId(type = IdType.AUTO)
     private Integer id;

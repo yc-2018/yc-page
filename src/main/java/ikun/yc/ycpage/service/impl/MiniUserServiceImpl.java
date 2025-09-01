@@ -2,10 +2,10 @@ package ikun.yc.ycpage.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import ikun.yc.ycpage.common.WechatMiniAuthService;
-import ikun.yc.ycpage.entity.MiniUsers;
+import ikun.yc.ycpage.entity.MiniUser;
 import ikun.yc.ycpage.entity.dto.MiniSessionDTO;
-import ikun.yc.ycpage.service.MiniUsersService;
-import ikun.yc.ycpage.mapper.MiniUsersMapper;
+import ikun.yc.ycpage.service.MiniUserService;
+import ikun.yc.ycpage.mapper.MiniUserMapper;
 import ikun.yc.ycpage.utils.JwtUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,7 +20,7 @@ import java.util.HashMap;
 */
 @Service
 @RequiredArgsConstructor
-public class MiniUsersServiceImpl extends ServiceImpl<MiniUsersMapper, MiniUsers> implements MiniUsersService{
+public class MiniUserServiceImpl extends ServiceImpl<MiniUserMapper, MiniUser> implements MiniUserService {
   private final WechatMiniAuthService wechatMiniAuthService;
 
 
@@ -30,19 +30,19 @@ public class MiniUsersServiceImpl extends ServiceImpl<MiniUsersMapper, MiniUsers
     MiniSessionDTO sessionInfo = wechatMiniAuthService.getSessionInfo(code);
 
     // 步骤2：处理/保存用户信息
-    MiniUsers user = processUserInfo(sessionInfo);
+    MiniUser user = processUserInfo(sessionInfo);
 
     // 步骤3：生成Jwt
     return JwtUtils.generateJwt(new HashMap<String, Object>() {{put("userId", user.getOpenid());}}, "yz");
   }
 
-  private MiniUsers processUserInfo(MiniSessionDTO session) {
+  private MiniUser processUserInfo(MiniSessionDTO session) {
     // 查找已有用户
-    MiniUsers user = this.lambdaQuery().eq(MiniUsers::getOpenid, session.getOpenid()).one();
+    MiniUser user = this.lambdaQuery().eq(MiniUser::getOpenid, session.getOpenid()).one();
 
     // 新用户注册逻辑
     if (user == null) {
-      user = new MiniUsers();
+      user = new MiniUser();
       user.setOpenid(session.getOpenid());
       this.save(user);
       return user;
