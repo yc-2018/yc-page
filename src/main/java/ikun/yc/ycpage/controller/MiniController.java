@@ -137,13 +137,12 @@ public class MiniController {
     /**
      * 获取用户信息(头像、名称)
      *
-     * @param miniUser 迷你用户
      * @author ChenGuangLong
      * @since 2025/09/02 01:29:02
      */
     @PostMapping("/getUserInfo")
-    public R<MiniUser> getUserInfo(@RequestBody MiniUser miniUser) {
-        return R.success(miniUser.selectOne(Wrappers.<MiniUser>lambdaQuery()
+    public R<MiniUser> getUserInfo() {
+        return R.success(new MiniUser().selectOne(Wrappers.<MiniUser>lambdaQuery()
                 .select(MiniUser::getNickname, MiniUser::getAvatarUrl)
                 .eq(MiniUser::getOpenid, BaseContext.getCurrentId())
         ));
