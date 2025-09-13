@@ -54,7 +54,7 @@ public class LoopMemoItemController {
     }
 
     /**
-     * 添加循环备忘录时间
+     * 添加循环备忘录项
      *
      * @param loopMemoItem 循环备注明细项
      * @return {@code LoopMemoItem }
@@ -64,15 +64,13 @@ public class LoopMemoItemController {
     @PostMapping
     @Transactional
     public R<LoopMemoItem> addLoopMemoItem(@RequestBody LoopMemoItem loopMemoItem) {
-        boolean update = memoService.update(Wrappers.<Memo>lambdaUpdate()
+        loopMemoItemService.save(loopMemoItem);
+        memoService.update(Wrappers.<Memo>lambdaUpdate()
                 .eq(Memo::getId, loopMemoItem.getMemoId())
                 .eq(Memo::getUserId, BaseContext.getCurrentId())
                 .set(Memo::getUpdateTime, LocalDateTime.now())  // 更新时间
-                .setSql("number_of_recurrences = COALESCE(number_of_recurrences, 0) + 1")
+                .setSql("number_of_recurrences = (select count(*) from loop_memo_item where memo_id = " + loopMemoItem.getMemoId() + ")")
         );
-        if (!update) throw new SqlUpdateException("+1失败");
-        boolean save = loopMemoItemService.save(loopMemoItem);
-        if (!save) throw new SqlSaveException("保存失败");
         return R.success(loopMemoItem);
     }
 
@@ -98,19 +96,19 @@ public class LoopMemoItemController {
     @Transactional
     @DeleteMapping("/{memoId}/{loopId}")
     public R<Boolean> deleteLoopMemoItem(@PathVariable String memoId, @PathVariable Integer loopId) {
+        // 删除循环备忘项
+        loopMemoItemService.remove(Wrappers.<LoopMemoItem>lambdaUpdate()
+                .eq(LoopMemoItem::getId, loopId)
+                .eq(LoopMemoItem::getMemoId, memoId)
+        );
+
         // 待办减一
         boolean b = memoService.lambdaUpdate()
                 .eq(Memo::getUserId, BaseContext.getCurrentId())
                 .eq(Memo::getId, memoId)
-                .setSql("number_of_recurrences = number_of_recurrences - 1")
+                .setSql("number_of_recurrences = (select count(*) from loop_memo_item where memo_id = " + memoId + ")")
                 .update();
-        if (b) {
-            // 删除循环备忘录
-            b = loopMemoItemService.remove(Wrappers.<LoopMemoItem>lambdaUpdate()
-                    .eq(LoopMemoItem::getId, loopId)
-                    .eq(LoopMemoItem::getMemoId, memoId)
-            );
-        }
+
         return R.success(b);
     }
 
