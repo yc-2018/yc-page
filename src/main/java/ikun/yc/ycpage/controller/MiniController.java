@@ -124,7 +124,8 @@ public class MiniController {
         boolean updateOk = checkinRecords.update(Wrappers.<CheckinRecords>lambdaUpdate()
                 .set(StringUtils.hasText(checkinRecords.getName()), CheckinRecords::getName, checkinRecords.getName())
                 .set(StringUtils.hasText(checkinRecords.getAddress()), CheckinRecords::getAddress, checkinRecords.getAddress())
-                .set(StringUtils.hasText(checkinRecords.getRemark()), CheckinRecords::getRemark, checkinRecords.getRemark())
+                .set(CheckinRecords::getRemark, checkinRecords.getRemark())     // 描述
+                .set(CheckinRecords::getImgs, checkinRecords.getImgs())         // 图片
                 .set(StringUtils.hasText(checkinRecords.getLocationType()), CheckinRecords::getLocationType, checkinRecords.getLocationType())
                 .set(checkinRecords.getCheckinTime() != null, CheckinRecords::getCheckinTime, checkinRecords.getCheckinTime())
                 .set( CheckinRecords::getUpdateTime, LocalDate.now())
