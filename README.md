@@ -1,99 +1,99 @@
-# welCome to YcPage Project
-## 0x01. C - Variables, if, else, while
+# 欢迎来到 YcPage 项目
 
-<details>
-    <summary>Topic</summary>
-    <ul>
-    <li>C</li>
-    <li>if</li>
-    <li>else</li>
-    <li>while</li>
-    <li>for</li>
-    <li>variables</li>
-    </ul>
-</details>
-
+YcPage 是一个基于 Spring Boot 的多功能后端服务项目，旨在为用户提供便捷的个人数据管理功能。该项目集成了多种常用功能模块，包括书签管理、备忘录、微信小程序登录、操作日志记录等，适用于个人工具类应用的开发。
 
 ---
-> # @Bean和@Component
-> ### **1. 核心区别**
-> | **特性**       | **`@Bean`**                          | **`@Component`**                  |
-> |----------------|--------------------------------------|----------------------------------|
-> | **作用位置**   | 标注在**方法**上（通常在配置类中）   | 标注在**类**上（如Service、DAO）|
-> | **控制权**     | **手动编程式**创建对象               | **自动**由Spring创建对象        |
-> | **适用场景**   | 第三方库的类、复杂初始化逻辑         | 自己编写的类                    |
-> 
-> ---
-> 
-> ### **2. 举个栗子 🌰**
-> #### **场景 1：自己写的类 → 用 `@Component`**
-> ```java
-> @Component // Spring自动扫描并new这个类
-> public class UserService {
->     // 业务逻辑...
-> }
-> ```
-> 
-> #### **场景 2：第三方库的类 → 用 `@Bean`**
-> ```java
-> @Configuration
-> public class AppConfig {
-> 
->     @Bean // 比如RestTemplate是第三方库的类，你无法修改它的源码加@Component
->     public RestTemplate restTemplate() {
->         // 可以在这里写复杂配置，比如设置超时时间、拦截器等
->         return new RestTemplate();
->     }
-> }
-> ```
-> 
-> ---
-> 
-> ### **3. 更深入的理解**
-> #### **`@Component` 的本质**
-> - Spring通过**组件扫描**（`@ComponentScan`）找到所有标注了`@Component`的类。
-> - **自动调用无参构造器**创建对象（相当于帮你做了 `new UserService()`）。
-> - 适用于**自己编写的、无复杂初始化逻辑**的类。
-> 
-> #### **`@Bean` 的灵活性**
-> - 你**完全控制对象的创建过程**，可以：
->   - 调用带参数的构造器：`return new MyService(100, "timeout");`
->   - 调用工厂方法：`return DataSourceFactory.createHikariDataSource();`
->   - 设置属性或依赖：`service.setMaxPoolSize(10);`
->   - 结合条件注解（如 `@ConditionalOnClass`）动态决定是否创建 Bean。
-> 
-> ---
-> 
-> ### **4. 常见误区**
-> #### **误区 1：用 `@Bean` 来注册自己写的类**
-> ```java
-> @Configuration
-> public class AppConfig {
-> 
->     @Bean // ❌ 没必要！自己写的类直接用@Component更简单
->     public UserService userService()  {
->        return new UserService(); 
->    }
-> }
-> ```
-> 
-> #### **误区 2：试图给第三方库的类加 `@Component`**
-> ```java
-> // ❌ 第三方库的类（如RestTemplate）的源码你无法修改，加不了@Component
-> public class RestTemplate {
->     // ...
-> }
-> ```
-> 
-> ---
-> 
-> ### **5. 总结一句话**
-> - **`@Component`**：Spring 帮你自动 new 对象（适合自己写的类）。
-> - **`@Bean`**：你手动写代码 new 对象（适合无法改源码的类，或需要复杂配置的类）。
-> 
-> ---
-> 
-> ### **6. 互补关系**
-> 两者**最终效果相同**（都是向 Spring 容器注册 Bean），但**使用场景不同**：
-> - 自己写的简单类 → **`@Component` + 组件扫描**。
-> - 第三方类或复杂配置 → **`@Bean` + 配置类**。
+
+## 🌟 主要功能模块
+
+- **书签管理**：支持添加、编辑、删除和拖拽排序书签，支持自定义图标和分类。
+- **备忘录系统**：支持创建、更新、删除备忘录，支持循环备忘录和打卡记录。
+- **微信小程序集成**：提供微信登录、用户信息管理、打卡记录等功能。
+- **搜索引擎配置**：支持自定义搜索引擎及其排序，适用于个性化搜索需求。
+- **用户配置管理**：支持用户自定义背景、书签排序等个性化设置。
+- **操作日志记录**：记录用户操作行为，便于审计和追踪。
+
+---
+
+## 🛠 技术栈
+
+- **后端框架**：Spring Boot + MyBatis Plus
+- **数据库**：MySQL
+- **缓存**：Redis
+- **安全**：JWT + Spring Security
+- **接口文档**：Swagger UI
+- **日志记录**：AOP + Logback
+- **其他工具**：Lombok、Validation、RedisTemplate、RestTemplate
+
+---
+
+## 📦 核心组件说明
+
+### 控制器（Controller）
+- `BookmarksController`：书签管理接口
+- `MemoController`：备忘录管理接口
+- `MiniController`：微信小程序相关接口
+- `SearchEnginesController`：搜索引擎配置接口
+- `UserController`：用户管理接口
+
+### 服务层（Service）
+- `BookmarksService`：书签业务逻辑
+- `MemoService`：备忘录业务逻辑
+- `MiniUserService`：微信用户管理
+- `SearchEnginesService`：搜索引擎业务逻辑
+- `UserService`：用户管理业务逻辑
+
+### 数据访问层（Mapper）
+- `BookmarksMapper`、`MemoMapper`、`MiniUserMapper`、`SearchEnginesMapper` 等：数据库操作接口
+
+### 实体类（Entity）
+- `Bookmarks`、`Memo`、`MiniUser`、`SearchEngines` 等：数据库映射实体类
+
+### 工具类与配置
+- `JwtUtils`：JWT 生成与解析工具
+- `RedisConfig`：Redis 缓存配置
+- `WebMvcConfig`：Web 请求拦截与格式配置
+- `GlobalExceptionHandler`：全局异常处理
+- `MyMetaObjectHandler`：MyBatis Plus 自动填充字段
+
+---
+
+## 🧪 测试与部署
+
+### 单元测试
+- `YcPageApplicationTests`：Spring Boot 应用上下文测试
+
+### 部署建议
+- 使用 `application.properties` 配置数据库、Redis、JWT 等参数
+- 使用 `pom.xml` 构建项目，支持 Maven 打包部署
+- 可部署于任意支持 Java 11+ 的服务器环境（如 Tomcat、Jetty、Docker）
+
+---
+
+## 📚 开发文档
+
+- **Swagger 接口文档**：启动项目后访问 `/swagger-ui.html` 查看所有 API 接口
+- **日志记录**：所有操作日志记录在 `operate_log` 表中
+- **缓存机制**：使用 Redis 缓存书签和搜索引擎数据，提升访问效率
+- **权限控制**：通过 JWT 实现 Token 认证，部分接口需登录访问
+
+---
+
+## 📌 注意事项
+
+- 项目中使用了大量 Spring Boot 注解（如 `@Component`, `@Service`, `@RestController`），建议熟悉 Spring Boot 基础知识
+- 所有数据库操作基于 MyBatis Plus，支持自动分页、自动填充等功能
+- 微信相关接口需配置 AppID 和 Secret，详见 `application.properties`
+- Redis 缓存策略通过自定义注解（如 `@RedisCache`, `@CacheEvict`）实现，便于扩展和维护
+
+---
+
+## 📝 许可证
+
+本项目采用 [MIT License](https://opensource.org/licenses/MIT)，欢迎自由使用和修改。如需贡献代码，请提交 PR 或 Issue。
+
+---
+
+## 📬 联系方式
+
+如需进一步了解项目或提出建议，请访问 [Gitee 项目主页](https://gitee.com/yc556/yc-page) 或联系作者。
