@@ -43,7 +43,12 @@ public class Bookmarks extends Model<Bookmarks> implements Serializable {
   /** 排序  书签组：所属书签排序，如：id/id/id    书签：书签组id */
   private String sort;
 
-  /** 类型 状态0:正常书签(默认)  1:排序书签组(一个账号一个)  2:快捷图标书签 */
+  /**
+   * 类型
+   * 0:排序书签组(一个账号一个（创建账号时创建）),
+   * 1:书签组
+   * 2:正常书签(默认),
+   */
   private Integer type;
 
   /** 图标 */
