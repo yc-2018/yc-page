@@ -7,10 +7,12 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
+import ikun.yc.ycpage.common.StringToLinkTypeConverter;
 import ikun.yc.ycpage.interceptor.LoginInterceptor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.format.FormatterRegistry;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -30,6 +32,8 @@ import java.util.TimeZone;
 @RequiredArgsConstructor
 public class WebMvcConfig implements WebMvcConfigurer {
     private final LoginInterceptor loginInterceptor;
+    private final StringToLinkTypeConverter stringToLinkTypeConverter;
+
     private static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
     private static final String DATE_FORMAT = "yyyy-MM-dd";
     @Override
@@ -37,7 +41,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry.addInterceptor(loginInterceptor)       //注册拦截器
                 .addPathPatterns("/**")                 //拦截全部路径    /*是一级路径/**是全部路径
                 .excludePathPatterns(
-                        "/error"
+                        "/error",
+                        "/searchEngines/example"
 //                        "/users/login"
 //                        "/mini/login",
 //                        "/接收微信接口",
@@ -99,4 +104,15 @@ public class WebMvcConfig implements WebMvcConfigurer {
         converters.add(0, new MappingJackson2HttpMessageConverter(builder.build()));
     }
 
+    /**
+     * 添加枚举转换器
+     *
+     * @param registry 注册表
+     * @author cgl
+     * @since 2025/11/06 22:11:06
+     */
+    @Override
+    public void addFormatters(FormatterRegistry registry) {
+        registry.addConverter(stringToLinkTypeConverter);
+    }
 }

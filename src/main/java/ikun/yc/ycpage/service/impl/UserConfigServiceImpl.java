@@ -2,7 +2,9 @@ package ikun.yc.ycpage.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import ikun.yc.ycpage.common.BaseContext;
+import ikun.yc.ycpage.common.exception.ParamException;
 import ikun.yc.ycpage.entity.UserConfig;
+import ikun.yc.ycpage.entity.enumeration.LinkType;
 import ikun.yc.ycpage.mapper.UserConfigMapper;
 import ikun.yc.ycpage.service.UserConfigService;
 import org.springframework.lang.Nullable;
@@ -23,21 +25,20 @@ public class UserConfigServiceImpl extends ServiceImpl<UserConfigMapper, UserCon
     /**
      * 获取搜索引擎排序
      *
-     * @param isLowUsage 是否是不常用搜索引擎
+     * @param linkType 链接类型枚菌
      * @author 𝑐𝒽𝑒𝑛𝐺𝑢𝑎𝑛𝑔𝐿𝑜𝑛𝑔
      * @since 2025/08/06 21:53:06
      */
     @Override
-    public String getSearchEngineSort(@Nullable Boolean isLowUsage) {
-        if (isLowUsage == null) isLowUsage = true;
+    public String getSearchEngineSort(@Nullable LinkType linkType) {
+        if (linkType == null) throw new ParamException("参数错误");
         UserConfig config = this.lambdaQuery()
-                .select(!isLowUsage, UserConfig::getSearchSort, UserConfig::getId)
-                .select(isLowUsage, UserConfig::getLowSearchSort, UserConfig::getId)
+                .select(linkType.getFieldMapper(), UserConfig::getId)
                 .eq(UserConfig::getUserId, BaseContext.getCurrentId())
                 .one(); // 注册时,每人都初始化了一条，搜索加上id才不会为null
 
         // 获取排序字段 格式 id/id/id
-        return isLowUsage ? config.getLowSearchSort() : config.getSearchSort();
+        return config.getXxxSort(linkType);
     }
 
 
@@ -46,10 +47,10 @@ public class UserConfigServiceImpl extends ServiceImpl<UserConfigMapper, UserCon
      *
      * @param userId 用户ID
      * @param id 要移除的ID
-     * @param isLowUsage 是否是不常用分类
+     * @param linkType 链接类型枚菌
      */
     @Override
-    public void removeIdFromSortString(String userId, Integer id, boolean isLowUsage) {
+    public void removeIdFromSortString(String userId, Integer id, LinkType linkType) {
         // 1. 获取当前配置
         UserConfig config = this.lambdaQuery()
                 .select(UserConfig::getId, UserConfig::getSearchSort, UserConfig::getLowSearchSort)
@@ -59,7 +60,7 @@ public class UserConfigServiceImpl extends ServiceImpl<UserConfigMapper, UserCon
         if (config == null) return;
 
         // 2. 获取排序字段并处理
-        String sortField = isLowUsage ? config.getLowSearchSort() : config.getSearchSort();
+        String sortField = config.getXxxSort(linkType) ;
         if (StringUtils.hasText(sortField)) {
             // 移除目标ID并重新拼接
             String newSortField = Arrays.stream(sortField.split("/"))
@@ -67,11 +68,7 @@ public class UserConfigServiceImpl extends ServiceImpl<UserConfigMapper, UserCon
                     .collect(Collectors.joining("/"));
 
             // 3. 更新配置
-            if (isLowUsage) {
-                config.setLowSearchSort(newSortField);
-            } else {
-                config.setSearchSort(newSortField);
-            }
+            config.setXxxSort(linkType, newSortField);
             this.updateById(config);
         }
     }
@@ -81,10 +78,10 @@ public class UserConfigServiceImpl extends ServiceImpl<UserConfigMapper, UserCon
      *
      * @param userId 用户ID
      * @param id 要添加的ID
-     * @param isLowUsage 是否是不常用分类
+     * @param linkType 链接类型枚菌
      */
     @Override
-    public void appendIdToSortString(String userId, Integer id, boolean isLowUsage) {
+    public void appendIdToSortString(String userId, Integer id, LinkType linkType) {
         // 1. 获取当前配置
         UserConfig config = this.lambdaQuery()
                 .eq(UserConfig::getUserId, userId)
@@ -93,7 +90,7 @@ public class UserConfigServiceImpl extends ServiceImpl<UserConfigMapper, UserCon
         if (config == null) return;
 
         // 2. 获取当前排序字段
-        String sortField = isLowUsage ? config.getLowSearchSort() : config.getSearchSort();
+        String sortField = config.getXxxSort(linkType);
         String newSortField;
 
         if (StringUtils.hasText(sortField)) {
@@ -105,11 +102,8 @@ public class UserConfigServiceImpl extends ServiceImpl<UserConfigMapper, UserCon
         }
 
         // 3. 更新配置
-        if (isLowUsage) {
-            config.setLowSearchSort(newSortField);
-        } else {
-            config.setSearchSort(newSortField);
-        }
+        config.setXxxSort(linkType, newSortField);
+
         this.updateById(config);
     }
 }

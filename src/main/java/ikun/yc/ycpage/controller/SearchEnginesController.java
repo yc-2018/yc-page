@@ -9,6 +9,7 @@ import ikun.yc.ycpage.common.anno.RedisCache;
 import ikun.yc.ycpage.common.aop.CountControlAspect;
 import ikun.yc.ycpage.entity.SearchEngines;
 import ikun.yc.ycpage.entity.UserConfig;
+import ikun.yc.ycpage.entity.enumeration.LinkType;
 import ikun.yc.ycpage.service.SearchEnginesService;
 import ikun.yc.ycpage.service.UserConfigService;
 import lombok.RequiredArgsConstructor;
@@ -40,23 +41,23 @@ public class SearchEnginesController {
     /**
      * 获取列表
      *
-     * @param isLowUsage 是否获取的是不常用列表
+     * @param linkType 获取这个类型列表
      * @author 𝑐𝒽𝑒𝑛𝐺𝑢𝑎𝑛𝑔𝐿𝑜𝑛𝑔
      * @since 2025/08/06 20:00:06
      */
     @GetMapping
     @RedisCache("searchEngines")
-    public R<List<SearchEngines>> getList(@RequestParam(defaultValue = "false") Boolean isLowUsage) {
+    public R<List<SearchEngines>> getList(@RequestParam(defaultValue = "0") LinkType linkType) {
         // 1. 查询基础数据
         List<SearchEngines> enginesList = searchEnginesService.lambdaQuery()
                 .eq(SearchEngines::getUserId, BaseContext.getCurrentId())
-                .eq(SearchEngines::getLowUsage, isLowUsage ? 1 : 0)
+                .eq(SearchEngines::getType, linkType.getCode())
                 .list();
 
         if (enginesList.isEmpty()) return R.success(enginesList);
         // 2. 获取排序数据
         // 获取排序字段 格式 id/id/id
-        String sortField = userConfigService.getSearchEngineSort(isLowUsage);
+        String sortField = userConfigService.getSearchEngineSort(linkType);
 
         if (!StringUtils.hasText(sortField)) return R.success(enginesList);
 
@@ -100,12 +101,11 @@ public class SearchEnginesController {
         if (!saveSuccess) return R.error("添加失败！");
 
         // 2. 获取排序数据
-        boolean isLowUsage = !Objects.equals(searchEngines.getLowUsage(), 0);
-        String sortField = userConfigService.getSearchEngineSort(isLowUsage);
+        String sortField = userConfigService.getSearchEngineSort(searchEngines.getType());
         // 检查排序字段和全部id对应
         List<SearchEngines> sqlEngines = searchEnginesService.lambdaQuery()
                 .eq(SearchEngines::getUserId, BaseContext.getCurrentId())
-                .eq(SearchEngines::getLowUsage, isLowUsage ? 1 : 0)
+                .eq(SearchEngines::getType, searchEngines.getType().getCode())
                 .list();
         if (!sqlEngines.isEmpty()) {
             List<Integer> allIds = sqlEngines.stream().map(SearchEngines::getId).collect(Collectors.toList());
@@ -129,8 +129,7 @@ public class SearchEnginesController {
         }
         userConfigService.lambdaUpdate()
                 .eq(UserConfig::getUserId, BaseContext.getCurrentId())
-                .set(!isLowUsage, UserConfig::getSearchSort, sortField)
-                .set(isLowUsage, UserConfig::getLowSearchSort, sortField)
+                .set(searchEngines.getType().getFieldMapper(), sortField)
                 .update();
 
         return R.success(searchEngines);
@@ -157,7 +156,7 @@ public class SearchEnginesController {
         }
 
         // 3. 检查分类是否改变
-        boolean categoryChanged = !Objects.equals(originalEngine.getLowUsage(), updatedEngine.getLowUsage());
+        boolean categoryChanged = !Objects.equals(originalEngine.getType(), updatedEngine.getType());
 
         // 4. 更新记录
         updatedEngine.setUserId(userId); // 确保用户ID不被修改
@@ -165,12 +164,12 @@ public class SearchEnginesController {
         if (!updateSuccess) return R.error("更新失败！");
 
         // 5. 处理分类转换的排序逻辑（常用/不常用转换）
-        if (updatedEngine.getLowUsage() != null && categoryChanged) {
+        if (updatedEngine.getType() != null && categoryChanged) {
             // 从原分类排序中移除
-            userConfigService.removeIdFromSortString(userId, updatedEngine.getId(), originalEngine.getLowUsage() == 1);
+            userConfigService.removeIdFromSortString(userId, updatedEngine.getId(), originalEngine.getType());
 
             // 添加到新分类排序末尾
-            userConfigService.appendIdToSortString(userId, updatedEngine.getId(), updatedEngine.getLowUsage() == 1);
+            userConfigService.appendIdToSortString(userId, updatedEngine.getId(), originalEngine.getType());
         }
         return R.success(updatedEngine);
     }
@@ -198,8 +197,7 @@ public class SearchEnginesController {
         if (!deleteSuccess) return R.error("删除失败！");
 
         // 3. 从用户配置的排序字符串中移除该ID
-        boolean isLowUsage = engine.getLowUsage() != 0;
-        String sortField = userConfigService.getSearchEngineSort(isLowUsage);
+        String sortField = userConfigService.getSearchEngineSort(engine.getType());
         if (StringUtils.hasText(sortField)) {
             // 移除目标ID并重新拼接
             String newSortField = Arrays.stream(sortField.split("/"))
@@ -209,8 +207,7 @@ public class SearchEnginesController {
             // 3. 更新配置
             userConfigService.lambdaUpdate()
                     .eq(UserConfig::getUserId, BaseContext.getCurrentId())
-                    .set(!isLowUsage, UserConfig::getSearchSort, newSortField)
-                    .set(isLowUsage, UserConfig::getLowSearchSort, newSortField)
+                    .set(engine.getType().getFieldMapper(), newSortField)
                     .update();
         }
 
@@ -220,8 +217,8 @@ public class SearchEnginesController {
     /**
      * 排序搜索引擎
      *
-     * @param sort       排序
-     * @param isLowUsage 是否是不常用的列表排序？
+     * @param sort      排序
+     * @param linkType   类型
      * @author 𝑐𝒽𝑒𝑛𝐺𝑢𝑎𝑛𝑔𝐿𝑜𝑛𝑔
      * @since 2025/08/10 21:29:10
      */
@@ -230,12 +227,12 @@ public class SearchEnginesController {
     @CacheEvict("searchEngines")    // 删除缓存
     public R<Boolean> sortSearchEngines(
             @Pattern(regexp = "(\\d+)(/\\d+)*", message = "排序参数格式有误") String sort,
-            @RequestParam(defaultValue = "false") Boolean isLowUsage
+            @RequestParam(defaultValue = "0") LinkType linkType
     ) {
         List<String> searchIds = searchEnginesService.lambdaQuery()
                 .select(SearchEngines::getId)
                 .eq(SearchEngines::getUserId, BaseContext.getCurrentId())
-                .eq(SearchEngines::getLowUsage, isLowUsage ? 1 : 0)
+                .eq(SearchEngines::getType, linkType)
                 .list()
                 .stream()
                 .map(se -> se.getId().toString())
@@ -252,8 +249,7 @@ public class SearchEnginesController {
 
         boolean update = userConfigService.lambdaUpdate()
                 .eq(UserConfig::getUserId, BaseContext.getCurrentId())
-                .set(!isLowUsage, UserConfig::getSearchSort, sort)
-                .set(isLowUsage, UserConfig::getLowSearchSort, sort)
+                .set(linkType.getFieldMapper(), sort)
                 .update();
 
         return R.success(update);

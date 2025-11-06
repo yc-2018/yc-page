@@ -3,6 +3,7 @@ package ikun.yc.ycpage.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import ikun.yc.ycpage.entity.enumeration.LinkType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -32,11 +33,12 @@ public class SearchEngines extends Model<SearchEngines> implements Serializable 
 	private Integer id;
 
     /** 搜索引擎URL  */
-    @Pattern(regexp = "^https?://.*$", message = "搜索引擎URL格式不正确")
+    @Pattern(regexp = "^https?://.*$", message = "URL格式不正确")
     private String engineUrl;
 
     /** 不常用 1是 0否  */
-    private Integer lowUsage;
+    @TableField("low_usage")
+    private LinkType type = LinkType.SEARCH;
 
     /** 名称  */
     @NotNull(message = "名称不可为空")  // 验证非空且长度 > 0（去空格后）

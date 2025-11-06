@@ -2,6 +2,7 @@ package ikun.yc.ycpage.service;
 
 import ikun.yc.ycpage.entity.UserConfig;
 import com.baomidou.mybatisplus.extension.service.IService;
+import ikun.yc.ycpage.entity.enumeration.LinkType;
 
 /**
 * @author cgl
@@ -10,9 +11,9 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface UserConfigService extends IService<UserConfig> {
 
-    String getSearchEngineSort(Boolean isLowUsage);
+    String getSearchEngineSort(LinkType linkType);
 
-    void removeIdFromSortString(String userId, Integer id, boolean b);
+    void removeIdFromSortString(String userId, Integer id, LinkType linkType);
 
-    void appendIdToSortString(String userId, Integer id, boolean isLowUsage);
+    void appendIdToSortString(String userId, Integer id, LinkType linkType);
 }
