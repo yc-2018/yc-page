@@ -42,7 +42,7 @@ public class UserConfig {
                 return this.getSearchSort();
             case LOW_SEARCH:
                 return this.getLowSearchSort();
-            case HOME_BOOK:
+            case HOME_LINK:
                 return this.getHomeBookmarkSort();
             default:
                 return null;
@@ -65,7 +65,7 @@ public class UserConfig {
             case LOW_SEARCH:
                 this.setLowSearchSort(sortField);
                 break;
-            case HOME_BOOK:
+            case HOME_LINK:
                 this.setHomeBookmarkSort(sortField);
                 break;
         }

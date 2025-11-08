@@ -20,7 +20,7 @@ import lombok.Getter;
 public enum LinkType {
     SEARCH(0, UserConfig::getSearchSort),
     LOW_SEARCH(1, UserConfig::getLowSearchSort),
-    HOME_BOOK(2, UserConfig::getHomeBookmarkSort);
+    HOME_LINK(2, UserConfig::getHomeBookmarkSort);
 
     @EnumValue
     @JsonValue  // 序列化时使用这个值
