@@ -5,6 +5,7 @@ import ikun.yc.ycpage.common.R;
 import ikun.yc.ycpage.common.anno.CountControl;
 import ikun.yc.ycpage.common.anno.PassToken;
 import ikun.yc.ycpage.common.anno.UserId;
+import ikun.yc.ycpage.entity.DeviceUsageLog;
 import ikun.yc.ycpage.entity.DySeeTime;
 import ikun.yc.ycpage.entity.dto.DateDto;
 import lombok.extern.slf4j.Slf4j;
@@ -88,6 +89,19 @@ public class OtherController {
         if (dateDto.getSeeRange() == null || dateDto.getSeeRange() <= 0 || dateDto.getSeeRange() > 4)
             throw new IllegalArgumentException("《X_X》");
         return R.success(new DySeeTime().getSeeTimeByDate(dateDto));
+    }
+
+    /**
+     * 记录设备使用日志
+     *
+     * @param deviceUsageLog 设备使用日志对象
+     * @author cgl
+     * @since 2025/11/12 01:43:12
+     */
+    @UserId
+    @PostMapping("/deviceUsageLog")
+    public R<?> saveDeviceUsageLog(@RequestBody DeviceUsageLog deviceUsageLog) {
+        return R.success(deviceUsageLog.insert());
     }
 
 }
