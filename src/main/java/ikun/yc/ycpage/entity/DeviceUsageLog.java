@@ -30,6 +30,8 @@ public class DeviceUsageLog extends Model<DeviceUsageLog> {
     private String packageName;
     /** 电量 */
     private Integer battery;
+    /** 是否在充电 */
+    private Boolean charging;
     /** 设备名 */
     private String device;
     /** 创建时间 */
