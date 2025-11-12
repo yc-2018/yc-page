@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.extension.activerecord.Model;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.util.Date;
+import java.time.Instant;
 
 /**
  * 设备使用日志
@@ -35,5 +35,5 @@ public class DeviceUsageLog extends Model<DeviceUsageLog> {
     /** 设备名 */
     private String device;
     /** 创建时间 */
-    private Date time;
+    private Instant time;
 }
