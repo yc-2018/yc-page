@@ -5,12 +5,12 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.R;
-import ikun.yc.ycpage.common.exception.SqlSaveException;
 import ikun.yc.ycpage.common.exception.SqlUpdateException;
 import ikun.yc.ycpage.entity.LoopMemoItem;
 import ikun.yc.ycpage.entity.Memo;
 import ikun.yc.ycpage.service.LoopMemoItemService;
 import ikun.yc.ycpage.service.MemoService;
+import io.jsonwebtoken.lang.Strings;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -34,6 +34,7 @@ public class LoopMemoItemController {
     /**
      * 获取循环备忘记录列表
      *
+     * @param q        搜索关键字
      * @param page     第几页
      * @param pageSize 页面大小
      * @param itemId   待办id
@@ -43,13 +44,15 @@ public class LoopMemoItemController {
      */
     @GetMapping("/{itemId}")
     public R<Page<LoopMemoItem>> getLoopMemoItemList(
+            @RequestParam(required = false) String q,
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "20") Integer pageSize,
             @PathVariable Integer itemId) {
         return R.success(loopMemoItemService.lambdaQuery()
-            .eq(LoopMemoItem::getMemoId, itemId)
-            .orderByDesc(LoopMemoItem::getMemoDate)
-            .page(new Page<>(page, pageSize))
+                .eq(LoopMemoItem::getMemoId, itemId)
+                .like(Strings.hasText(q), LoopMemoItem::getLoopText, q)
+                .orderByDesc(LoopMemoItem::getMemoDate)
+                .page(new Page<>(page, pageSize))
         );
     }
 
