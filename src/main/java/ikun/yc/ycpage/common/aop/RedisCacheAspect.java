@@ -78,6 +78,9 @@ public class RedisCacheAspect {
         // 获取方法名
         String methodName = joinPoint.getSignature().getName();
 
+        // 获取当前类名
+        String className = joinPoint.getTarget().getClass().getSimpleName();
+
         // 获取参数信息
         MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();   // 将切点签名转换为方法签名，用于获取具体方法信息
         Method method = methodSignature.getMethod();                                    // 从方法签名中获取被拦截的Method对象
@@ -92,7 +95,8 @@ public class RedisCacheAspect {
 
         // 构建Key字符串
         StringBuilder keyBuilder = new StringBuilder();
-        keyBuilder.append(userId).append(":").append(redisCache.value()).append(":").append(methodName);
+        String cacheValue = redisCache.value().isEmpty() ? className : redisCache.value();
+        keyBuilder.append(userId).append(":").append(cacheValue).append(":").append(methodName);
 
         for (int i = 0; i < args.length; i++) {
             String paramName = (i < paramNames.length) ? paramNames[i] : "arg" + i;

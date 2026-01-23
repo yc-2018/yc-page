@@ -1,4 +1,4 @@
-package ikun.yc.ycpage.common.anno;// CacheEvict.java
+package ikun.yc.ycpage.common.anno;// DelCache.java
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.METHOD) // 只能用在方法上
 @Retention(RetentionPolicy.RUNTIME) // 运行时生效
-public @interface CacheEvict {
+public @interface DelCache {
     /** 要清理的缓存区域（必须与@RedisCache的value对应） */
-    String value();
+    String value() default "";
 }

@@ -2,7 +2,7 @@ package ikun.yc.ycpage.controller;
 
 import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.R;
-import ikun.yc.ycpage.common.anno.CacheEvict;
+import ikun.yc.ycpage.common.anno.DelCache;
 import ikun.yc.ycpage.common.anno.CountControl;
 import ikun.yc.ycpage.common.anno.Log;
 import ikun.yc.ycpage.common.anno.RedisCache;
@@ -45,8 +45,8 @@ public class SearchEnginesController {
      * @author 𝑐𝒽𝑒𝑛𝐺𝑢𝑎𝑛𝑔𝐿𝑜𝑛𝑔
      * @since 2025/08/06 20:00:06
      */
+    @RedisCache
     @GetMapping
-    @RedisCache("searchEngines")
     public R<List<SearchEngines>> getList(@RequestParam(defaultValue = "0") LinkType linkType) {
         // 1. 查询基础数据
         List<SearchEngines> enginesList = searchEnginesService.lambdaQuery()
@@ -90,9 +90,9 @@ public class SearchEnginesController {
      * @since 2023/12/23 16:53:03
      */
     @Log
+    @DelCache    // 清除缓存
     @PostMapping
     @Transactional
-    @CacheEvict("searchEngines")    // 清除缓存
     @CountControl(operationType = CountControlAspect.ADD, frequency = 10)
     public R<SearchEngines> addSearchEngines(@RequestBody @Valid SearchEngines searchEngines) {
         searchEngines.setUserId(BaseContext.getCurrentId());
@@ -142,9 +142,9 @@ public class SearchEnginesController {
      * @return 更新后的搜索引擎
      */
     @Log
+    @DelCache    // 清除缓存
     @PutMapping
     @Transactional
-    @CacheEvict("searchEngines")    // 清除缓存
     public R<SearchEngines> updateSearchEngines(@RequestBody @Valid SearchEngines updatedEngine) {
         // 1. 获取当前用户ID
         String userId = BaseContext.getCurrentId();
@@ -182,9 +182,9 @@ public class SearchEnginesController {
      * @since 2025/08/07 00:23:07
      */
     @Log
+    @DelCache    // 删除缓存
     @Transactional
     @DeleteMapping("/{id}")
-    @CacheEvict("searchEngines")    // 删除缓存
     public R<Boolean> deleteSearchEngines(@PathVariable Integer id) {
         // 1. 查询要删除的搜索引擎
         SearchEngines engine = searchEnginesService.getById(id);
@@ -223,8 +223,8 @@ public class SearchEnginesController {
      * @since 2025/08/10 21:29:10
      */
     @Log
+    @DelCache    // 删除缓存
     @PostMapping("/sort")
-    @CacheEvict("searchEngines")    // 删除缓存
     public R<Boolean> sortSearchEngines(
             @Pattern(regexp = "(\\d+)(/\\d+)*", message = "排序参数格式有误") String sort,
             @RequestParam(defaultValue = "0") LinkType linkType

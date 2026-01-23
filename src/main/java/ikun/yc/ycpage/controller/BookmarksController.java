@@ -42,7 +42,7 @@ public class BookmarksController {
      * @since 2024/02/29 15:08:48
      */
     @Log
-    @CacheEvict("bookmarks")   // 删除缓存
+    @DelCache   // 删除缓存
     @CountControl(operationType = CountControlAspect.ADD, frequency = 10)  // 一分钟请求超出10次，禁用1分钟
     @PostMapping
     public R<Integer> addBookmarks(@RequestBody Bookmarks bookmarks) {
@@ -60,7 +60,7 @@ public class BookmarksController {
      * @since 2024/02/29 19:44
      */
     @GetMapping
-    @RedisCache("bookmarks") // 缓存
+    @RedisCache // 缓存
     public R<List<Bookmarks>> getBookmarks() {
         return R.success(
             bookmarksService.lambdaQuery().eq(Bookmarks::getUserId, BaseContext.getCurrentId()).list()
@@ -74,7 +74,7 @@ public class BookmarksController {
      * @author ChenGuangLong
      * @since 2024/03/02 02:38:14
      */
-    @CacheEvict("bookmarks")   // 删除缓存
+    @DelCache   // 删除缓存
     @PutMapping("/dragSort")
     public R<Boolean> dragSort(@RequestBody BookmarksDto bookmarksDto) {
         if (!(Objects.equals(bookmarksDto.getType(), BOOKMARK_GROUP) ||
@@ -92,7 +92,7 @@ public class BookmarksController {
      * @since 2024/03/05 18:16:15
      */
     @Log
-    @CacheEvict("bookmarks")   // 删除缓存
+    @DelCache   // 删除缓存
     @CountControl(operationType = CountControlAspect.UPDATE, frequency = 10)  // 一分钟请求超出10次，禁用1分钟
     @PutMapping
     public R<Boolean> updateBookmarks(@RequestBody BookmarksDto bookmarksDto) {
@@ -121,7 +121,7 @@ public class BookmarksController {
      */
     @Log
     @UserId
-    @CacheEvict("bookmarks")   // 删除缓存
+    @DelCache   // 删除缓存
     @CountControl(operationType = CountControlAspect.DELETE, frequency = 30)  // 一分钟请求超出30次，禁用1分钟
     @DeleteMapping
     public R<Boolean> deleteBookmarks(@RequestBody Bookmarks bookmarks) {
