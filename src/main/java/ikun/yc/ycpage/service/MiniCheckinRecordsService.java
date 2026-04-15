@@ -1,6 +1,6 @@
 package ikun.yc.ycpage.service;
 
-import ikun.yc.ycpage.entity.CheckinRecords;
+import ikun.yc.ycpage.entity.MiniCheckinRecords;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -10,6 +10,6 @@ import org.apache.ibatis.annotations.Mapper;
 * createDate 2025-03-08 17:13:45
 */
 @Mapper
-public interface CheckinRecordsService extends IService<CheckinRecords> {
+public interface MiniCheckinRecordsService extends IService<MiniCheckinRecords> {
 
 }

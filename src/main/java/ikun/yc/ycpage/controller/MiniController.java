@@ -8,7 +8,7 @@ import ikun.yc.ycpage.common.anno.CountControl;
 import ikun.yc.ycpage.common.anno.PassToken;
 import ikun.yc.ycpage.common.anno.UserId;
 import ikun.yc.ycpage.common.aop.CountControlAspect;
-import ikun.yc.ycpage.entity.CheckinRecords;
+import ikun.yc.ycpage.entity.MiniCheckinRecords;
 import ikun.yc.ycpage.entity.MiniUser;
 import ikun.yc.ycpage.entity.dto.MiniCheckinDto;
 import ikun.yc.ycpage.service.MiniUserService;
@@ -50,22 +50,22 @@ public class MiniController {
     @CountControl(operationType = CountControlAspect.ADD, msg = "频率过快 冷却一分钟")  // 一分钟请求超出5次，禁用1分钟
     @UserId(fieldName = "userOpenid")
     @PostMapping("/checkin")
-    public R<?> checkin(@RequestBody @Valid CheckinRecords checkinRecord) {
+    public R<?> checkin(@RequestBody @Valid MiniCheckinRecords checkinRecord) {
         // 先从数据库获取今天的这个用户这个经纬度是否已经打卡
-        long count = checkinRecord.selectCount(Wrappers.<CheckinRecords>lambdaQuery()
-                .select(CheckinRecords::getId)
-                .eq(CheckinRecords::getUserOpenid, checkinRecord.getUserOpenid())
-                .eq(CheckinRecords::getIsDeleted, 0)
-                .eq(CheckinRecords::getLongitude, checkinRecord.getLongitude())
-                .eq(CheckinRecords::getLatitude, checkinRecord.getLatitude())
-                .ge(CheckinRecords::getCheckinTime, LocalDate.now().atStartOfDay())
+        long count = checkinRecord.selectCount(Wrappers.<MiniCheckinRecords>lambdaQuery()
+                .select(MiniCheckinRecords::getId)
+                .eq(MiniCheckinRecords::getUserOpenid, checkinRecord.getUserOpenid())
+                .eq(MiniCheckinRecords::getIsDeleted, 0)
+                .eq(MiniCheckinRecords::getLongitude, checkinRecord.getLongitude())
+                .eq(MiniCheckinRecords::getLatitude, checkinRecord.getLatitude())
+                .ge(MiniCheckinRecords::getCheckinTime, LocalDate.now().atStartOfDay())
         );
         if (count != 0) return R.error("此处今日已打卡");
 
         // 判断今天打卡是否超过100次
-        if (checkinRecord.selectCount(Wrappers.<CheckinRecords>lambdaQuery()
-                .eq(CheckinRecords::getUserOpenid, checkinRecord.getUserOpenid())
-                .ge(CheckinRecords::getCreateTime, LocalDate.now().atStartOfDay())
+        if (checkinRecord.selectCount(Wrappers.<MiniCheckinRecords>lambdaQuery()
+                .eq(MiniCheckinRecords::getUserOpenid, checkinRecord.getUserOpenid())
+                .ge(MiniCheckinRecords::getCreateTime, LocalDate.now().atStartOfDay())
         ) > 100) return R.error("今日打卡超百次");
 
         return R.success(checkinRecord.insert());
@@ -80,16 +80,16 @@ public class MiniController {
      * @since 2025/03/09
      */
     @PostMapping("/checkinList/{page}")
-    public R<Page<CheckinRecords>> checkinList(@RequestBody MiniCheckinDto checkinDto, @PathVariable Integer page) {
-        Page<CheckinRecords> pages = new Page<>(page, 10);
-        Page<CheckinRecords> recordsPage = new CheckinRecords().selectPage(pages, Wrappers.<CheckinRecords>lambdaQuery()
-                .eq(CheckinRecords::getUserOpenid, BaseContext.getCurrentId())
-                .between(checkinDto.getStartTime() != null && checkinDto.getEndTime() != null, CheckinRecords::getCheckinTime, checkinDto.getStartTime(), checkinDto.getEndTime())
-                .eq(CheckinRecords::getIsDeleted, 0)
-                .and(StringUtils.hasText(checkinDto.getAddress()), wrapper -> wrapper.like(CheckinRecords::getAddress, checkinDto.getAddress()).or().like(CheckinRecords::getName, checkinDto.getAddress()))
-                .like(StringUtils.hasText(checkinDto.getRemark()), CheckinRecords::getRemark, checkinDto.getRemark())
-                .eq(StringUtils.hasText(checkinDto.getLocationType()), CheckinRecords::getLocationType, checkinDto.getLocationType())
-                .orderByDesc(CheckinRecords::getCheckinTime)
+    public R<Page<MiniCheckinRecords>> checkinList(@RequestBody MiniCheckinDto checkinDto, @PathVariable Integer page) {
+        Page<MiniCheckinRecords> pages = new Page<>(page, 10);
+        Page<MiniCheckinRecords> recordsPage = new MiniCheckinRecords().selectPage(pages, Wrappers.<MiniCheckinRecords>lambdaQuery()
+                .eq(MiniCheckinRecords::getUserOpenid, BaseContext.getCurrentId())
+                .between(checkinDto.getStartTime() != null && checkinDto.getEndTime() != null, MiniCheckinRecords::getCheckinTime, checkinDto.getStartTime(), checkinDto.getEndTime())
+                .eq(MiniCheckinRecords::getIsDeleted, 0)
+                .and(StringUtils.hasText(checkinDto.getAddress()), wrapper -> wrapper.like(MiniCheckinRecords::getAddress, checkinDto.getAddress()).or().like(MiniCheckinRecords::getName, checkinDto.getAddress()))
+                .like(StringUtils.hasText(checkinDto.getRemark()), MiniCheckinRecords::getRemark, checkinDto.getRemark())
+                .eq(StringUtils.hasText(checkinDto.getLocationType()), MiniCheckinRecords::getLocationType, checkinDto.getLocationType())
+                .orderByDesc(MiniCheckinRecords::getCheckinTime)
         );
         return R.success(recordsPage);
     }
@@ -103,10 +103,10 @@ public class MiniController {
      */
     @PostMapping("/deleteCheckin/{id}")
     public R<?> deleteCheckin(@PathVariable Integer id) {
-        boolean updateOk = new CheckinRecords().update(Wrappers.<CheckinRecords>lambdaUpdate()
-                .set(CheckinRecords::getIsDeleted, 1)
-                .eq(CheckinRecords::getUserOpenid, BaseContext.getCurrentId())
-                .eq(CheckinRecords::getId, id)
+        boolean updateOk = new MiniCheckinRecords().update(Wrappers.<MiniCheckinRecords>lambdaUpdate()
+                .set(MiniCheckinRecords::getIsDeleted, 1)
+                .eq(MiniCheckinRecords::getUserOpenid, BaseContext.getCurrentId())
+                .eq(MiniCheckinRecords::getId, id)
         );
         return updateOk ? R.success(true) : R.error("删除失败");
     }
@@ -114,23 +114,23 @@ public class MiniController {
     /**
      * 修改打卡数据
      *
-     * @param checkinRecords 打卡记录
+     * @param miniCheckinRecords 打卡记录
      * @author ChenGuangLong
      * @since 2025/03/11
      */
     @PostMapping("/updateCheckin")
-    public R<?> updateCheckin(@RequestBody CheckinRecords checkinRecords) {
-        if (checkinRecords.getId() == null) return R.error("数据有误！");
-        boolean updateOk = checkinRecords.update(Wrappers.<CheckinRecords>lambdaUpdate()
-                .set(StringUtils.hasText(checkinRecords.getName()), CheckinRecords::getName, checkinRecords.getName())
-                .set(StringUtils.hasText(checkinRecords.getAddress()), CheckinRecords::getAddress, checkinRecords.getAddress())
-                .set(CheckinRecords::getRemark, checkinRecords.getRemark())     // 描述
-                .set(CheckinRecords::getImgs, checkinRecords.getImgs())         // 图片
-                .set(StringUtils.hasText(checkinRecords.getLocationType()), CheckinRecords::getLocationType, checkinRecords.getLocationType())
-                .set(checkinRecords.getCheckinTime() != null, CheckinRecords::getCheckinTime, checkinRecords.getCheckinTime())
-                .set( CheckinRecords::getUpdateTime, LocalDate.now())
-                .eq(CheckinRecords::getId, checkinRecords.getId())
-                .eq(CheckinRecords::getUserOpenid, BaseContext.getCurrentId())
+    public R<?> updateCheckin(@RequestBody MiniCheckinRecords miniCheckinRecords) {
+        if (miniCheckinRecords.getId() == null) return R.error("数据有误！");
+        boolean updateOk = miniCheckinRecords.update(Wrappers.<MiniCheckinRecords>lambdaUpdate()
+                .set(StringUtils.hasText(miniCheckinRecords.getName()), MiniCheckinRecords::getName, miniCheckinRecords.getName())
+                .set(StringUtils.hasText(miniCheckinRecords.getAddress()), MiniCheckinRecords::getAddress, miniCheckinRecords.getAddress())
+                .set(MiniCheckinRecords::getRemark, miniCheckinRecords.getRemark())     // 描述
+                .set(MiniCheckinRecords::getImgs, miniCheckinRecords.getImgs())         // 图片
+                .set(StringUtils.hasText(miniCheckinRecords.getLocationType()), MiniCheckinRecords::getLocationType, miniCheckinRecords.getLocationType())
+                .set(miniCheckinRecords.getCheckinTime() != null, MiniCheckinRecords::getCheckinTime, miniCheckinRecords.getCheckinTime())
+                .set( MiniCheckinRecords::getUpdateTime, LocalDate.now())
+                .eq(MiniCheckinRecords::getId, miniCheckinRecords.getId())
+                .eq(MiniCheckinRecords::getUserOpenid, BaseContext.getCurrentId())
         );
         return updateOk ? R.success(true) : R.error("修改失败");
     }

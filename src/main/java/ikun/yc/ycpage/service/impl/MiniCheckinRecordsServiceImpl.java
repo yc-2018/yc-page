@@ -1,9 +1,9 @@
 package ikun.yc.ycpage.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import ikun.yc.ycpage.entity.CheckinRecords;
-import ikun.yc.ycpage.service.CheckinRecordsService;
-import ikun.yc.ycpage.mapper.CheckinRecordsMapper;
+import ikun.yc.ycpage.entity.MiniCheckinRecords;
+import ikun.yc.ycpage.service.MiniCheckinRecordsService;
+import ikun.yc.ycpage.mapper.MiniCheckinRecordsMapper;
 import org.springframework.stereotype.Service;
 
 /**
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 * createDate 2025-03-08 17:13:45
 */
 @Service
-public class CheckinRecordsServiceImpl extends ServiceImpl<CheckinRecordsMapper, CheckinRecords> implements CheckinRecordsService{
+public class MiniCheckinRecordsServiceImpl extends ServiceImpl<MiniCheckinRecordsMapper, MiniCheckinRecords> implements MiniCheckinRecordsService {
 
 }
 

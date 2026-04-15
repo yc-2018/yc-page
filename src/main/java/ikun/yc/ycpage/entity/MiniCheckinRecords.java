@@ -26,9 +26,9 @@ import java.time.LocalDateTime;
  */
 @Data
 @Accessors(chain = true)    //chain = true 生成setter方法返回this //https://blog.csdn.net/qs_xf/article/details/123876948
-@TableName(value ="checkin_records")
+@TableName(value ="mini_checkin_records")
 @EqualsAndHashCode(callSuper = false)
-public class CheckinRecords extends Model<CheckinRecords> {
+public class MiniCheckinRecords extends Model<MiniCheckinRecords> {
     /** 记录ID  */
     @TableId(type = IdType.AUTO)
     private Integer id;
