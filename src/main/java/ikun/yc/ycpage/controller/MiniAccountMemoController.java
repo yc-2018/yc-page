@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 @RequiredArgsConstructor
@@ -84,7 +85,7 @@ public class MiniAccountMemoController {
                 .set(StringUtils.hasText(miniAccountMemo.getAccount()), MiniAccountMemo::getAccount, miniAccountMemo.getAccount())
                 .set(StringUtils.hasText(miniAccountMemo.getPassword()), MiniAccountMemo::getPassword, miniAccountMemo.getPassword())
                 .set(MiniAccountMemo::getRemark, miniAccountMemo.getRemark())
-                .set(MiniAccountMemo::getUpdatedAt, new Date())
+                .set(MiniAccountMemo::getUpdatedAt, LocalDate.now())
         );
         return updateOk ? R.success(true) : R.error("修改失败");
     }
@@ -97,7 +98,7 @@ public class MiniAccountMemoController {
                 .eq(MiniAccountMemo::getUserOpenid, BaseContext.getCurrentId())
                 .eq(MiniAccountMemo::getIsDeleted, 0)
                 .set(MiniAccountMemo::getIsDeleted, 1)
-                .set(MiniAccountMemo::getUpdatedAt, new Date())
+                .set(MiniAccountMemo::getUpdatedAt, LocalDate.now())
         );
         return updateOk ? R.success(true) : R.error("删除失败");
     }
