@@ -1,0 +1,54 @@
+name: 标签推送自动打包
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 JDK 8
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "8"
+          cache: maven
+
+      - name: 执行 Maven 打包
+        run: mvn -B clean package
+
+      - name: 准备发布产物
+        shell: bash
+        run: |
+          mkdir -p dist
+          JAR_FILE="$(find target -maxdepth 1 -type f -name '*.jar' ! -name 'original-*.jar' | head -n 1)"
+          if [ -z "$JAR_FILE" ]; then
+            echo "No packaged jar found in target directory."
+            exit 1
+          fi
+          cp "$JAR_FILE" "dist/yc-page-${{ github.ref_name }}.jar"
+
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: yc-page-${{ github.ref_name }}
+          path: dist/yc-page-${{ github.ref_name }}.jar
+
+      - name: 创建 GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/yc-page-${{ github.ref_name }}.jar
+          body: |
+            发布标签：`${{ github.ref_name }}`
+
+            此版本由 GitHub Actions 在标签推送后自动打包生成。
+          generate_release_notes: true
