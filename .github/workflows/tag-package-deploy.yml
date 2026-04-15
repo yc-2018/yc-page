@@ -1,0 +1,103 @@
+name: 标签推送自动打包并部署
+
+on:
+  push:
+    tags:
+      - "cs*"
+
+permissions:
+  contents: write
+
+env:
+  APP_NAME: yc-page
+  APP_PORT: "8080"
+  DEPLOY_DIR: /var/java/yc-page
+
+jobs:
+  package-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 JDK 8
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "8"
+          cache: maven
+
+      - name: 执行 Maven 打包
+        run: mvn -B clean package
+
+      - name: 准备发布产物
+        shell: bash
+        run: |
+          mkdir -p dist
+          JAR_FILE="$(find target -maxdepth 1 -type f -name '*.jar' ! -name 'original-*.jar' | head -n 1)"
+          if [ -z "$JAR_FILE" ]; then
+            echo "No packaged jar found in target directory."
+            exit 1
+          fi
+          cp "$JAR_FILE" "dist/${APP_NAME}-${{ github.ref_name }}.jar"
+
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: yc-page-${{ github.ref_name }}
+          path: dist/${{ env.APP_NAME }}-${{ github.ref_name }}.jar
+
+      - name: 创建 GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/${{ env.APP_NAME }}-${{ github.ref_name }}.jar
+          body: |
+            发布标签：`${{ github.ref_name }}`
+
+            此版本由 GitHub Actions 在标签推送后自动打包并部署。
+          generate_release_notes: true
+
+      - name: 上传 jar 到服务器临时目录
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          source: dist/${{ env.APP_NAME }}-${{ github.ref_name }}.jar
+          target: /tmp
+          overwrite: true
+
+#      - name: 部署到 CentOS 7 服务器
+#        uses: appleboy/ssh-action@v1.0.3
+#        with:
+#          host: ${{ secrets.SERVER_HOST }}
+#          username: ${{ secrets.SERVER_USERNAME }}
+#          key: ${{ secrets.SERVER_SSH_KEY }}
+#          port: ${{ secrets.SERVER_PORT }}
+#          script_stop: true
+#          envs: APP_NAME,APP_PORT,DEPLOY_DIR,GITHUB_REF_NAME
+#          script: |
+#            set -e
+#            RELEASE_JAR="${APP_NAME}-${GITHUB_REF_NAME}.jar"
+#            RELEASE_DIR="${DEPLOY_DIR}/releases"
+#            LOG_DIR="${DEPLOY_DIR}/logs"
+#
+#            sudo mkdir -p "${RELEASE_DIR}" "${LOG_DIR}"
+#            sudo mv "/tmp/dist/${RELEASE_JAR}" "${RELEASE_DIR}/${RELEASE_JAR}"
+#            sudo ln -sfn "${RELEASE_DIR}/${RELEASE_JAR}" "${DEPLOY_DIR}/current.jar"
+#
+#            PID="$(sudo ss -ltnp | awk -v port=":${APP_PORT}" -F '[=, ]+' '$0 ~ port {for (i = 1; i <= NF; i++) if ($i == "pid") {print $(i + 1); exit}}')"
+#            if [ -n "${PID}" ]; then
+#              echo "停止旧服务进程: ${PID}"
+#              sudo kill -9 "${PID}"
+#              sleep 2
+#            fi
+#
+#            echo "启动新版本 ${RELEASE_JAR}"
+#            sudo bash -lc 'nohup java -jar "'"${DEPLOY_DIR}"'"/current.jar > "'"${LOG_DIR}"'"/app.log 2>&1 &'
+#
+#            sleep 10
+#            sudo ss -ltnp | grep -q ":${APP_PORT}"
+#            echo "部署完成，${APP_NAME} 已在端口 ${APP_PORT} 启动"
