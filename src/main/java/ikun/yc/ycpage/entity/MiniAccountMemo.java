@@ -29,6 +29,8 @@ public class MiniAccountMemo {
     private String websiteUrl;
     /** 登录账号 */
     private String account;
+    /** 邮箱 */
+    private String email;
     /** 登录密码 */
     private String password;
     /** 备注信息 */

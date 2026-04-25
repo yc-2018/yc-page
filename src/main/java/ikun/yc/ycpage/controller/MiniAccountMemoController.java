@@ -60,6 +60,7 @@ public class MiniAccountMemoController {
                         .like(StringUtils.hasText(memoQuery.getWebsiteName()), MiniAccountMemo::getWebsiteName, memoQuery.getWebsiteName())
                         .like(StringUtils.hasText(memoQuery.getWebsiteUrl()), MiniAccountMemo::getWebsiteUrl, memoQuery.getWebsiteUrl())
                         .like(StringUtils.hasText(memoQuery.getAccount()), MiniAccountMemo::getAccount, memoQuery.getAccount())
+                        .like(StringUtils.hasText(memoQuery.getEmail()), MiniAccountMemo::getEmail, memoQuery.getEmail())
                         .like(StringUtils.hasText(memoQuery.getRemark()), MiniAccountMemo::getRemark, memoQuery.getRemark())
                         .orderByDesc(MiniAccountMemo::getUpdatedAt)
                         .orderByDesc(MiniAccountMemo::getCreatedAt)
@@ -83,6 +84,7 @@ public class MiniAccountMemoController {
                 .set(StringUtils.hasText(miniAccountMemo.getWebsiteName()), MiniAccountMemo::getWebsiteName, miniAccountMemo.getWebsiteName())
                 .set(StringUtils.hasText(miniAccountMemo.getWebsiteUrl()), MiniAccountMemo::getWebsiteUrl, miniAccountMemo.getWebsiteUrl())
                 .set(StringUtils.hasText(miniAccountMemo.getAccount()), MiniAccountMemo::getAccount, miniAccountMemo.getAccount())
+                .set(StringUtils.hasText(miniAccountMemo.getEmail()), MiniAccountMemo::getEmail, miniAccountMemo.getEmail())
                 .set(StringUtils.hasText(miniAccountMemo.getPassword()), MiniAccountMemo::getPassword, miniAccountMemo.getPassword())
                 .set(MiniAccountMemo::getRemark, miniAccountMemo.getRemark())
                 .set(MiniAccountMemo::getUpdatedAt, LocalDate.now())
@@ -120,6 +122,7 @@ public class MiniAccountMemoController {
                 && !StringUtils.hasText(miniAccountMemo.getWebsiteLogo())
                 && !StringUtils.hasText(miniAccountMemo.getWebsiteUrl())
                 && !StringUtils.hasText(miniAccountMemo.getAccount())
+                && !StringUtils.hasText(miniAccountMemo.getEmail())
                 && !StringUtils.hasText(miniAccountMemo.getPassword())
                 && miniAccountMemo.getRemark() == null) {
             throw new ParamException("没数");
