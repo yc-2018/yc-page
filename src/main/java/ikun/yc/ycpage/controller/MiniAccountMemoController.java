@@ -12,14 +12,9 @@ import ikun.yc.ycpage.entity.MiniAccountMemo;
 import ikun.yc.ycpage.service.MiniAccountMemoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @RequiredArgsConstructor
 @RestController
@@ -87,7 +82,8 @@ public class MiniAccountMemoController {
                 .set(StringUtils.hasText(miniAccountMemo.getEmail()), MiniAccountMemo::getEmail, miniAccountMemo.getEmail())
                 .set(StringUtils.hasText(miniAccountMemo.getPassword()), MiniAccountMemo::getPassword, miniAccountMemo.getPassword())
                 .set(MiniAccountMemo::getRemark, miniAccountMemo.getRemark())
-                .set(MiniAccountMemo::getUpdatedAt, LocalDate.now())
+                .set(StringUtils.hasText(miniAccountMemo.getImgs()), MiniAccountMemo::getImgs, miniAccountMemo.getImgs())
+                .set(MiniAccountMemo::getUpdatedAt, LocalDateTime.now())
         );
         return updateOk ? R.success(true) : R.error("修改失败");
     }
@@ -100,7 +96,7 @@ public class MiniAccountMemoController {
                 .eq(MiniAccountMemo::getUserOpenid, BaseContext.getCurrentId())
                 .eq(MiniAccountMemo::getIsDeleted, 0)
                 .set(MiniAccountMemo::getIsDeleted, 1)
-                .set(MiniAccountMemo::getUpdatedAt, LocalDate.now())
+                .set(MiniAccountMemo::getUpdatedAt, LocalDateTime.now())
         );
         return updateOk ? R.success(true) : R.error("删除失败");
     }
