@@ -1,4 +1,7 @@
 HELP.md
+
+/src/main/resources/yc-web/
+
 target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
