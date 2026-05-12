@@ -1,6 +1,9 @@
 //仰晨study 创建时间2024/1/11 23:51 星期四
 package ikun.yc.ycpage.controller;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.R;
 import ikun.yc.ycpage.common.anno.CountControl;
 import ikun.yc.ycpage.common.anno.PassToken;
@@ -13,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -102,6 +106,39 @@ public class OtherController {
     @PostMapping("/deviceUsageLog")
     public R<?> saveDeviceUsageLog(@RequestBody DeviceUsageLog deviceUsageLog) {
         return R.success(deviceUsageLog.insert());
+    }
+
+    /**
+     * 分页查询设备使用日志
+     *
+     * @param page      当前页码
+     * @param pageSize  每页条数
+     * @param name      App 名称关键字
+     * @param startTime 创建时间起始时间戳
+     * @param endTime   创建时间结束时间戳
+     * @return 设备使用日志分页数据
+     * @author cgl
+     * @since 2026/05/12 15:40:00
+     */
+    @GetMapping("/deviceUsageLog")
+    public R<Page<DeviceUsageLog>> getDeviceUsageLogList(@RequestParam(defaultValue = "1") Integer page,
+                                                         @RequestParam(defaultValue = "10") Integer pageSize,
+                                                         @RequestParam(required = false) String name,
+                                                         @RequestParam(required = false) Long startTime,
+                                                         @RequestParam(required = false) Long endTime) {
+        String appName = name == null ? null : name.trim(); // App 名称查询关键字
+        boolean hasAppName = appName != null && !appName.isEmpty(); // 是否按 App 名称过滤
+        Instant startInstant = startTime == null ? null : Instant.ofEpochMilli(startTime); // 创建时间起始值
+        Instant endInstant = endTime == null ? null : Instant.ofEpochMilli(endTime); // 创建时间结束值
+
+        return R.success(new DeviceUsageLog().selectPage(new Page<>(page, pageSize),
+                Wrappers.<DeviceUsageLog>lambdaQuery()
+                        .eq(DeviceUsageLog::getUserId, BaseContext.getCurrentId())
+                        .like(hasAppName, DeviceUsageLog::getName, appName)
+                        .ge(startInstant != null, DeviceUsageLog::getTime, startInstant)
+                        .le(endInstant != null, DeviceUsageLog::getTime, endInstant)
+                        .orderByDesc(DeviceUsageLog::getTime)
+        ));
     }
 
 }

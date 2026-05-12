@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -22,7 +23,9 @@ public class DeviceUsageLog extends Model<DeviceUsageLog> {
     /** 日志ID */
     @TableId(type = IdType.AUTO)
     private Integer id;
+
     /** 用户ID */
+    @JsonIgnore
     private String userId;
     /** App名字 */
     private String name;
