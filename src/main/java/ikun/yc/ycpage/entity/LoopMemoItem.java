@@ -12,6 +12,7 @@ import lombok.experimental.Accessors;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 循环备忘记录
@@ -56,4 +57,16 @@ public class LoopMemoItem implements Serializable {
 
     @ApiModelProperty(value = "循环时可备注图片用,分割")
     private String imgArr;
+
+    @TableField(exist = false)
+    @ApiModelProperty(value = "前5条循环记录评论")
+    private List<LoopMemoItemComment> comments;
+
+    @TableField(exist = false)
+    @ApiModelProperty(value = "循环记录评论总数")
+    private Long commentTotal;
+
+    @TableField(exist = false)
+    @ApiModelProperty(value = "循环记录是否还有更多评论")
+    private Boolean commentHasMore;
 }

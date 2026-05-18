@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ikun.yc.ycpage.mapper.LoopMemoItemCommentMapper">
+
+    <select id="selectPreviewByLoopItemIds" resultType="ikun.yc.ycpage.entity.LoopMemoItemComment">
+        SELECT
+            c.id,
+            c.memo_id,
+            c.loop_item_id,
+            c.comment_date,
+            c.comment_text,
+            c.img_arr,
+            c.create_time,
+            c.update_time,
+            (
+                SELECT COUNT(*)
+                FROM loop_memo_item_comment c2
+                WHERE c2.loop_item_id = c.loop_item_id
+            ) AS comment_total
+        FROM loop_memo_item_comment c
+        WHERE c.loop_item_id IN
+        <foreach collection="loopItemIds" item="loopItemId" open="(" separator="," close=")">
+            #{loopItemId}
+        </foreach>
+        AND (
+            SELECT COUNT(*)
+            FROM loop_memo_item_comment c3
+            WHERE c3.loop_item_id = c.loop_item_id
+              AND (
+                c3.comment_date &gt; c.comment_date
+                OR (c3.comment_date = c.comment_date AND c3.id &gt; c.id)
+              )
+        ) &lt; #{limitSize}
+        ORDER BY c.loop_item_id, c.comment_date DESC, c.id DESC
+    </select>
+</mapper>

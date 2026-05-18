@@ -7,7 +7,10 @@ import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.R;
 import ikun.yc.ycpage.common.exception.SqlUpdateException;
 import ikun.yc.ycpage.entity.LoopMemoItem;
+import ikun.yc.ycpage.entity.LoopMemoItemComment;
 import ikun.yc.ycpage.entity.Memo;
+import ikun.yc.ycpage.mapper.LoopMemoItemCommentMapper;
+import ikun.yc.ycpage.service.LoopMemoItemCommentService;
 import ikun.yc.ycpage.service.LoopMemoItemService;
 import ikun.yc.ycpage.service.MemoService;
 import io.jsonwebtoken.lang.Strings;
@@ -16,6 +19,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 循环备忘录时间控制器
@@ -28,7 +34,11 @@ import java.time.LocalDateTime;
 @RequestMapping("/loopMemoItem")
 public class LoopMemoItemController {
 
+    private static final long DEFAULT_COMMENT_PAGE_SIZE = 5L; // 每条循环记录默认返回的评论数量
+
     private final LoopMemoItemService loopMemoItemService;
+    private final LoopMemoItemCommentService loopMemoItemCommentService;
+    private final LoopMemoItemCommentMapper loopMemoItemCommentMapper;
     private final MemoService memoService;
 
     /**
@@ -48,12 +58,40 @@ public class LoopMemoItemController {
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "20") Integer pageSize,
             @PathVariable Integer itemId) {
-        return R.success(loopMemoItemService.lambdaQuery()
+        Page<LoopMemoItem> result = loopMemoItemService.lambdaQuery()
                 .eq(LoopMemoItem::getMemoId, itemId)
                 .like(Strings.hasText(q), LoopMemoItem::getLoopText, q)
                 .orderByDesc(LoopMemoItem::getMemoDate)
                 .page(new Page<>(page, pageSize))
-        );
+        ;
+        fillCommentPreview(result.getRecords());
+        return R.success(result);
+    }
+
+    /**
+     * 给循环记录补充前5条评论，避免前端首次展示时逐条请求
+     *
+     * @param records 循环记录列表
+     */
+    private void fillCommentPreview(List<LoopMemoItem> records) {
+        if (records == null || records.isEmpty()) return;
+        List<Integer> loopItemIds = records.stream()
+                .map(LoopMemoItem::getId)
+                .collect(Collectors.toList()); // 本页循环记录id
+        List<LoopMemoItemComment> comments = loopMemoItemCommentMapper.selectPreviewByLoopItemIds(loopItemIds, DEFAULT_COMMENT_PAGE_SIZE);
+        Map<Integer, List<LoopMemoItemComment>> commentMap = comments.stream()
+                .collect(Collectors.groupingBy(LoopMemoItemComment::getLoopItemId)); // 按循环记录分组的评论
+        records.forEach(record -> {
+            List<LoopMemoItemComment> itemComments = commentMap.getOrDefault(record.getId(), java.util.Collections.emptyList());
+            long total = itemComments.stream()
+                    .findFirst()
+                    .map(LoopMemoItemComment::getCommentTotal)
+                    .orElse(0L); // 当前循环记录评论总数
+            itemComments.forEach(comment -> comment.setCommentTotal(null));
+            record.setComments(itemComments);
+            record.setCommentTotal(total);
+            record.setCommentHasMore(total > DEFAULT_COMMENT_PAGE_SIZE);
+        });
     }
 
     /**
@@ -103,6 +141,12 @@ public class LoopMemoItemController {
         loopMemoItemService.remove(Wrappers.<LoopMemoItem>lambdaUpdate()
                 .eq(LoopMemoItem::getId, loopId)
                 .eq(LoopMemoItem::getMemoId, memoId)
+        );
+
+        // 删除循环备忘项下的第三层评论
+        loopMemoItemCommentService.remove(Wrappers.<LoopMemoItemComment>lambdaUpdate()
+                .eq(LoopMemoItemComment::getLoopItemId, loopId)
+                .eq(LoopMemoItemComment::getMemoId, memoId)
         );
 
         // 待办减一
