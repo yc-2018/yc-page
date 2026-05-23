@@ -10,6 +10,7 @@ import java.util.Map;
 
 public class JwtUtils {
     private static final String SIGN_KEY = "ikun";
+    public static final String DEFAULT_EXPIRE = "yz"; // 默认过期时间：一周
     private static final Map<String, Long>EXPIRE_MAP = new HashMap<>();
     static {
         EXPIRE_MAP.put("bt", 43200000L);    //过期时间为12个小时
@@ -38,7 +39,7 @@ public class JwtUtils {
      * @return JWT令牌
      */
     public static String generateJwt(Map<String, Object> claims,String expire){
-        Long expireTime = EXPIRE_MAP.get(expire)==null?EXPIRE_MAP.get("bt"):EXPIRE_MAP.get(expire);
+        Long expireTime = EXPIRE_MAP.get(expire)==null?EXPIRE_MAP.get(DEFAULT_EXPIRE):EXPIRE_MAP.get(expire);
         return generateJwt(claims, expireTime);
     }
 

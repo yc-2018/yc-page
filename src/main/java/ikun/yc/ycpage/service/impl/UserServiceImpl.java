@@ -1,6 +1,7 @@
 package ikun.yc.ycpage.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.R;
 import ikun.yc.ycpage.common.SearchEngineDataInitializer;
 import ikun.yc.ycpage.common.exception.LoginException;
@@ -107,6 +108,25 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             log.error("登录异常失败", e);
             throw new LoginException("😢登录居然失败，这种情况非常罕见，请联系站长或请重新试试");
         }
+    }
+
+    /**
+     * 刷新当前登录用户的JWT令牌
+     *
+     * @return 新的一周有效JWT
+     */
+    @Override
+    public R<?> refreshToken() {
+        String userId = BaseContext.getCurrentId(); // 当前登录用户ID
+        User user = this.getById(userId);           // 当前登录用户信息
+        if (user == null) return R.error("用户不存在");
+
+        String newJwt = JwtUtils.generateJwt(new HashMap<String, Object>() {{
+            put("userId", userId);
+            put("username", user.getUsername());
+            put("avatar", user.getAvatar());
+        }}, JwtUtils.DEFAULT_EXPIRE);               // 生成新的一周JWT
+        return R.success(newJwt);
     }
 
 

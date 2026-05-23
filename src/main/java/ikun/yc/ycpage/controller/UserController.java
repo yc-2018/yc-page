@@ -36,8 +36,18 @@ public class UserController {
      */
     @PassToken
     @PostMapping("login")
-    public R<?> login(HttpServletRequest request, String key, @RequestParam(defaultValue = "bt") String expireTime ) {
+    public R<?> login(HttpServletRequest request, String key, @RequestParam(defaultValue = JwtUtils.DEFAULT_EXPIRE) String expireTime ) {
         return userService.login(request, key,expireTime);
+    }
+
+    /**
+     * 静默刷新JWT令牌
+     *
+     * @return 新的一周有效JWT
+     */
+    @PostMapping("refreshToken")
+    public R<?> refreshToken() {
+        return userService.refreshToken();
     }
 
     /** 获取姓名和头像 */

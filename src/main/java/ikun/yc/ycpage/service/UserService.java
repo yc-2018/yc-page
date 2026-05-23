@@ -16,4 +16,11 @@ import javax.servlet.http.HttpServletRequest;
 public interface UserService extends IService<User> {
 
     R<?> login(HttpServletRequest request, String key, String expireTime);
+
+    /**
+     * 刷新当前登录用户的JWT令牌
+     *
+     * @return 新的一周有效JWT
+     */
+    R<?> refreshToken();
 }
