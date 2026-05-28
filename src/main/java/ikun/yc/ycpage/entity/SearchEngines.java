@@ -36,6 +36,10 @@ public class SearchEngines extends Model<SearchEngines> implements Serializable 
     @Pattern(regexp = "^https?://.*$", message = "URL格式不正确")
     private String engineUrl;
 
+    /** 直达URL，搜索框为空时直接打开  */
+    @Pattern(regexp = "^$|^https?://.*$", message = "直达URL格式不正确")
+    private String directUrl;
+
     /** 不常用 1是 0否  */
     @TableField("low_usage")
     private LinkType type = LinkType.SEARCH;
