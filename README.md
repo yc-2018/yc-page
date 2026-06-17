@@ -8,7 +8,7 @@ YcPage 是一个基于 Spring Boot 的多功能后端服务项目，旨在为用
 
 - **书签管理**：支持添加、编辑、删除和拖拽排序书签，支持自定义图标和分类。
 - **备忘录系统**：支持创建、更新、删除备忘录，支持循环备忘录和打卡记录。
-- **微信小程序集成**：提供微信登录、用户信息管理、打卡记录、WiFi 小程序码生成等功能，WiFi 码按用户每天最多生成 10 次。
+- **微信小程序集成**：提供微信登录、用户信息管理、打卡记录、打卡分享、WiFi 小程序码生成等功能，WiFi 码按用户每天最多生成 10 次。
 - **搜索引擎配置**：支持自定义搜索引擎及其排序，适用于个性化搜索需求。
 - **用户配置管理**：支持用户自定义背景、书签排序等个性化设置。
 - **操作日志记录**：记录用户操作行为，便于审计和追踪。
@@ -33,6 +33,7 @@ YcPage 是一个基于 Spring Boot 的多功能后端服务项目，旨在为用
 - `BookmarksController`：书签管理接口
 - `MemoController`：备忘录管理接口
 - `MiniController`：微信小程序相关接口
+- `MiniCheckinShareController`：微信小程序打卡分享接口
 - `MiniWifiCodeController`：微信小程序 WiFi 码生成接口
 - `SearchEnginesController`：搜索引擎配置接口
 - `UserController`：用户管理接口
@@ -41,6 +42,7 @@ YcPage 是一个基于 Spring Boot 的多功能后端服务项目，旨在为用
 - `BookmarksService`：书签业务逻辑
 - `MemoService`：备忘录业务逻辑
 - `MiniUserService`：微信用户管理
+- `MiniCheckinShareService`：微信小程序打卡分享业务逻辑
 - `SearchEnginesService`：搜索引擎业务逻辑
 - `UserService`：用户管理业务逻辑
 
@@ -77,6 +79,7 @@ YcPage 是一个基于 Spring Boot 的多功能后端服务项目，旨在为用
 - **日志记录**：所有操作日志记录在 `operate_log` 表中
 - **缓存机制**：使用 Redis 缓存书签和搜索引擎数据，提升访问效率
 - **权限控制**：通过 JWT 实现 Token 认证，部分接口需登录访问
+- **打卡分享**：创建分享需登录，分享详情接口 `/mini/checkinShare/{id}` 对好友公开读取，过期后不返回打卡内容
 
 ---
 
