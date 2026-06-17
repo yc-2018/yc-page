@@ -1,16 +1,20 @@
 package ikun.yc.ycpage.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ikun.yc.ycpage.common.exception.ParamException;
 import ikun.yc.ycpage.common.exception.SqlSaveException;
+import ikun.yc.ycpage.common.exception.SqlUpdateException;
+import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.entity.MiniCheckinRecords;
 import ikun.yc.ycpage.entity.MiniCheckinShare;
 import ikun.yc.ycpage.entity.dto.MiniCheckinShareCreateRequest;
 import ikun.yc.ycpage.entity.dto.MiniCheckinShareCreateResponse;
 import ikun.yc.ycpage.entity.dto.MiniCheckinShareDetailResponse;
+import ikun.yc.ycpage.entity.dto.MiniCheckinShareManageItem;
 import ikun.yc.ycpage.entity.enumeration.MiniCheckinShareDurationType;
 import ikun.yc.ycpage.mapper.MiniCheckinShareMapper;
 import ikun.yc.ycpage.service.MiniCheckinRecordsService;
@@ -20,6 +24,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 小程序打卡分享 Service 实现
@@ -109,6 +116,109 @@ public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMap
         detail.setShareType(share.getShareType());
         applyIncludeOptions(detail, share);
         return detail;
+    }
+
+    /**
+     * 分页获取当前用户的分享列表
+     *
+     * @param page 第几页
+     * @return 分享管理列表
+     */
+    @Override
+    public Page<MiniCheckinShareManageItem> getManageList(Integer page) {
+        String userOpenid = BaseContext.getCurrentId(); // 当前登录用户openid
+        Page<MiniCheckinShare> sharePage = page(new Page<>(page == null ? 1 : page, 10),
+                Wrappers.<MiniCheckinShare>lambdaQuery()
+                        .eq(MiniCheckinShare::getUserOpenid, userOpenid)
+                        .orderByDesc(MiniCheckinShare::getUpdateTime)
+                        .orderByDesc(MiniCheckinShare::getCreateTime));
+        Page<MiniCheckinShareManageItem> resultPage = new Page<>(sharePage.getCurrent(), sharePage.getSize(), sharePage.getTotal());
+        resultPage.setPages(sharePage.getPages());
+
+        List<MiniCheckinShare> shares = sharePage.getRecords(); // 当前页分享记录
+        if (shares.isEmpty()) {
+            resultPage.setRecords(java.util.Collections.emptyList());
+            return resultPage;
+        }
+
+        List<Integer> recordIds = shares.stream()
+                .map(MiniCheckinShare::getRecordId)
+                .distinct()
+                .collect(Collectors.toList()); // 当前页涉及的打卡记录ID
+        Map<Integer, MiniCheckinRecords> recordMap = miniCheckinRecordsService.list(Wrappers.<MiniCheckinRecords>lambdaQuery()
+                .in(MiniCheckinRecords::getId, recordIds))
+                .stream()
+                .collect(Collectors.toMap(MiniCheckinRecords::getId, record -> record, (left, right) -> left));
+
+        LocalDateTime now = LocalDateTime.now(); // 当前服务器时间
+        List<MiniCheckinShareManageItem> records = shares.stream()
+                .map(share -> buildManageItem(share, recordMap.get(share.getRecordId()), now))
+                .collect(Collectors.toList());
+        resultPage.setRecords(records);
+        return resultPage;
+    }
+
+    /**
+     * 从当前时间重新计算分享过期时间
+     *
+     * @param id           分享ID
+     * @param durationType 分享时长类型
+     * @return 分享ID和新的过期时间
+     */
+    @Override
+    public MiniCheckinShareCreateResponse extendShare(Integer id, String durationType) {
+        MiniCheckinShare share = getCurrentUserShare(id); // 当前用户的分享记录
+        LocalDateTime expireTime = MiniCheckinShareDurationType.fromCode(durationType)
+                .resolveExpireTime(LocalDateTime.now()); // 新有效截止时间
+        boolean updateOk = update(Wrappers.<MiniCheckinShare>lambdaUpdate()
+                .eq(MiniCheckinShare::getId, share.getId())
+                .eq(MiniCheckinShare::getUserOpenid, BaseContext.getCurrentId())
+                .set(MiniCheckinShare::getExpireTime, expireTime)
+                .set(MiniCheckinShare::getUpdateTime, LocalDateTime.now()));
+        if (!updateOk) {
+            throw new SqlUpdateException("修改分享时间失败");
+        }
+        return new MiniCheckinShareCreateResponse(share.getId(), expireTime);
+    }
+
+    /**
+     * 停用分享
+     *
+     * @param id 分享ID
+     * @return 是否停用成功
+     */
+    @Override
+    public Boolean disableShare(Integer id) {
+        MiniCheckinShare share = getCurrentUserShare(id); // 当前用户的分享记录
+        LocalDateTime now = LocalDateTime.now(); // 当前服务器时间
+        if (share.getExpireTime() == null || !share.getExpireTime().isAfter(now)) {
+            throw new ParamException("分享已经停用");
+        }
+        boolean updateOk = update(Wrappers.<MiniCheckinShare>lambdaUpdate()
+                .eq(MiniCheckinShare::getId, share.getId())
+                .eq(MiniCheckinShare::getUserOpenid, BaseContext.getCurrentId())
+                .set(MiniCheckinShare::getExpireTime, now)
+                .set(MiniCheckinShare::getUpdateTime, now));
+        if (!updateOk) {
+            throw new SqlUpdateException("停用分享失败");
+        }
+        return true;
+    }
+
+    /**
+     * 删除分享记录
+     *
+     * @param id 分享ID
+     * @return 是否删除成功
+     */
+    @Override
+    public Boolean deleteShare(Integer id) {
+        MiniCheckinShare share = getCurrentUserShare(id); // 当前用户的分享记录
+        boolean removeOk = removeById(share.getId()); // 删除结果
+        if (!removeOk) {
+            throw new SqlUpdateException("删除分享失败");
+        }
+        return true;
     }
 
     /**
@@ -202,6 +312,54 @@ public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMap
         if (!Integer.valueOf(1).equals(share.getIncludeImgs())) {
             detail.setImgs(null);
         }
+    }
+
+    /**
+     * 获取当前用户自己的分享记录
+     *
+     * @param id 分享ID
+     * @return 分享记录
+     */
+    private MiniCheckinShare getCurrentUserShare(Integer id) {
+        if (id == null) {
+            throw new ParamException("分享不存在");
+        }
+        MiniCheckinShare share = getOne(Wrappers.<MiniCheckinShare>lambdaQuery()
+                .eq(MiniCheckinShare::getId, id)
+                .eq(MiniCheckinShare::getUserOpenid, BaseContext.getCurrentId())
+                .last("limit 1"));
+        if (share == null) {
+            throw new ParamException("分享不存在");
+        }
+        return share;
+    }
+
+    /**
+     * 构建分享管理列表项
+     *
+     * @param share  分享记录
+     * @param record 原打卡记录
+     * @param now    当前服务器时间
+     * @return 管理列表项
+     */
+    private MiniCheckinShareManageItem buildManageItem(MiniCheckinShare share, MiniCheckinRecords record, LocalDateTime now) {
+        MiniCheckinShareManageItem item = new MiniCheckinShareManageItem();
+        item.setId(share.getId());
+        item.setRecordId(share.getRecordId());
+        item.setExpireTime(share.getExpireTime());
+        item.setShareType(share.getShareType());
+        item.setIncludeRemark(share.getIncludeRemark());
+        item.setIncludeImgs(share.getIncludeImgs());
+        item.setIsExpired(share.getExpireTime() == null || !share.getExpireTime().isAfter(now));
+        if (record != null) {
+            item.setName(record.getName());
+            item.setAddress(record.getAddress());
+            item.setCheckinTime(record.getCheckinTime());
+        } else {
+            item.setName("原打卡记录已删除");
+            item.setAddress("");
+        }
+        return item;
     }
 
     /**
