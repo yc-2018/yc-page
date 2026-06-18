@@ -32,6 +32,14 @@ public interface MiniCheckinShareService extends IService<MiniCheckinShare> {
     MiniCheckinShareDetailResponse getShareDetail(Integer id);
 
     /**
+     * 获取带当前登录人身份的分享详情
+     *
+     * @param id 分享ID
+     * @return 分享详情
+     */
+    MiniCheckinShareDetailResponse getOwnerShareDetail(Integer id);
+
+    /**
      * 分页获取当前用户的分享列表
      *
      * @param page 第几页

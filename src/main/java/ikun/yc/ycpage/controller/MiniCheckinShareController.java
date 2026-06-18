@@ -102,4 +102,15 @@ public class MiniCheckinShareController {
     public R<MiniCheckinShareDetailResponse> getShareDetail(@PathVariable Integer id) {
         return R.success(miniCheckinShareService.getShareDetail(id));
     }
+
+    /**
+     * 获取带当前登录人身份的打卡分享详情
+     *
+     * @param id 分享ID
+     * @return 分享详情
+     */
+    @GetMapping("/owner/{id}")
+    public R<MiniCheckinShareDetailResponse> getOwnerShareDetail(@PathVariable Integer id) {
+        return R.success(miniCheckinShareService.getOwnerShareDetail(id));
+    }
 }

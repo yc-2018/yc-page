@@ -48,4 +48,10 @@ public class MiniCheckinShareDetailResponse {
 
     /** 分享类型 dynamic-动态 static-静态 */
     private String shareType;
+
+    /** 当前访问者是否分享创建人 */
+    private Boolean isOwner;
+
+    /** 分享是否已过期 */
+    private Boolean isExpired;
 }

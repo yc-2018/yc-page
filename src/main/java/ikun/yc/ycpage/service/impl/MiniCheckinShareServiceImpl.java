@@ -103,19 +103,34 @@ public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMap
             throw new ParamException(SHARE_NOT_FOUND_MSG);
         }
         MiniCheckinShare share = getById(id);
-        if (share == null || share.getExpireTime() == null || !share.getExpireTime().isAfter(LocalDateTime.now())) {
+        if (share == null || isShareExpired(share, LocalDateTime.now())) {
             throw new ParamException(SHARE_NOT_FOUND_MSG);
         }
+        return buildShareDetail(share, false, false);
+    }
 
-        MiniCheckinShareDetailResponse detail = SHARE_TYPE_STATIC.equals(share.getShareType())
-                ? readStaticShareDetail(share)
-                : readDynamicShareDetail(share);
-        detail.setId(share.getId());
-        detail.setRecordId(share.getRecordId());
-        detail.setExpireTime(share.getExpireTime());
-        detail.setShareType(share.getShareType());
-        applyIncludeOptions(detail, share);
-        return detail;
+    /**
+     * 获取带当前登录人身份的分享详情
+     *
+     * @param id 分享ID
+     * @return 分享详情
+     */
+    @Override
+    public MiniCheckinShareDetailResponse getOwnerShareDetail(Integer id) {
+        if (id == null) {
+            throw new ParamException(SHARE_NOT_FOUND_MSG);
+        }
+        MiniCheckinShare share = getById(id);
+        if (share == null) {
+            throw new ParamException(SHARE_NOT_FOUND_MSG);
+        }
+        boolean isOwner = StringUtils.hasText(BaseContext.getCurrentId())
+                && BaseContext.getCurrentId().equals(share.getUserOpenid()); // 当前访问者是否作者
+        boolean isExpired = isShareExpired(share, LocalDateTime.now()); // 当前分享是否过期
+        if (!isOwner && isExpired) {
+            throw new ParamException(SHARE_NOT_FOUND_MSG);
+        }
+        return buildShareDetail(share, isOwner, isExpired);
     }
 
     /**
@@ -297,6 +312,39 @@ public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMap
         detail.setImgs(record.getImgs());
         detail.setCheckinTime(record.getCheckinTime());
         return detail;
+    }
+
+    /**
+     * 构建最终分享详情
+     *
+     * @param share     分享记录
+     * @param isOwner   当前访问者是否作者
+     * @param isExpired 分享是否已过期
+     * @return 分享详情
+     */
+    private MiniCheckinShareDetailResponse buildShareDetail(MiniCheckinShare share, boolean isOwner, boolean isExpired) {
+        MiniCheckinShareDetailResponse detail = SHARE_TYPE_STATIC.equals(share.getShareType())
+                ? readStaticShareDetail(share)
+                : readDynamicShareDetail(share);
+        detail.setId(share.getId());
+        detail.setRecordId(share.getRecordId());
+        detail.setExpireTime(share.getExpireTime());
+        detail.setShareType(share.getShareType());
+        detail.setIsOwner(isOwner);
+        detail.setIsExpired(isExpired);
+        applyIncludeOptions(detail, share);
+        return detail;
+    }
+
+    /**
+     * 判断分享是否已过期
+     *
+     * @param share 分享记录
+     * @param now   当前服务器时间
+     * @return 是否过期
+     */
+    private boolean isShareExpired(MiniCheckinShare share, LocalDateTime now) {
+        return share.getExpireTime() == null || !share.getExpireTime().isAfter(now);
     }
 
     /**
