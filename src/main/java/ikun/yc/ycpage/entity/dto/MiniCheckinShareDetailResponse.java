@@ -32,6 +32,9 @@ public class MiniCheckinShareDetailResponse {
     /** 详细地址 */
     private String address;
 
+    /** 地点类型 */
+    private String locationType;
+
     /** 备注 */
     private String remark;
 

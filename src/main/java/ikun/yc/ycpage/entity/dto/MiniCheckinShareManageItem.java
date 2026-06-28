@@ -25,6 +25,9 @@ public class MiniCheckinShareManageItem {
     /** 详细地址 */
     private String address;
 
+    /** 地点类型 */
+    private String locationType;
+
     /** 打卡时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime checkinTime;

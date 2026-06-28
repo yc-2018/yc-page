@@ -308,6 +308,7 @@ public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMap
         detail.setLatitude(record.getLatitude());
         detail.setName(record.getName());
         detail.setAddress(record.getAddress());
+        detail.setLocationType(record.getLocationType());
         detail.setRemark(record.getRemark());
         detail.setImgs(record.getImgs());
         detail.setCheckinTime(record.getCheckinTime());
@@ -402,6 +403,7 @@ public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMap
         if (record != null) {
             item.setName(record.getName());
             item.setAddress(record.getAddress());
+            item.setLocationType(record.getLocationType());
             item.setCheckinTime(record.getCheckinTime());
         } else {
             item.setName("原打卡记录已删除");
