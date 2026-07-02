@@ -20,5 +20,7 @@ public interface MemoService extends IService<Memo> {
 
     List<MemoIncompleteCountDto> getIncompleteCounts(Integer currentType);
 
+    void fillMemoTags(List<Memo> memos);
+
     boolean updateItem(Memo memo);
 }

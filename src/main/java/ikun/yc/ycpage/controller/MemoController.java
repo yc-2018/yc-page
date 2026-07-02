@@ -10,6 +10,7 @@ import ikun.yc.ycpage.common.exception.FieldIsNullException;
 import ikun.yc.ycpage.entity.Memo;
 import ikun.yc.ycpage.entity.dto.MemoIncompleteCountDto;
 import ikun.yc.ycpage.service.MemoService;
+import ikun.yc.ycpage.service.MemoTagService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -29,6 +30,7 @@ import java.util.List;
 @RequestMapping("/memo")
 public class MemoController {
     private final MemoService memoService;
+    private final MemoTagService memoTagService;
 
     /**
      * 获取待办未完成预加载统计
@@ -82,6 +84,7 @@ public class MemoController {
                                  @RequestParam(required = false) String firstLetter,
                                  @RequestParam(required = false) String keyword,
                                  @RequestParam(required = false) String dateRange,
+                                 @RequestParam(required = false) Integer tagId,
                                  @PathVariable Integer type) {
         // ————日期参数———— 下面写times[2]等就算没有在哪个条件也是会报错，因为已经到参数了，所以要先写
         String[] times = dateRange != null && !dateRange.isEmpty() ? dateRange.split("/") : null;
@@ -89,12 +92,14 @@ public class MemoController {
         Date startTime = times != null ? new Date(Long.parseLong(times[0])) : null;
         Date endTime = times != null ? new Date(Long.parseLong(times[1])) : null;
 
-        return R.success(
-            memoService.lambdaQuery()
+        if (tagId != null && !memoTagService.existsCurrentUserTag(tagId, type)) throw new FieldIsNullException("标签不存在");
+
+        Page<Memo> memoPage = memoService.lambdaQuery()
                 .eq(Memo::getItemType, type)
                 .eq(Memo::getUserId, BaseContext.getCurrentId())                // 请求头的token 的id
                 .eq(completed != -1, Memo::getCompleted, completed)    // 0 未完成 1 已完成 -1 全部
                 .lt(completed == -1, Memo::getCompleted, 10)       // >=10 已删除
+                .inSql(tagId != null, Memo::getId, "SELECT memo_id FROM memo_tag_relation WHERE tag_id = " + tagId)
                 .between(times != null, updateFilterDateType ? Memo::getUpdateTime : Memo::getCreateTime, startTime, endTime)
                 .orderByDesc(orderBy == 1, Memo::getUpdateTime)
                 .orderByDesc(orderBy == 3, Memo::getCreateTime)
@@ -104,8 +109,9 @@ public class MemoController {
                 .orderByAsc(orderBy == 5, Memo::getContent)
                 .likeRight(firstLetter != null, Memo::getContent, firstLetter)
                 .like(keyword != null, Memo::getContent, keyword)
-                .page(new Page<>(page, pageSize))
-        );
+                .page(new Page<>(page, pageSize));
+        memoService.fillMemoTags(memoPage.getRecords());
+        return R.success(memoPage);
     }
 
     /**

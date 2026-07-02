@@ -14,6 +14,7 @@ import lombok.experimental.Accessors;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 
 
 /**
@@ -60,6 +61,12 @@ public class Memo extends Model<Memo> implements Serializable {
     /** 完成时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime okTime;
+    /** 备忘标签列表 */
+    @TableField(exist = false)
+    private List<MemoTag> tags;
+    /** 备忘标签ID列表 */
+    @TableField(exist = false)
+    private List<Integer> tagIds;
 
     public Memo(String userId, String content, Integer itemType) {
         this.userId = userId;

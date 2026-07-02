@@ -8,6 +8,7 @@ import ikun.yc.ycpage.entity.Memo;
 import ikun.yc.ycpage.entity.dto.MemoIncompleteCountDto;
 import ikun.yc.ycpage.mapper.MemoMapper;
 import ikun.yc.ycpage.service.MemoService;
+import ikun.yc.ycpage.service.MemoTagRelationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,7 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class MemoServiceImpl extends ServiceImpl<MemoMapper, Memo> implements MemoService {
     private final MemoMapper memoMapper;
+    private final MemoTagRelationService memoTagRelationService;
 
 
     /**
@@ -41,8 +43,10 @@ public class MemoServiceImpl extends ServiceImpl<MemoMapper, Memo> implements Me
 
         memo.setCreateTime(null);
         memo.setUserId(userId);
+        memoTagRelationService.validateMemoTags(memo.getItemType(), memo.getTagIds());
 
         boolean save = this.save(memo);
+        if (save && memo.getTagIds() != null) memoTagRelationService.saveMemoTags(memo.getId(), memo.getItemType(), memo.getTagIds());
         return save ? R.success(memo.getId()) : R.error("添加失败");
     }
 
@@ -52,6 +56,12 @@ public class MemoServiceImpl extends ServiceImpl<MemoMapper, Memo> implements Me
     @Override
     public List<MemoIncompleteCountDto> getIncompleteCounts(Integer currentType) {
         return memoMapper.selectIncompleteCounts(new Memo(BaseContext.getCurrentId(), currentType));
+    }
+
+    /** 批量填充备忘标签 */
+    @Override
+    public void fillMemoTags(List<Memo> memos) {
+        memoTagRelationService.fillMemoTags(memos);
     }
 
 
@@ -67,10 +77,30 @@ public class MemoServiceImpl extends ServiceImpl<MemoMapper, Memo> implements Me
         if (Objects.equals(memo.getCompleted(), 1) && Objects.isNull(memo.getOkTime())) { // 完成没提供时间，选择当前时间
             memo.setOkTime(LocalDateTime.now());
         }
-        return this.update(memo, Wrappers.<Memo>lambdaUpdate()
+        Memo oldMemo = null; // 原备忘数据
+        if (memo.getTagIds() != null || memo.getItemType() != null) {
+            oldMemo = this.lambdaQuery()
+                    .select(Memo::getId, Memo::getItemType)
+                    .eq(Memo::getId, memo.getId())
+                    .eq(Memo::getUserId, memo.getUserId())
+                    .one();
+            if (oldMemo == null) return false;
+            Integer tagItemType = memo.getItemType() == null ? oldMemo.getItemType() : memo.getItemType(); // 标签对应的备忘类型
+            memoTagRelationService.validateMemoTags(tagItemType, memo.getTagIds());
+        }
+
+        boolean update = this.update(memo, Wrappers.<Memo>lambdaUpdate()
                 .eq(Memo::getId, memo.getId())
                 .eq(Memo::getUserId, memo.getUserId())
         );
+        if (!update) return false;
+        if (memo.getTagIds() != null) {
+            Integer tagItemType = memo.getItemType() == null ? oldMemo.getItemType() : memo.getItemType(); // 标签对应的备忘类型
+            memoTagRelationService.saveMemoTags(memo.getId(), tagItemType, memo.getTagIds());
+        } else if (memo.getItemType() != null) {
+            memoTagRelationService.clearMemoTags(memo.getId());
+        }
+        return true;
     }
 
 }
