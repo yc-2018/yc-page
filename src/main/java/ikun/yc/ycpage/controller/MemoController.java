@@ -8,12 +8,14 @@ import ikun.yc.ycpage.common.anno.Log;
 import ikun.yc.ycpage.common.aop.CountControlAspect;
 import ikun.yc.ycpage.common.exception.FieldIsNullException;
 import ikun.yc.ycpage.entity.Memo;
+import ikun.yc.ycpage.entity.dto.MemoIncompleteCountDto;
 import ikun.yc.ycpage.service.MemoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * 待办
@@ -27,6 +29,17 @@ import java.util.Date;
 @RequestMapping("/memo")
 public class MemoController {
     private final MemoService memoService;
+
+    /**
+     * 获取待办未完成预加载统计
+     *
+     * @param currentType 当前待办类型
+     * @return 待办未完成预加载统计
+     */
+    @GetMapping("/incomplete-counts")
+    public R<List<MemoIncompleteCountDto>> getIncompleteCounts(@RequestParam(defaultValue = "0") Integer currentType) {
+        return R.success(memoService.getIncompleteCounts(currentType));
+    }
 
     /**
      * 添加待办
@@ -76,7 +89,7 @@ public class MemoController {
         Date startTime = times != null ? new Date(Long.parseLong(times[0])) : null;
         Date endTime = times != null ? new Date(Long.parseLong(times[1])) : null;
 
-        R<Page<Memo>> pageR = R.success(
+        return R.success(
             memoService.lambdaQuery()
                 .eq(Memo::getItemType, type)
                 .eq(Memo::getUserId, BaseContext.getCurrentId())                // 请求头的token 的id
@@ -93,13 +106,6 @@ public class MemoController {
                 .like(keyword != null, Memo::getContent, keyword)
                 .page(new Page<>(page, pageSize))
         );
-
-
-        // 如果是查询未完成的 而且不是英语的，统计数量
-        if (completed == 0 && type != 4)
-            pageR.add("groupMemosCounts", memoService.getGroupMemoCount(type));
-
-        return pageR;
     }
 
     /**

@@ -4,8 +4,9 @@ package ikun.yc.ycpage.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import ikun.yc.ycpage.common.R;
 import ikun.yc.ycpage.entity.Memo;
+import ikun.yc.ycpage.entity.dto.MemoIncompleteCountDto;
 
-import java.util.Map;
+import java.util.List;
 
 /**
  * 服务接口
@@ -17,7 +18,7 @@ public interface MemoService extends IService<Memo> {
 
     R<Integer> addItem(Memo memo);
 
-    Map getGroupMemoCount(Integer type);
+    List<MemoIncompleteCountDto> getIncompleteCounts(Integer currentType);
 
     boolean updateItem(Memo memo);
 }

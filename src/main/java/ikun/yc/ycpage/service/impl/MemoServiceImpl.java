@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.R;
 import ikun.yc.ycpage.entity.Memo;
+import ikun.yc.ycpage.entity.dto.MemoIncompleteCountDto;
 import ikun.yc.ycpage.mapper.MemoMapper;
 import ikun.yc.ycpage.service.MemoService;
 import lombok.RequiredArgsConstructor;
@@ -14,9 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * 备忘录服务接口实现
@@ -49,20 +48,10 @@ public class MemoServiceImpl extends ServiceImpl<MemoMapper, Memo> implements Me
 
 
 
-    /**
-     * @return 分组统计加在标签上面 未完成的条数。但是不包括 2长期、1循环、4英语、5日记、和当前的
-     */
+    /** 查询需要预加载展示的未完成待办数量 */
     @Override
-    public Map getGroupMemoCount(Integer type) {
-        // 假设这是从MyBatis查询返回的原始列表
-        List<Map> originalList = memoMapper.selectGroupMemoCount(new Memo(BaseContext.getCurrentId(), type));
-
-        // 转换列表为期望的格式
-        return originalList.stream()
-                .collect(Collectors.toMap(
-                        map -> map.get("item_type"), // 键：item_type
-                        map -> map.get("count(*)")  // 值：count
-                ));
+    public List<MemoIncompleteCountDto> getIncompleteCounts(Integer currentType) {
+        return memoMapper.selectIncompleteCounts(new Memo(BaseContext.getCurrentId(), currentType));
     }
 
 
