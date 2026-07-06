@@ -3,6 +3,7 @@ package ikun.yc.ycpage.entity.dto;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 /**
@@ -20,4 +21,8 @@ public class MiniCheckinDto {
     private String address;
     private String remark;
     private String locationType;
+
+    private BigDecimal nearbyLongitude; // 附近搜索中心经度
+    private BigDecimal nearbyLatitude;  // 附近搜索中心纬度
+    private Integer nearbyRadius;       // 附近搜索半径，单位米
 }

@@ -18,7 +18,10 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * 小程序【在这打卡】控制器
@@ -32,6 +35,16 @@ import java.time.LocalDate;
 @RequestMapping("/mini")
 public class MiniController {
     private final MiniUserService miniUserService;
+    private static final List<Integer> NEARBY_RADIUS_OPTIONS = Arrays.asList(100, 500, 1000, 5000, 10000, 50000); // 附近搜索允许的半径
+    private static final BigDecimal MIN_LONGITUDE = BigDecimal.valueOf(-180); // 最小合法经度
+    private static final BigDecimal MAX_LONGITUDE = BigDecimal.valueOf(180); // 最大合法经度
+    private static final BigDecimal MIN_LATITUDE = BigDecimal.valueOf(-90); // 最小合法纬度
+    private static final BigDecimal MAX_LATITUDE = BigDecimal.valueOf(90); // 最大合法纬度
+    private static final String NEARBY_DISTANCE_SQL = "6371000 * 2 * ASIN(SQRT("
+            + "POWER(SIN((RADIANS(latitude) - RADIANS({1})) / 2), 2) "
+            + "+ COS(RADIANS({1})) * COS(RADIANS(latitude)) "
+            + "* POWER(SIN((RADIANS(longitude) - RADIANS({0})) / 2), 2)"
+            + ")) <= {2}"; // Haversine 球面距离，单位米
 
     @PassToken
     @PostMapping("/login")
@@ -81,17 +94,49 @@ public class MiniController {
      */
     @PostMapping("/checkinList/{page}")
     public R<Page<MiniCheckinRecords>> checkinList(@RequestBody MiniCheckinDto checkinDto, @PathVariable Integer page) {
+        MiniCheckinDto queryDto = checkinDto == null ? new MiniCheckinDto() : checkinDto; // 实际使用的筛选参数
+        String nearbySearchError = validateNearbySearch(queryDto); // 附近搜索参数错误信息
+        if (nearbySearchError != null) return R.error(nearbySearchError);
+        boolean hasNearbySearch = hasNearbySearch(queryDto); // 是否启用附近搜索
         Page<MiniCheckinRecords> pages = new Page<>(page, 10);
         Page<MiniCheckinRecords> recordsPage = new MiniCheckinRecords().selectPage(pages, Wrappers.<MiniCheckinRecords>lambdaQuery()
                 .eq(MiniCheckinRecords::getUserOpenid, BaseContext.getCurrentId())
-                .between(checkinDto.getStartTime() != null && checkinDto.getEndTime() != null, MiniCheckinRecords::getCheckinTime, checkinDto.getStartTime(), checkinDto.getEndTime())
+                .between(queryDto.getStartTime() != null && queryDto.getEndTime() != null, MiniCheckinRecords::getCheckinTime, queryDto.getStartTime(), queryDto.getEndTime())
                 .eq(MiniCheckinRecords::getIsDeleted, 0)
-                .and(StringUtils.hasText(checkinDto.getAddress()), wrapper -> wrapper.like(MiniCheckinRecords::getAddress, checkinDto.getAddress()).or().like(MiniCheckinRecords::getName, checkinDto.getAddress()))
-                .like(StringUtils.hasText(checkinDto.getRemark()), MiniCheckinRecords::getRemark, checkinDto.getRemark())
-                .eq(StringUtils.hasText(checkinDto.getLocationType()), MiniCheckinRecords::getLocationType, checkinDto.getLocationType())
+                .and(StringUtils.hasText(queryDto.getAddress()), wrapper -> wrapper.like(MiniCheckinRecords::getAddress, queryDto.getAddress()).or().like(MiniCheckinRecords::getName, queryDto.getAddress()))
+                .like(StringUtils.hasText(queryDto.getRemark()), MiniCheckinRecords::getRemark, queryDto.getRemark())
+                .eq(StringUtils.hasText(queryDto.getLocationType()), MiniCheckinRecords::getLocationType, queryDto.getLocationType())
+                .apply(hasNearbySearch, NEARBY_DISTANCE_SQL, queryDto.getNearbyLongitude(), queryDto.getNearbyLatitude(), queryDto.getNearbyRadius())
                 .orderByDesc(MiniCheckinRecords::getCheckinTime)
         );
         return R.success(recordsPage);
+    }
+
+    /**
+     * 判断请求是否携带附近搜索条件
+     *
+     * @param checkinDto 小程序打卡搜索列表请求参数
+     * @return 是否启用附近搜索
+     */
+    private boolean hasNearbySearch(MiniCheckinDto checkinDto) {
+        return checkinDto.getNearbyLongitude() != null
+                || checkinDto.getNearbyLatitude() != null
+                || checkinDto.getNearbyRadius() != null;
+    }
+
+    /**
+     * 校验附近搜索参数，避免缺字段或半径超出预设范围
+     *
+     * @param checkinDto 小程序打卡搜索列表请求参数
+     * @return 错误提示，返回 null 表示校验通过
+     */
+    private String validateNearbySearch(MiniCheckinDto checkinDto) {
+        if (!hasNearbySearch(checkinDto)) return null;
+        if (checkinDto.getNearbyLongitude() == null || checkinDto.getNearbyLatitude() == null || checkinDto.getNearbyRadius() == null) return "附近搜索参数不完整";
+        if (!NEARBY_RADIUS_OPTIONS.contains(checkinDto.getNearbyRadius())) return "附近搜索范围有误";
+        if (checkinDto.getNearbyLongitude().compareTo(MIN_LONGITUDE) < 0 || checkinDto.getNearbyLongitude().compareTo(MAX_LONGITUDE) > 0) return "附近搜索经度有误";
+        if (checkinDto.getNearbyLatitude().compareTo(MIN_LATITUDE) < 0 || checkinDto.getNearbyLatitude().compareTo(MAX_LATITUDE) > 0) return "附近搜索纬度有误";
+        return null;
     }
 
     /**
