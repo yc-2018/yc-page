@@ -9,6 +9,8 @@ import ikun.yc.ycpage.common.exception.SqlUpdateException;
 import ikun.yc.ycpage.entity.LoopMemoItem;
 import ikun.yc.ycpage.entity.LoopMemoItemComment;
 import ikun.yc.ycpage.entity.Memo;
+import ikun.yc.ycpage.entity.dto.LoopMemoItemTransferRequest;
+import ikun.yc.ycpage.entity.dto.LoopMemoItemTransferResponse;
 import ikun.yc.ycpage.mapper.LoopMemoItemCommentMapper;
 import ikun.yc.ycpage.service.LoopMemoItemCommentService;
 import ikun.yc.ycpage.service.LoopMemoItemService;
@@ -40,6 +42,17 @@ public class LoopMemoItemController {
     private final LoopMemoItemCommentService loopMemoItemCommentService;
     private final LoopMemoItemCommentMapper loopMemoItemCommentMapper;
     private final MemoService memoService;
+
+    /**
+     * 批量转移循环备忘记录
+     *
+     * @param request 转移请求
+     * @return 转移结果
+     */
+    @PutMapping("/transfer")
+    public R<LoopMemoItemTransferResponse> transferLoopMemoItems(@RequestBody LoopMemoItemTransferRequest request) {
+        return R.success(loopMemoItemService.transferLoopMemoItems(request));
+    }
 
     /**
      * 获取循环备忘记录列表

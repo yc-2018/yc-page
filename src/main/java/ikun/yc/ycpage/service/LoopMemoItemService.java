@@ -2,6 +2,8 @@ package ikun.yc.ycpage.service;
 
 import ikun.yc.ycpage.entity.LoopMemoItem;
 import com.baomidou.mybatisplus.extension.service.IService;
+import ikun.yc.ycpage.entity.dto.LoopMemoItemTransferRequest;
+import ikun.yc.ycpage.entity.dto.LoopMemoItemTransferResponse;
 
 /**
  * <p>
@@ -13,4 +15,11 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface LoopMemoItemService extends IService<LoopMemoItem> {
 
+    /**
+     * 转移循环备忘记录到另一个循环备忘
+     *
+     * @param request 转移请求
+     * @return 转移结果和两边最新循环次数
+     */
+    LoopMemoItemTransferResponse transferLoopMemoItems(LoopMemoItemTransferRequest request);
 }
