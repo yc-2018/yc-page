@@ -41,6 +41,7 @@ public class MemoServiceImpl extends ServiceImpl<MemoMapper, Memo> implements Me
     public R<Integer> addItem(Memo memo) {
         String userId = BaseContext.getCurrentId();
 
+        memo.validateImgArr(); // 校验备忘图片字段长度
         memo.setCreateTime(null);
         memo.setUserId(userId);
         memoTagRelationService.validateMemoTags(memo.getItemType(), memo.getTagIds());
@@ -74,6 +75,7 @@ public class MemoServiceImpl extends ServiceImpl<MemoMapper, Memo> implements Me
     @Transactional
     @Override
     public boolean updateItem(Memo memo) {
+        memo.validateImgArr(); // 校验备忘图片字段长度
         if (Objects.equals(memo.getCompleted(), 1) && Objects.isNull(memo.getOkTime())) { // 完成没提供时间，选择当前时间
             memo.setOkTime(LocalDateTime.now());
         }

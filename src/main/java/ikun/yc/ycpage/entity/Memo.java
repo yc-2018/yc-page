@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import ikun.yc.ycpage.common.BaseContext;
+import ikun.yc.ycpage.common.exception.ParamException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -50,6 +51,8 @@ public class Memo extends Model<Memo> implements Serializable {
     private Integer numberOfRecurrences;
     /** 完成时记录备注文本 */
     private String okText;
+    /** 备忘图片地址，多个地址用逗号分隔 */
+    private String imgArr;
     /** 创建时间 */
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -77,6 +80,13 @@ public class Memo extends Model<Memo> implements Serializable {
     public Memo(String userId, Integer itemType) {
         this.userId = userId;
         this.itemType = itemType;
+    }
+
+    /** 校验备忘图片字段长度 */
+    public void validateImgArr() {
+        if (imgArr != null && imgArr.length() > 999) {
+            throw new ParamException("备忘图片地址总长度不能超过999个字符");
+        }
     }
 
     /** 修改待办信息 防止恶意修改 */
