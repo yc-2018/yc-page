@@ -31,6 +31,12 @@ public class MiniCheckinShareCreateRequest {
     /** 分享类型 dynamic-动态 static-静态，默认动态 */
     private String shareType;
 
+    /** 静态分享备注覆盖值，允许空字符串；未传时使用原记录备注 */
+    private String staticRemark;
+
+    /** 静态分享图片覆盖值，多个地址用逗号拼接；允许空字符串；未传时使用原记录图片 */
+    private String staticImgs;
+
     /** 创建人openid，由登录态注入 */
     @JsonIgnore
     private String userOpenid;

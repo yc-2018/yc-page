@@ -74,7 +74,8 @@ public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMap
         String shareType = normalizeShareType(request.getShareType()); // 标准化分享类型
         LocalDateTime expireTime = MiniCheckinShareDurationType.fromCode(request.getDurationType())
                 .resolveExpireTime(LocalDateTime.now()); // 有效截止时间
-        String content = buildShareContent(record, shareType, includeRemark, includeImgs); // 分享内容字段
+        String content = buildShareContent(record, shareType, includeRemark, includeImgs,
+                request.getStaticRemark(), request.getStaticImgs()); // 分享内容字段
 
         MiniCheckinShare share = new MiniCheckinShare();
         share.setUserOpenid(userOpenid);
@@ -243,19 +244,27 @@ public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMap
      * @param shareType     分享类型
      * @param includeRemark 是否包含备注
      * @param includeImgs   是否包含图片
+     * @param staticRemark  静态分享备注覆盖值
+     * @param staticImgs    静态分享图片覆盖值
      * @return 内容字段
      */
-    private String buildShareContent(MiniCheckinRecords record, String shareType, boolean includeRemark, boolean includeImgs) {
+    private String buildShareContent(MiniCheckinRecords record, String shareType,
+                                     boolean includeRemark, boolean includeImgs,
+                                     String staticRemark, String staticImgs) {
         if (SHARE_TYPE_DYNAMIC.equals(shareType)) {
             return String.valueOf(record.getId());
         }
 
-        MiniCheckinShareDetailResponse snapshot = buildDetailFromRecord(record);
+        MiniCheckinShareDetailResponse snapshot = buildDetailFromRecord(record); // 静态分享快照
         if (!includeRemark) {
             snapshot.setRemark(null);
+        } else if (staticRemark != null) {
+            snapshot.setRemark(staticRemark);
         }
         if (!includeImgs) {
             snapshot.setImgs(null);
+        } else if (staticImgs != null) {
+            snapshot.setImgs(staticImgs);
         }
         try {
             return objectMapper.writeValueAsString(snapshot);
