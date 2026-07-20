@@ -23,4 +23,7 @@ public interface MemoService extends IService<Memo> {
     void fillMemoTags(List<Memo> memos);
 
     boolean updateItem(Memo memo);
+
+    /** 按版本逻辑删除当前用户备忘录。 */
+    boolean deleteItem(Integer id, Integer version);
 }

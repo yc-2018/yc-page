@@ -1,6 +1,8 @@
 package ikun.yc.ycpage.controller;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import ikun.yc.ycpage.common.BaseContext;
+import ikun.yc.ycpage.common.OptimisticLockUtils;
 import ikun.yc.ycpage.common.R;
 import ikun.yc.ycpage.common.anno.DelCache;
 import ikun.yc.ycpage.common.anno.CountControl;
@@ -8,7 +10,6 @@ import ikun.yc.ycpage.common.anno.Log;
 import ikun.yc.ycpage.common.anno.RedisCache;
 import ikun.yc.ycpage.common.aop.CountControlAspect;
 import ikun.yc.ycpage.entity.SearchEngines;
-import ikun.yc.ycpage.entity.UserConfig;
 import ikun.yc.ycpage.entity.enumeration.LinkType;
 import ikun.yc.ycpage.service.SearchEnginesService;
 import ikun.yc.ycpage.service.UserConfigService;
@@ -54,6 +55,9 @@ public class SearchEnginesController {
                 .eq(SearchEngines::getType, linkType.getCode())
                 .list();
 
+        Integer sortVersion = userConfigService.getSearchEngineSortVersion(linkType);
+        enginesList.forEach(engine -> engine.setSortVersion(sortVersion));
+
         if (enginesList.isEmpty()) return R.success(enginesList);
         // 2. 获取排序数据
         // 获取排序字段 格式 id/id/id
@@ -81,6 +85,12 @@ public class SearchEnginesController {
         return R.success(sortedList);
     }
 
+    /** 获取搜索引擎排序版本，空列表新增时也需要携带。 */
+    @GetMapping("/sortVersion")
+    public R<Integer> getSortVersion() {
+        return R.success(userConfigService.getSearchEngineSortVersion(LinkType.SEARCH));
+    }
+
     /**
      * 添加搜索引擎
      *
@@ -95,42 +105,15 @@ public class SearchEnginesController {
     @Transactional
     @CountControl(operationType = CountControlAspect.ADD, frequency = 10)
     public R<SearchEngines> addSearchEngines(@RequestBody @Valid SearchEngines searchEngines) {
+        OptimisticLockUtils.requireVersion(searchEngines.getSortVersion());
         searchEngines.setUserId(BaseContext.getCurrentId());
         boolean saveSuccess = searchEngines.insert();   // 插入,实体类继承Model的正确用法
 
         if (!saveSuccess) return R.error("添加失败！");
 
-        // 2. 获取排序数据
-        String sortField = userConfigService.getSearchEngineSort(searchEngines.getType());
-        // 检查排序字段和全部id对应
-        List<SearchEngines> sqlEngines = searchEnginesService.lambdaQuery()
-                .eq(SearchEngines::getUserId, BaseContext.getCurrentId())
-                .eq(SearchEngines::getType, searchEngines.getType().getCode())
-                .list();
-        if (!sqlEngines.isEmpty()) {
-            List<Integer> allIds = sqlEngines.stream().map(SearchEngines::getId).collect(Collectors.toList());
-            if (StringUtils.hasText(sortField)) {
-                List<Integer> sortIds = Arrays.stream(sortField.split("/"))
-                        .map(Integer::parseInt)
-                        .filter(v-> !allIds.contains(v))
-                        .collect(Collectors.toList());
-                if (!sortIds.isEmpty()) {
-                    // 在sortField后面加上/ids
-                    String noSort = sortIds.stream().map(Object::toString).collect(Collectors.joining("/"));
-                    sortField = sortField + "/" + noSort;
-                }
-            } else sortField = allIds.stream().map(Object::toString).collect(Collectors.joining("/"));
-        }
-
-        if (StringUtils.hasText(sortField)) { // 用/分割  在最后增加id 并用 / 链接
-            sortField = sortField + "/" + searchEngines.getId();
-        }else {
-            sortField = searchEngines.getId().toString();
-        }
-        userConfigService.lambdaUpdate()
-                .eq(UserConfig::getUserId, BaseContext.getCurrentId())
-                .set(searchEngines.getType().getFieldMapper(), sortField)
-                .update();
+        Integer nextSortVersion = userConfigService.appendIdToSortString(
+                BaseContext.getCurrentId(), searchEngines.getId(), searchEngines.getType(), searchEngines.getSortVersion());
+        searchEngines.setSortVersion(nextSortVersion);
 
         return R.success(searchEngines);
     }
@@ -160,16 +143,18 @@ public class SearchEnginesController {
 
         // 4. 更新记录
         updatedEngine.setUserId(userId); // 确保用户ID不被修改
+        OptimisticLockUtils.requireVersion(updatedEngine.getVersion());
         boolean updateSuccess = searchEnginesService.updateById(updatedEngine);
-        if (!updateSuccess) return R.error("更新失败！");
+        OptimisticLockUtils.requireUpdated(updateSuccess);
 
         // 5. 处理分类转换的排序逻辑（常用/不常用转换）
         if (updatedEngine.getType() != null && categoryChanged) {
-            // 从原分类排序中移除
-            userConfigService.removeIdFromSortString(userId, updatedEngine.getId(), originalEngine.getType());
-
-            // 添加到新分类排序末尾
-            userConfigService.appendIdToSortString(userId, updatedEngine.getId(), originalEngine.getType());
+            Integer nextSortVersion = userConfigService.moveIdBetweenSortStrings(
+                    userId, updatedEngine.getId(), originalEngine.getType(), updatedEngine.getType(),
+                    updatedEngine.getSortVersion()); // 分类移动和排序字段修改使用同一次 CAS
+            updatedEngine.setSortVersion(nextSortVersion);
+        } else {
+            updatedEngine.setSortVersion(userConfigService.getSearchEngineSortVersion(originalEngine.getType()));
         }
         return R.success(updatedEngine);
     }
@@ -185,7 +170,8 @@ public class SearchEnginesController {
     @DelCache    // 删除缓存
     @Transactional
     @DeleteMapping("/{id}")
-    public R<Boolean> deleteSearchEngines(@PathVariable Integer id) {
+    public R<Boolean> deleteSearchEngines(@PathVariable Integer id, @RequestParam Integer version,
+                                          @RequestParam Integer sortVersion) {
         // 1. 查询要删除的搜索引擎
         SearchEngines engine = searchEnginesService.getById(id);
         if (engine == null || !engine.getUserId().equals(BaseContext.getCurrentId())) {
@@ -193,23 +179,18 @@ public class SearchEnginesController {
         }
 
         // 2. 删除记录
-        boolean deleteSuccess = searchEnginesService.removeById(id);
-        if (!deleteSuccess) return R.error("删除失败！");
+        OptimisticLockUtils.requireVersion(version);
+        OptimisticLockUtils.requireVersion(sortVersion);
+        if (!Objects.equals(engine.getVersion(), version)) throw new ikun.yc.ycpage.common.exception.OptimisticLockException();
+        boolean deleteSuccess = searchEnginesService.remove(Wrappers.<SearchEngines>lambdaUpdate()
+                .eq(SearchEngines::getId, id)
+                .eq(SearchEngines::getUserId, BaseContext.getCurrentId())
+                .eq(SearchEngines::getVersion, version));
+        OptimisticLockUtils.requireUpdated(deleteSuccess);
 
         // 3. 从用户配置的排序字符串中移除该ID
-        String sortField = userConfigService.getSearchEngineSort(engine.getType());
-        if (StringUtils.hasText(sortField)) {
-            // 移除目标ID并重新拼接
-            String newSortField = Arrays.stream(sortField.split("/"))
-                    .filter(s -> !s.equals(id.toString()))
-                    .collect(Collectors.joining("/"));
-
-            // 3. 更新配置
-            userConfigService.lambdaUpdate()
-                    .eq(UserConfig::getUserId, BaseContext.getCurrentId())
-                    .set(engine.getType().getFieldMapper(), newSortField)
-                    .update();
-        }
+        userConfigService.removeIdFromSortString(
+                BaseContext.getCurrentId(), id, engine.getType(), sortVersion);
 
         return R.success(true);
     }
@@ -227,7 +208,8 @@ public class SearchEnginesController {
     @PostMapping("/sort")
     public R<Boolean> sortSearchEngines(
             @Pattern(regexp = "(\\d+)(/\\d+)*", message = "排序参数格式有误") String sort,
-            @RequestParam(defaultValue = "0") LinkType linkType
+            @RequestParam(defaultValue = "0") LinkType linkType,
+            @RequestParam Integer sortVersion
     ) {
         List<String> searchIds = searchEnginesService.lambdaQuery()
                 .select(SearchEngines::getId)
@@ -238,20 +220,11 @@ public class SearchEnginesController {
                 .map(se -> se.getId().toString())
                 .collect(Collectors.toList());
 
-        // 如果一一存在，那就重新设置排序字段，否则报错
+        // 如果 ID 集合完全一致且没有重复，才允许重写排序字段
         List<String> sortIds = Arrays.asList(sort.split("/"));
-        if (sortIds.size() != searchIds.size()) throw new RuntimeException("数据和云端不匹对,请刷新后重试");
-        // 使用HashSet优化存在性检查
-        Set<String> validIdSet = new HashSet<>(searchIds);
-        for (String sortId : searchIds) {
-            if (!validIdSet.contains(sortId)) throw new RuntimeException("排序数据有误,请刷新后重试");
-        }
+        OptimisticLockUtils.requireSameIds(searchIds, sortIds);
 
-        boolean update = userConfigService.lambdaUpdate()
-                .eq(UserConfig::getUserId, BaseContext.getCurrentId())
-                .set(linkType.getFieldMapper(), sort)
-                .update();
-
-        return R.success(update);
+        userConfigService.updateSearchEngineSort(BaseContext.getCurrentId(), linkType, sort, sortVersion);
+        return R.success(true);
     }
 }

@@ -21,6 +21,9 @@ public interface BookmarksService extends IService<Bookmarks> {
      */
     Integer saveBookmarks(Bookmarks bookmarks);
 
+    /** 按版本更新书签内容。 */
+    Bookmarks updateBookmark(Bookmarks bookmarks);
+
     Boolean delBookmark(Bookmarks bookmarks);
 
     Boolean dragSort(Bookmarks bookmarks);

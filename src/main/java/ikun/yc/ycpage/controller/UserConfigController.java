@@ -35,6 +35,7 @@ public class UserConfigController {
     @PutMapping
     @CountControl(operationType = CountControlAspect.UPDATE)
     public R<?> updatePageParameters(@RequestBody UserConfig userConfig) {
+        userConfig.setSortVersion(null); // 普通页面配置不允许覆盖搜索排序版本
         userConfigService.lambdaUpdate()
                 .eq(UserConfig::getUserId, BaseContext.getCurrentId())
                 .update(userConfig);

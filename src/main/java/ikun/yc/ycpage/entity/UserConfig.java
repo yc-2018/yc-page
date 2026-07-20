@@ -28,6 +28,8 @@ public class UserConfig {
     private String lowSearchSort;
     /** 首页大图标书签排序  id/id/id */
     private String homeBookmarkSort;
+    /** 搜索引擎排序版本号 */
+    private Integer sortVersion;
 
     /**
      * 获取xxx排序字段数据

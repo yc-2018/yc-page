@@ -30,4 +30,10 @@ public class LoopMemoItemTransferResponse {
 
     @ApiModelProperty("目标循环备忘最新循环次数")
     private Integer targetNumberOfRecurrences; // 目标循环备忘最新循环次数
+
+    @ApiModelProperty("源循环备忘新版本号")
+    private Integer sourceMemoVersion; // 源循环备忘新版本号
+
+    @ApiModelProperty("目标循环备忘新版本号")
+    private Integer targetMemoVersion; // 目标循环备忘新版本号
 }

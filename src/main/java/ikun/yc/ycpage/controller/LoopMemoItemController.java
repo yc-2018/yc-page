@@ -4,7 +4,9 @@ package ikun.yc.ycpage.controller;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import ikun.yc.ycpage.common.BaseContext;
+import ikun.yc.ycpage.common.OptimisticLockUtils;
 import ikun.yc.ycpage.common.R;
+import ikun.yc.ycpage.common.exception.OptimisticLockException;
 import ikun.yc.ycpage.common.exception.SqlUpdateException;
 import ikun.yc.ycpage.entity.LoopMemoItem;
 import ikun.yc.ycpage.entity.LoopMemoItemComment;
@@ -20,7 +22,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -118,13 +119,16 @@ public class LoopMemoItemController {
     @PostMapping
     @Transactional
     public R<LoopMemoItem> addLoopMemoItem(@RequestBody LoopMemoItem loopMemoItem) {
+        OptimisticLockUtils.requireVersion(loopMemoItem.getMemoVersion());
+        Memo memo = getCurrentMemo(loopMemoItem.getMemoId());
+        if (!memo.getVersion().equals(loopMemoItem.getMemoVersion())) {
+            throw new OptimisticLockException();
+        }
         loopMemoItemService.save(loopMemoItem);
-        memoService.update(Wrappers.<Memo>lambdaUpdate()
-                .eq(Memo::getId, loopMemoItem.getMemoId())
-                .eq(Memo::getUserId, BaseContext.getCurrentId())
-                .set(Memo::getUpdateTime, LocalDateTime.now())  // 更新时间
-                .setSql("number_of_recurrences = (select count(*) from loop_memo_item where memo_id = " + loopMemoItem.getMemoId() + ")")
-        );
+        memo.setNumberOfRecurrences(Math.toIntExact(loopMemoItemService.lambdaQuery()
+                .eq(LoopMemoItem::getMemoId, loopMemoItem.getMemoId()).count()));
+        OptimisticLockUtils.requireUpdated(memoService.updateById(memo));
+        loopMemoItem.setMemoVersion(memo.getVersion());
         return R.success(loopMemoItem);
     }
 
@@ -132,11 +136,13 @@ public class LoopMemoItemController {
     /** 更新循环备忘录 */
     @PutMapping
     public R<LoopMemoItem> updateLoopMemoItem(@RequestBody LoopMemoItem loopMemoItem) {
+        OptimisticLockUtils.requireVersion(loopMemoItem.getVersion());
+        getCurrentMemo(loopMemoItem.getMemoId());
         boolean b = loopMemoItemService.update(loopMemoItem, Wrappers.<LoopMemoItem>lambdaUpdate()
                 .eq(LoopMemoItem::getId, loopMemoItem.getId())
                 .eq(LoopMemoItem::getMemoId, loopMemoItem.getMemoId())
         );
-        if (!b) throw new SqlUpdateException("修改失败");
+        OptimisticLockUtils.requireUpdated(b);
         return R.success(loopMemoItem);
     }
 
@@ -149,12 +155,21 @@ public class LoopMemoItemController {
      */
     @Transactional
     @DeleteMapping("/{memoId}/{loopId}")
-    public R<Boolean> deleteLoopMemoItem(@PathVariable String memoId, @PathVariable Integer loopId) {
+    public R<Boolean> deleteLoopMemoItem(@PathVariable Integer memoId, @PathVariable Integer loopId,
+                                         @RequestParam Integer version, @RequestParam Integer memoVersion) {
+        OptimisticLockUtils.requireVersion(version);
+        OptimisticLockUtils.requireVersion(memoVersion);
+        Memo memo = getCurrentMemo(memoId);
+        if (!memo.getVersion().equals(memoVersion)) {
+            throw new OptimisticLockException();
+        }
         // 删除循环备忘项
-        loopMemoItemService.remove(Wrappers.<LoopMemoItem>lambdaUpdate()
+        boolean removed = loopMemoItemService.remove(Wrappers.<LoopMemoItem>lambdaUpdate()
                 .eq(LoopMemoItem::getId, loopId)
                 .eq(LoopMemoItem::getMemoId, memoId)
+                .eq(LoopMemoItem::getVersion, version)
         );
+        OptimisticLockUtils.requireUpdated(removed);
 
         // 删除循环备忘项下的第三层评论
         loopMemoItemCommentService.remove(Wrappers.<LoopMemoItemComment>lambdaUpdate()
@@ -163,13 +178,23 @@ public class LoopMemoItemController {
         );
 
         // 待办减一
-        boolean b = memoService.lambdaUpdate()
-                .eq(Memo::getUserId, BaseContext.getCurrentId())
-                .eq(Memo::getId, memoId)
-                .setSql("number_of_recurrences = (select count(*) from loop_memo_item where memo_id = " + memoId + ")")
-                .update();
+        memo.setNumberOfRecurrences(Math.toIntExact(loopMemoItemService.lambdaQuery()
+                .eq(LoopMemoItem::getMemoId, memoId).count()));
+        boolean b = memoService.updateById(memo);
+        OptimisticLockUtils.requireUpdated(b);
 
         return R.success(b);
+    }
+
+    /** 查询并校验当前用户的备忘录。 */
+    private Memo getCurrentMemo(Integer memoId) {
+        Memo memo = memoService.lambdaQuery()
+                .select(Memo::getId, Memo::getUserId, Memo::getVersion, Memo::getNumberOfRecurrences)
+                .eq(Memo::getId, memoId)
+                .eq(Memo::getUserId, BaseContext.getCurrentId())
+                .one();
+        if (memo == null) throw new SqlUpdateException("备忘录不存在");
+        return memo;
     }
 
 }

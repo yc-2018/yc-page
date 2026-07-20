@@ -35,6 +35,14 @@ public class LoopMemoItem implements Serializable {
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
 
+    /** 乐观锁版本号 */
+    @Version
+    private Integer version;
+
+    /** 所属备忘录乐观锁版本号，仅用于请求传输 */
+    @TableField(exist = false)
+    private Integer memoVersion;
+
     @ApiModelProperty(value = "备忘主键")
     private Integer memoId;
 

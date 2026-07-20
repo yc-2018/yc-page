@@ -13,7 +13,18 @@ public interface UserConfigService extends IService<UserConfig> {
 
     String getSearchEngineSort(LinkType linkType);
 
-    void removeIdFromSortString(String userId, Integer id, LinkType linkType);
+    /** 获取搜索引擎排序版本号。 */
+    Integer getSearchEngineSortVersion(LinkType linkType);
 
-    void appendIdToSortString(String userId, Integer id, LinkType linkType);
+    /** 按版本更新搜索引擎排序。 */
+    Integer updateSearchEngineSort(String userId, LinkType linkType, String sort, Integer version);
+
+    /** 按版本从排序字符串移除搜索引擎，并返回新版本。 */
+    Integer removeIdFromSortString(String userId, Integer id, LinkType linkType, Integer version);
+
+    /** 按版本把搜索引擎追加到排序末尾，并返回新版本。 */
+    Integer appendIdToSortString(String userId, Integer id, LinkType linkType, Integer version);
+
+    /** 按版本把搜索引擎从一个分类移动到另一个分类，并返回新版本。 */
+    Integer moveIdBetweenSortStrings(String userId, Integer id, LinkType sourceType, LinkType targetType, Integer version);
 }

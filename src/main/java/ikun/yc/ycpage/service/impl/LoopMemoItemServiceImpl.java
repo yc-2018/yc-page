@@ -7,6 +7,7 @@ import ikun.yc.ycpage.entity.Memo;
 import ikun.yc.ycpage.entity.dto.LoopMemoItemTransferRequest;
 import ikun.yc.ycpage.entity.dto.LoopMemoItemTransferResponse;
 import ikun.yc.ycpage.common.BaseContext;
+import ikun.yc.ycpage.common.OptimisticLockUtils;
 import ikun.yc.ycpage.common.exception.FieldIsNullException;
 import ikun.yc.ycpage.common.exception.ParamException;
 import ikun.yc.ycpage.mapper.LoopMemoItemMapper;
@@ -52,8 +53,14 @@ public class LoopMemoItemServiceImpl extends ServiceImpl<LoopMemoItemMapper, Loo
     @Transactional
     public LoopMemoItemTransferResponse transferLoopMemoItems(LoopMemoItemTransferRequest request) {
         validateTransferRequest(request);
+        OptimisticLockUtils.requireVersion(request.getSourceMemoVersion());
+        OptimisticLockUtils.requireVersion(request.getTargetMemoVersion());
         Memo sourceMemo = getCurrentUserLoopMemo(request.getSourceMemoId()); // 源循环备忘
         Memo targetMemo = getCurrentUserLoopMemo(request.getTargetMemoId()); // 目标循环备忘
+        if (!request.getSourceMemoVersion().equals(sourceMemo.getVersion())
+                || !request.getTargetMemoVersion().equals(targetMemo.getVersion())) {
+            throw new ikun.yc.ycpage.common.exception.OptimisticLockException();
+        }
         List<Integer> loopItemIds = request.getLoopItemIds(); // 要转移的循环记录主键列表
         Set<Integer> distinctLoopItemIds = new HashSet<>(loopItemIds); // 去重后的循环记录主键
 
@@ -76,8 +83,8 @@ public class LoopMemoItemServiceImpl extends ServiceImpl<LoopMemoItemMapper, Loo
                 .set(LoopMemoItemComment::getMemoId, targetMemo.getId())
         );
 
-        int sourceCount = refreshMemoLoopCount(sourceMemo.getId()); // 源循环备忘最新次数
-        int targetCount = refreshMemoLoopCount(targetMemo.getId()); // 目标循环备忘最新次数
+        int sourceCount = refreshMemoLoopCount(sourceMemo, request.getSourceMemoVersion()); // 源循环备忘最新次数
+        int targetCount = refreshMemoLoopCount(targetMemo, request.getTargetMemoVersion()); // 目标循环备忘最新次数
 
         LoopMemoItemTransferResponse response = new LoopMemoItemTransferResponse(); // 转移响应
         response.setSourceMemoId(sourceMemo.getId());
@@ -85,6 +92,8 @@ public class LoopMemoItemServiceImpl extends ServiceImpl<LoopMemoItemMapper, Loo
         response.setMovedCount(distinctLoopItemIds.size());
         response.setSourceNumberOfRecurrences(sourceCount);
         response.setTargetNumberOfRecurrences(targetCount);
+        response.setSourceMemoVersion(sourceMemo.getVersion());
+        response.setTargetMemoVersion(targetMemo.getVersion());
         return response;
     }
 
@@ -110,7 +119,7 @@ public class LoopMemoItemServiceImpl extends ServiceImpl<LoopMemoItemMapper, Loo
      */
     private Memo getCurrentUserLoopMemo(Integer memoId) {
         Memo memo = memoService.lambdaQuery()
-                .select(Memo::getId, Memo::getItemType)
+                .select(Memo::getId, Memo::getItemType, Memo::getUserId, Memo::getVersion)
                 .eq(Memo::getId, memoId)
                 .eq(Memo::getUserId, BaseContext.getCurrentId())
                 .lt(Memo::getCompleted, DELETED_COMPLETED_LIMIT)
@@ -125,16 +134,14 @@ public class LoopMemoItemServiceImpl extends ServiceImpl<LoopMemoItemMapper, Loo
      * @param memoId 循环备忘主键
      * @return 最新循环次数
      */
-    private int refreshMemoLoopCount(Integer memoId) {
+    private int refreshMemoLoopCount(Memo memo, Integer expectedVersion) {
+        Integer memoId = memo.getId();
         int count = Math.toIntExact(this.lambdaQuery()
                 .eq(LoopMemoItem::getMemoId, memoId)
                 .count()); // 最新循环次数
-        memoService.lambdaUpdate()
-                .eq(Memo::getUserId, BaseContext.getCurrentId())
-                .eq(Memo::getId, memoId)
-                .set(Memo::getUpdateTime, LocalDateTime.now())
-                .set(Memo::getNumberOfRecurrences, count)
-                .update();
+        if (!expectedVersion.equals(memo.getVersion())) throw new ikun.yc.ycpage.common.exception.OptimisticLockException();
+        memo.setNumberOfRecurrences(count);
+        OptimisticLockUtils.requireUpdated(memoService.updateById(memo));
         return count;
     }
 }

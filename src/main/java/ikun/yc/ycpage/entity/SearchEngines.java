@@ -29,8 +29,16 @@ public class SearchEngines extends Model<SearchEngines> implements Serializable 
     private static final long serialVersionUID = 1L;
 
     /** 搜索引擎ID  */
-    @TableId(type = IdType.AUTO)
+	@TableId(type = IdType.AUTO)
 	private Integer id;
+
+    /** 乐观锁版本号 */
+    @Version
+    private Integer version;
+
+    /** 用户搜索排序版本号，仅用于列表响应 */
+    @TableField(exist = false)
+    private Integer sortVersion;
 
     /** 搜索引擎URL  */
     @Pattern(regexp = "^https?://.*$", message = "URL格式不正确")

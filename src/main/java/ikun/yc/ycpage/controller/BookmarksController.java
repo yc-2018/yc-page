@@ -95,20 +95,12 @@ public class BookmarksController {
     @DelCache   // 删除缓存
     @CountControl(operationType = CountControlAspect.UPDATE, frequency = 10)  // 一分钟请求超出10次，禁用1分钟
     @PutMapping
-    public R<Boolean> updateBookmarks(@RequestBody BookmarksDto bookmarksDto) {
+    public R<Bookmarks> updateBookmarks(@RequestBody BookmarksDto bookmarksDto) {
         if (!(Objects.equals(bookmarksDto.getType(), BOOKMARK_GROUP) ||
               Objects.equals(bookmarksDto.getType(), BOOKMARK)))
             throw new ParamException("参数有误");
 
-        return R.success(
-            bookmarksService.lambdaUpdate()
-                .eq(Bookmarks::getId, bookmarksDto.getId())
-                .eq(Bookmarks::getUserId, BaseContext.getCurrentId())
-                .set(Bookmarks::getName, bookmarksDto.getName())
-                .set(Bookmarks::getUrl, bookmarksDto.getUrl())
-                .set(Bookmarks::getIcon, bookmarksDto.getIcon())
-                .update()
-        );
+        return R.success(bookmarksService.updateBookmark(bookmarksDto.toBookmarks()));
     }
 
 

@@ -17,6 +17,9 @@ public class BookmarksDto{
     /** 书签ID */
     private Integer id;
 
+    /** 乐观锁版本号 */
+    private Integer version;
+
     /** 名称 */
     private String name;
 
@@ -35,6 +38,7 @@ public class BookmarksDto{
     public Bookmarks toBookmarks(){
         return new Bookmarks()
                 .setId(id)
+                .setVersion(version)
                 .setName(name)
                 .setUrl(url)
                 .setSort(sort)

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.R;
+import ikun.yc.ycpage.common.OptimisticLockUtils;
 import ikun.yc.ycpage.entity.Memo;
 import ikun.yc.ycpage.entity.dto.MemoIncompleteCountDto;
 import ikun.yc.ycpage.mapper.MemoMapper;
@@ -75,6 +76,7 @@ public class MemoServiceImpl extends ServiceImpl<MemoMapper, Memo> implements Me
     @Transactional
     @Override
     public boolean updateItem(Memo memo) {
+        OptimisticLockUtils.requireVersion(memo.getVersion());
         memo.validateImgArr(); // 校验备忘图片字段长度
         if (Objects.equals(memo.getCompleted(), 1) && Objects.isNull(memo.getOkTime())) { // 完成没提供时间，选择当前时间
             memo.setOkTime(LocalDateTime.now());
@@ -95,13 +97,30 @@ public class MemoServiceImpl extends ServiceImpl<MemoMapper, Memo> implements Me
                 .eq(Memo::getId, memo.getId())
                 .eq(Memo::getUserId, memo.getUserId())
         );
-        if (!update) return false;
+        OptimisticLockUtils.requireUpdated(update);
         if (memo.getTagIds() != null) {
             Integer tagItemType = memo.getItemType() == null ? oldMemo.getItemType() : memo.getItemType(); // 标签对应的备忘类型
             memoTagRelationService.saveMemoTags(memo.getId(), tagItemType, memo.getTagIds());
         } else if (memo.getItemType() != null) {
             memoTagRelationService.clearMemoTags(memo.getId());
         }
+        return true;
+    }
+
+    /** 按版本逻辑删除当前用户备忘录。 */
+    @Transactional
+    @Override
+    public boolean deleteItem(Integer id, Integer version) {
+        OptimisticLockUtils.requireVersion(version);
+        boolean updated = this.lambdaUpdate()
+                .eq(Memo::getId, id)
+                .eq(Memo::getUserId, BaseContext.getCurrentId())
+                .eq(Memo::getVersion, version)
+                .lt(Memo::getCompleted, 10)
+                .setSql("completed = completed + 10")
+                .setSql("version = version + 1")
+                .update(); // CAS 逻辑删除结果
+        OptimisticLockUtils.requireUpdated(updated);
         return true;
     }
 

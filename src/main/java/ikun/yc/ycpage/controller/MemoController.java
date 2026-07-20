@@ -121,13 +121,13 @@ public class MemoController {
     @Log
     @PutMapping
     @CountControl(operationType = CountControlAspect.UPDATE)  // 一分钟请求超出5次，禁用1分钟
-    public R<Boolean> updateItem(@RequestBody Memo memo) {
+    public R<Memo> updateItem(@RequestBody Memo memo) {
 
         memo.toReviseInfo();   // 不允许更新的字段就不允许更新
 
         boolean updateSuccess = memoService.updateItem(memo);
 
-        return updateSuccess ? R.success(true) : R.error("修改失败");
+        return updateSuccess ? R.success(memo) : R.error("修改失败");
     }
 
     /**
@@ -138,11 +138,7 @@ public class MemoController {
     @Log
     @CountControl(operationType = CountControlAspect.DELETE)
     @DeleteMapping("/{id}")
-    public R<?> deleteItem(@PathVariable String id) {
-        return memoService.lambdaUpdate()
-            .eq(Memo::getId, id)
-            .eq(Memo::getUserId, BaseContext.getCurrentId())
-            .setSql("completed = completed + 10")
-            .update() ? R.success(true) : R.error("删除失败");
+    public R<Boolean> deleteItem(@PathVariable Integer id, @RequestParam Integer version) {
+        return R.success(memoService.deleteItem(id, version));
     }
 }

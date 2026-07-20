@@ -37,6 +37,10 @@ public class Memo extends Model<Memo> implements Serializable {
     @TableId(type = IdType.AUTO)
     private Integer id;
 
+    /** 乐观锁版本号 */
+    @Version
+    private Integer version;
+
     /** 用户ID */
     @JsonIgnore
     @TableField(select = false)

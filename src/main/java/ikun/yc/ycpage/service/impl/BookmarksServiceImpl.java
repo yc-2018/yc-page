@@ -1,7 +1,10 @@
 package ikun.yc.ycpage.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import ikun.yc.ycpage.common.BaseContext;
+import ikun.yc.ycpage.common.OptimisticLockUtils;
+import ikun.yc.ycpage.common.exception.OptimisticLockException;
 import ikun.yc.ycpage.common.exception.ParamException;
 import ikun.yc.ycpage.entity.Bookmarks;
 import ikun.yc.ycpage.mapper.BookmarksMapper;
@@ -40,11 +43,15 @@ public class BookmarksServiceImpl extends ServiceImpl<BookmarksMapper, Bookmarks
     public Integer saveBookmarks(Bookmarks bookmarks) {
         String userId = BaseContext.getCurrentId();
         bookmarks.setUserId(userId);
+        OptimisticLockUtils.requireVersion(bookmarks.getParentVersion());
         // 如果是书签，判断书签组是否存在 是否是当前用户的
         if (Objects.equals(bookmarks.getType(), BOOKMARK)){
             Bookmarks bookmarkGroup = this.getById(Integer.parseInt(bookmarks.getSort()));
             if (Objects.isNull(bookmarkGroup)|| !bookmarkGroup.getUserId().equals(userId)){
                 throw new ParamException("书签组不存在");
+            }
+            if (!Objects.equals(bookmarkGroup.getVersion(), bookmarks.getParentVersion())) {
+                throw new OptimisticLockException();
             }
             this.save(bookmarks);
 
@@ -52,16 +59,21 @@ public class BookmarksServiceImpl extends ServiceImpl<BookmarksMapper, Bookmarks
             bookmarkGroup.setSort(StringUtils.hasText(bookmarkGroup.getSort()) ?
                     bookmarkGroup.getSort() + "/" + bookmarks.getId() : bookmarks.getId().toString()
             );
-            this.updateById(bookmarkGroup);
+            OptimisticLockUtils.requireUpdated(this.updateById(bookmarkGroup));
             // 如果增加的是书签组
         }else if (Objects.equals(bookmarks.getType(), BOOKMARK_GROUP)){
             bookmarks.setSort(null).insert();   // 保存书签组 但是新的是不会有排序字段的
-
-            this.lambdaUpdate()
-                .eq(Bookmarks::getUserId, userId)
-                .eq(Bookmarks::getType, BOOKMARK_ROOT)
-                .setSql("sort = CASE WHEN sort IS NULL OR sort = '' THEN " + bookmarks.getId() + " ELSE CONCAT(sort, '/', " + bookmarks.getId() + ") END")
-                .update();
+            Bookmarks bookmarkRoot = this.lambdaQuery()
+                    .eq(Bookmarks::getUserId, userId)
+                    .eq(Bookmarks::getType, BOOKMARK_ROOT)
+                    .one(); // 当前用户的书签根排序节点
+            if (bookmarkRoot == null || !Objects.equals(bookmarkRoot.getVersion(), bookmarks.getParentVersion())) {
+                throw new OptimisticLockException();
+            }
+            bookmarkRoot.setSort(StringUtils.hasText(bookmarkRoot.getSort())
+                    ? bookmarkRoot.getSort() + "/" + bookmarks.getId()
+                    : bookmarks.getId().toString());
+            OptimisticLockUtils.requireUpdated(this.updateById(bookmarkRoot));
         }
         return bookmarks.getId();
     }
@@ -76,19 +88,31 @@ public class BookmarksServiceImpl extends ServiceImpl<BookmarksMapper, Bookmarks
     @Transactional
     @Override
     public Boolean delBookmark(Bookmarks bookmarks) {
+        OptimisticLockUtils.requireVersion(bookmarks.getVersion());
+        OptimisticLockUtils.requireVersion(bookmarks.getParentVersion());
+        Bookmarks currentBookmark = this.getById(bookmarks.getId());
+        if (currentBookmark == null || !Objects.equals(currentBookmark.getUserId(), bookmarks.getUserId())
+                || !Objects.equals(currentBookmark.getVersion(), bookmarks.getVersion())) {
+            throw new OptimisticLockException();
+        }
         if (Objects.equals(bookmarks.getType(), BOOKMARK)){
             // 如果是书签，判断书签组是否存在 是否是当前用户的
             Bookmarks bookmarkGroup = this.getById(Integer.parseInt(bookmarks.getSort()));
             if (Objects.isNull(bookmarkGroup)|| !bookmarkGroup.getUserId().equals(bookmarks.getUserId()))
                 throw new ParamException("参数存在错误,或页面数据不是最新的！");
+            if (!Objects.equals(bookmarkGroup.getVersion(), bookmarks.getParentVersion())) {
+                throw new OptimisticLockException();
+            }
             // 书签组排序字段删除当前要删除的书签
             String newSort = reduceSortString(bookmarkGroup.getSort(), bookmarks.getId());
-            this.lambdaUpdate()
-                .eq(Bookmarks::getUserId, bookmarkGroup.getUserId())
-                .eq(Bookmarks::getId, bookmarkGroup.getId())
-                .set(Bookmarks::getSort, newSort)
-                .update();
-            return this.removeById(bookmarks.getId());
+            bookmarkGroup.setSort(newSort);
+            OptimisticLockUtils.requireUpdated(this.updateById(bookmarkGroup));
+            boolean removed = this.remove(new LambdaQueryWrapper<Bookmarks>()
+                    .eq(Bookmarks::getId, bookmarks.getId())
+                    .eq(Bookmarks::getUserId, bookmarks.getUserId())
+                    .eq(Bookmarks::getVersion, bookmarks.getVersion()));
+            OptimisticLockUtils.requireUpdated(removed);
+            return true;
 
             // 如果删除的是书签组
         }else if (Objects.equals(bookmarks.getType(), BOOKMARK_GROUP)){
@@ -96,21 +120,27 @@ public class BookmarksServiceImpl extends ServiceImpl<BookmarksMapper, Bookmarks
                 .eq(Bookmarks::getUserId, BaseContext.getCurrentId())
                 .eq(Bookmarks::getType, BOOKMARK_ROOT)
                 .one();
+            if (bookmarkRoot == null || !Objects.equals(bookmarkRoot.getVersion(), bookmarks.getParentVersion())) {
+                throw new OptimisticLockException();
+            }
             String newSort = reduceSortString(bookmarkRoot.getSort(), bookmarks.getId());
             // 更新根排序
-            this.lambdaUpdate()
-                .eq(Bookmarks::getId, bookmarkRoot.getId())
-                .set(Bookmarks::getSort, newSort)
-                .update();
+            bookmarkRoot.setSort(newSort);
+            OptimisticLockUtils.requireUpdated(this.updateById(bookmarkRoot));
 
-            // 删除书签组和它的子书签
-            return this.lambdaUpdate()
+            // 删除书签组的子书签
+            this.lambdaUpdate()
                 .eq(Bookmarks::getUserId, bookmarkRoot.getUserId())
                 .eq(Bookmarks::getType, BOOKMARK)
                 .eq(Bookmarks::getSort, bookmarks.getId().toString())
-                .or()
-                .eq(Bookmarks::getId, bookmarks.getId())
                 .remove();
+
+            boolean removed = this.remove(new LambdaQueryWrapper<Bookmarks>()
+                    .eq(Bookmarks::getId, bookmarks.getId())
+                    .eq(Bookmarks::getUserId, bookmarks.getUserId())
+                    .eq(Bookmarks::getVersion, bookmarks.getVersion()));
+            OptimisticLockUtils.requireUpdated(removed);
+            return true;
 
         }
         return null;
@@ -126,17 +156,40 @@ public class BookmarksServiceImpl extends ServiceImpl<BookmarksMapper, Bookmarks
      */
     @Override
     public Boolean dragSort(Bookmarks bookmarks) {
+        OptimisticLockUtils.requireVersion(bookmarks.getVersion());
         Bookmarks sqlBookmark = bookmarks.selectById();
         // 判断书签是否存在 且是当前用户的
         if (Objects.isNull(sqlBookmark) || !sqlBookmark.getUserId().equals(bookmarks.getUserId()))
             throw new ParamException("书签组不存在");
+        if (!Objects.equals(sqlBookmark.getVersion(), bookmarks.getVersion()))
+            throw new OptimisticLockException();
 
         // 排序的数据只是位置不一样
-        if (!new HashSet<>(Arrays.asList(bookmarks.getSort().split("/"))).equals(
-             new HashSet<>(Arrays.asList(sqlBookmark.getSort().split("/")))))
-            throw new ParamException("本地数据非最新,请刷新后重试。");
+        List<String> submittedIds = Arrays.asList(bookmarks.getSort().split("/")); // 客户端排序ID
+        List<String> currentIds = Arrays.asList(sqlBookmark.getSort().split("/")); // 云端排序ID
+        OptimisticLockUtils.requireSameIds(currentIds, submittedIds);
 
-        return sqlBookmark.setSort(bookmarks.getSort()).updateById();
+        boolean updated = sqlBookmark.setSort(bookmarks.getSort()).updateById();
+        OptimisticLockUtils.requireUpdated(updated);
+        return true;
+    }
+
+    /** 按版本更新书签内容。 */
+    @Override
+    public Bookmarks updateBookmark(Bookmarks bookmarks) {
+        OptimisticLockUtils.requireVersion(bookmarks.getVersion());
+        Bookmarks current = this.lambdaQuery()
+                .eq(Bookmarks::getId, bookmarks.getId())
+                .eq(Bookmarks::getUserId, BaseContext.getCurrentId())
+                .one();
+        if (current == null || !Objects.equals(current.getVersion(), bookmarks.getVersion())) {
+            throw new OptimisticLockException();
+        }
+        current.setName(bookmarks.getName())
+                .setUrl(bookmarks.getUrl())
+                .setIcon(bookmarks.getIcon());
+        OptimisticLockUtils.requireUpdated(this.updateById(current));
+        return current;
     }
 
     /**

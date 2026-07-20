@@ -3,9 +3,9 @@ package ikun.yc.ycpage.controller;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import ikun.yc.ycpage.common.BaseContext;
+import ikun.yc.ycpage.common.OptimisticLockUtils;
 import ikun.yc.ycpage.common.R;
 import ikun.yc.ycpage.common.exception.FieldIsNullException;
-import ikun.yc.ycpage.common.exception.SqlUpdateException;
 import ikun.yc.ycpage.entity.LoopMemoItem;
 import ikun.yc.ycpage.entity.LoopMemoItemComment;
 import ikun.yc.ycpage.entity.Memo;
@@ -83,13 +83,14 @@ public class LoopMemoItemCommentController {
         if (comment.getId() == null) throw new FieldIsNullException("评论id不能为空");
         if (comment.getMemoId() == null) throw new FieldIsNullException("备忘录不能为空");
         if (comment.getLoopItemId() == null) throw new FieldIsNullException("循环记录不能为空");
+        OptimisticLockUtils.requireVersion(comment.getVersion());
         getCurrentUserLoopMemoItem(comment.getLoopItemId(), comment.getMemoId());
         boolean b = loopMemoItemCommentService.update(comment, Wrappers.<LoopMemoItemComment>lambdaUpdate()
                 .eq(LoopMemoItemComment::getId, comment.getId())
                 .eq(LoopMemoItemComment::getMemoId, comment.getMemoId())
                 .eq(LoopMemoItemComment::getLoopItemId, comment.getLoopItemId())
         );
-        if (!b) throw new SqlUpdateException("修改失败");
+        OptimisticLockUtils.requireUpdated(b);
         return R.success(comment);
     }
 
@@ -105,14 +106,18 @@ public class LoopMemoItemCommentController {
     public R<Boolean> deleteLoopMemoItemComment(
             @PathVariable Integer memoId,
             @PathVariable Integer loopItemId,
-            @PathVariable Integer commentId) {
+            @PathVariable Integer commentId,
+            @RequestParam Integer version) {
+        OptimisticLockUtils.requireVersion(version);
         getCurrentUserLoopMemoItem(loopItemId, memoId);
         boolean b = loopMemoItemCommentService.remove(Wrappers.<LoopMemoItemComment>lambdaUpdate()
                 .eq(LoopMemoItemComment::getId, commentId)
                 .eq(LoopMemoItemComment::getMemoId, memoId)
                 .eq(LoopMemoItemComment::getLoopItemId, loopItemId)
+                .eq(LoopMemoItemComment::getVersion, version)
         );
-        return R.success(b);
+        OptimisticLockUtils.requireUpdated(b);
+        return R.success(true);
     }
 
     /**

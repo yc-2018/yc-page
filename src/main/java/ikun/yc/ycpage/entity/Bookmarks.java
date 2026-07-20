@@ -2,7 +2,9 @@ package ikun.yc.ycpage.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.Version;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
@@ -29,6 +31,14 @@ public class Bookmarks extends Model<Bookmarks> implements Serializable {
   /** 书签ID */
   @TableId(type = IdType.AUTO)
   private Integer id;
+
+  /** 乐观锁版本号 */
+  @Version
+  private Integer version;
+
+  /** 父排序节点乐观锁版本号，仅用于新增和删除请求。 */
+  @TableField(exist = false)
+  private Integer parentVersion;
 
   /** 用户ID */
   @JsonIgnore
