@@ -7,6 +7,7 @@ import ikun.yc.ycpage.common.BaseContext;
 import ikun.yc.ycpage.common.OptimisticLockUtils;
 import ikun.yc.ycpage.common.R;
 import ikun.yc.ycpage.common.exception.OptimisticLockException;
+import ikun.yc.ycpage.common.exception.ParamException;
 import ikun.yc.ycpage.common.exception.SqlUpdateException;
 import ikun.yc.ycpage.entity.LoopMemoItem;
 import ikun.yc.ycpage.entity.LoopMemoItemComment;
@@ -19,9 +20,11 @@ import ikun.yc.ycpage.service.LoopMemoItemService;
 import ikun.yc.ycpage.service.MemoService;
 import io.jsonwebtoken.lang.Strings;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -61,6 +64,8 @@ public class LoopMemoItemController {
      * @param q        搜索关键字
      * @param page     第几页
      * @param pageSize 页面大小
+     * @param startDate 打卡开始日期
+     * @param endDate   打卡结束日期
      * @param itemId   待办id
      * @return 待办时间列表
      * @author ChenGuangLong
@@ -71,10 +76,17 @@ public class LoopMemoItemController {
             @RequestParam(required = false) String q,
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "20") Integer pageSize,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @PathVariable Integer itemId) {
+        if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
+            throw new ParamException("打卡开始日期不能晚于结束日期");
+        }
         Page<LoopMemoItem> result = loopMemoItemService.lambdaQuery()
                 .eq(LoopMemoItem::getMemoId, itemId)
                 .like(Strings.hasText(q), LoopMemoItem::getLoopText, q)
+                .ge(startDate != null, LoopMemoItem::getMemoDate, startDate == null ? null : startDate.atStartOfDay())
+                .lt(endDate != null, LoopMemoItem::getMemoDate, endDate == null ? null : endDate.plusDays(1).atStartOfDay())
                 .orderByDesc(LoopMemoItem::getMemoDate)
                 .page(new Page<>(page, pageSize))
         ;
