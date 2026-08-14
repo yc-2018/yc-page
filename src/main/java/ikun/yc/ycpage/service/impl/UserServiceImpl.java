@@ -20,7 +20,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -63,20 +63,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 return R.error("您因频繁登录 目前已被封禁1小时，请稍后再试");
 
             // 增加登录尝试次数，如果 attemptKey 不存在，则 Redis 会创建它值为 1然后返回 本来存在就会自增
-            Long attempts = redisTemplate.opsForValue().increment(attemptKey);
-            if (attempts!=null) {   // 其实不可能等于null,只是好烦这个 idea代码提示就先写上了。
-                if (attempts == 1)
-                    // 如果是第一次尝试，设置过期时间为1分钟
-                    redisTemplate.expire(attemptKey, 1, TimeUnit.MINUTES);
+            long attempts = redisTemplate.opsForValue().increment(attemptKey);
 
-                // 检查尝试次数是否超过限制
-                if (attempts > 3) {
-                    // 封禁IP一个小时
-                    redisTemplate.opsForValue().set(banKey, "banned", 1, TimeUnit.HOURS);
-                    redisTemplate.delete(attemptKey); // 重置尝试次数
-                    return R.error("尝试次数过多，您已被封禁");
-                }
+            if (attempts == 1)
+                // 如果是第一次尝试，设置过期时间为1分钟
+                redisTemplate.expire(attemptKey, 1, TimeUnit.MINUTES);
+
+            // 检查尝试次数是否超过限制
+            if (attempts > 3) {
+                // 封禁IP一个小时
+                redisTemplate.opsForValue().set(banKey, "banned", 1, TimeUnit.HOURS);
+                redisTemplate.delete(attemptKey); // 重置尝试次数
+                return R.error("尝试次数过多，您已被封禁");
             }
+
 
             // ---------------正常登录逻辑--------------
             // 校验验证码
@@ -98,15 +98,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
             log.info("用户：{},登录", userId);
             User loginUser = user;     // 不重新赋值会报错 有点神奇
-            String generateJwt = JwtUtils.generateJwt(new HashMap<String, Object>() {{
+            String generateJwt = JwtUtils.generateJwt(new HashMap<>() {{
                 put("userId", userId);
                 put("username", loginUser.getUsername());
                 put("avatar", loginUser.getAvatar());
             }}, expireTime);
             return R.success(generateJwt);
         } catch (Exception e) {
-            log.error("登录异常失败", e);
-            throw new LoginException("😢登录居然失败，这种情况非常罕见，请联系站长或请重新试试");
+            throw new LoginException("😢登录居然失败，这种情况非常罕见，请联系站长或请重新试试", e);
         }
     }
 
@@ -121,7 +120,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         User user = this.getById(userId);           // 当前登录用户信息
         if (user == null) return R.error("用户不存在");
 
-        String newJwt = JwtUtils.generateJwt(new HashMap<String, Object>() {{
+        String newJwt = JwtUtils.generateJwt(new HashMap<>() {{
             put("userId", userId);
             put("username", user.getUsername());
             put("avatar", user.getAvatar());

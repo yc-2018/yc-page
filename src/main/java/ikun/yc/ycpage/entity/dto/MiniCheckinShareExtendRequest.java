@@ -2,7 +2,7 @@ package ikun.yc.ycpage.entity.dto;
 
 import lombok.Data;
 
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 
 /**
  * 小程序打卡分享续期请求

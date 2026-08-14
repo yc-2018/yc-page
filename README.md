@@ -21,7 +21,6 @@ YcPage 是一个基于 Spring Boot 的多功能后端服务项目，旨在为用
 - **数据库**：MySQL
 - **缓存**：Redis
 - **安全**：JWT + Spring Security
-- **接口文档**：Swagger UI
 - **日志记录**：AOP + Logback
 - **其他工具**：Lombok、Validation、RedisTemplate、RestTemplate
 
@@ -69,13 +68,12 @@ YcPage 是一个基于 Spring Boot 的多功能后端服务项目，旨在为用
 ### 部署建议
 - 使用 `application.properties` 配置数据库、Redis、JWT 等参数
 - 使用 `pom.xml` 构建项目，支持 Maven 打包部署
-- 可部署于任意支持 Java 11+ 的服务器环境（如 Tomcat、Jetty、Docker）
+- 运行和构建均需要 Java 21；部署前必须配置至少 32 字节的 `YC_JWT_SECRET`
 
 ---
 
 ## 📚 开发文档
 
-- **Swagger 接口文档**：启动项目后访问 `/swagger-ui.html` 查看所有 API 接口
 - **日志记录**：所有操作日志记录在 `operate_log` 表中
 - **缓存机制**：使用 Redis 缓存书签和搜索引擎数据，提升访问效率
 - **权限控制**：通过 JWT 实现 Token 认证，部分接口需登录访问

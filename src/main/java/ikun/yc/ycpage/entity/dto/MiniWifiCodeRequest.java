@@ -2,8 +2,8 @@ package ikun.yc.ycpage.entity.dto;
 
 import lombok.Data;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 /**
  * 小程序 WiFi 码生成请求参数

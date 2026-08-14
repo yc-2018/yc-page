@@ -4,8 +4,6 @@ package ikun.yc.ycpage.controller;
 import ikun.yc.ycpage.common.anno.PassToken;
 import ikun.yc.ycpage.entity.dto.WechatDto;
 import ikun.yc.ycpage.service.WechatService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,7 +22,6 @@ import java.util.Arrays;
 @PassToken  // 忽略token验证
 @RestController
 @RequiredArgsConstructor
-@Api(tags = "接收微信接口")
 @RequestMapping("/接收微信接口")
 public class WechatController {
     @Value("${wechat.token}")
@@ -47,7 +44,6 @@ public class WechatController {
      * @param echostr   随机字符串
      * @return 返回echostr参数内容，则接入生效，成为开发者成功，否则接入失败。
      */
-    @ApiOperation(value = "处理微信服务器发送的GET请求", notes = "用于微信验证服务器地址", httpMethod = "GET")
     @GetMapping
     public String validate(@RequestParam(value = "signature", required = false) String signature,
                            @RequestParam(value = "timestamp", required = false) String timestamp,
@@ -84,7 +80,6 @@ public class WechatController {
      * @param payload 微信服务器发送的POST请求内容
      * @return 返回回复消息给微信服务器
      */
-    @ApiOperation(value = "接收微信信息", notes = "接收及返回微信信息", httpMethod = "POST")
     @PostMapping(produces = "text/xml; charset=UTF-8")
     public String handleMessage(@RequestBody String payload) throws Exception {
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();

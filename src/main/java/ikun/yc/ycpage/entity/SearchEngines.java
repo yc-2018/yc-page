@@ -9,8 +9,10 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -26,6 +28,7 @@ import java.time.LocalDateTime;
 @TableName("search_engines")
 @EqualsAndHashCode(callSuper = false)
 public class SearchEngines extends Model<SearchEngines> implements Serializable {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /** 搜索引擎ID  */

@@ -29,8 +29,8 @@
 
 ## 3. 技术栈规则
 
-- JDK 版本按当前项目保持 `Java 8`
-- Spring Boot 版本按当前项目保持 `2.7.5`
+- JDK 版本按当前项目保持 `Java 21`
+- Spring Boot 版本按当前项目保持 `3.5.16`
 - 数据访问层继续使用 `MyBatis-Plus`
 - 缓存继续使用 `Redis`
 - 鉴权继续使用 `JWT + LoginInterceptor + BaseContext`

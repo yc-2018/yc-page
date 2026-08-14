@@ -49,16 +49,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
 //                        "/favicon.ico",
 //                        "/other/run-script",
 //                        "/other/startTime",         // 本次服务启动时间
-//                        "/doc.html",                // 放行Swagger
-//                        "/docs.html",               // 放行Swagger
-//                        "/swagger-ui.html",         // 放行Swagger
-//                        "/index.html",              // 放行Swagger
-//                        "/v2/api-docs/**",          // 放行Swagger
-//                        "/swagger-resources/**",    // 放行Swagger
-//                        "/noAuth/**",               // 放行Swagger
-//                        "/swagger-ui/**",           // 放行Swagger UI静态资源
-//                        "/v3/**",                   // 放行Swagger新API文档路径
-//                        "/webjars/**",              // 放行webjars路径下的资源
 //                        "/css/**",                  // 放行css静态资源
 //                        "/js/**",                   // 放行js静态资源
 //                        "/images/**"                // 放行images静态资源

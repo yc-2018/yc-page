@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import ikun.yc.ycpage.common.R;
 import ikun.yc.ycpage.entity.User;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * 服务接口

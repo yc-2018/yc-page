@@ -20,9 +20,9 @@
 
 ### 2.1 技术栈
 
-- Java 8
-- Spring Boot 2.7.5
-- MyBatis-Plus 3.5.4.1
+- Java 21
+- Spring Boot 3.5.16
+- MyBatis-Plus 3.5.8
 - MySQL
 - Redis
 - JWT
@@ -30,7 +30,6 @@
 - Lombok
 - Spring Validation
 - RestTemplate
-- Swagger / Springfox 3.0.0（代码存在，但当前配置类默认未启用）
 
 ### 2.2 关键配置
 
@@ -46,6 +45,7 @@
 - `YC_MYSQL_HOST`
 - `YC_MYSQL_USERNAME`
 - `YC_MYSQL_PASSWORD`
+- `YC_JWT_SECRET`（至少 32 个 UTF-8 字节）
 
 默认端口是 `8080`，数据库名默认是 `yc_page`。
 
@@ -519,7 +519,7 @@
 
 - 自定义了 `RedisTemplate<String, Object>`
 - 用 Jackson 处理对象序列化
-- 注册了 Java 8 时间模块
+- 注册了 Java 时间模块
 
 ### 8.4 RestTemplate 配置
 
@@ -583,7 +583,6 @@
 
 ### 10.3 当前可见的维护点
 
-- `SwaggerConfig` 默认未启用
 - 测试非常少，`YcPageApplicationTests` 里的 `@SpringBootTest` 还是注释状态
 - `MiniAccountMemoController` 为空，说明账号备忘录功能未完成
 - `OtherController` 的 `/other/run-script` 是一个带明显运维性质的接口，需要谨慎使用

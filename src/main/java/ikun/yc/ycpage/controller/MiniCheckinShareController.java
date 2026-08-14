@@ -15,7 +15,7 @@ import ikun.yc.ycpage.service.MiniCheckinShareService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 
 /**
  * 小程序打卡分享控制器

@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.Objects;
 
@@ -21,7 +22,7 @@ public class GlobalExceptionHandler {
     /** SQL完整性约束违规异常异常处理方法 */
     @ExceptionHandler(SQLIntegrityConstraintViolationException.class)   //只要抛出这个sql..的异常就会被捕捉到 进来这个方法
     public R<String> exceptionHandler(SQLIntegrityConstraintViolationException ex) {
-        log.error(ex.getMessage());
+        log.error("SQL完整性约束异常", ex);
         if (ex.getMessage().contains("Duplicate entry")) {  //如果报错信息包涵Duplicate entry 就能确定是唯一约束键已存在
             String[] split = ex.getMessage().split(" ");  //把报错信息里面的唯一键再分割出来
             String msg = split[2] + "已存在";                    // 唯一键在第二个位置
@@ -40,14 +41,14 @@ public class GlobalExceptionHandler {
     // 空指针错误处理方法
     @ExceptionHandler(NullPointerException.class)
     public R<String> handleException(NullPointerException ex) {
-        log.error("\n↓↓↓↓↓↓↓↓↓↓↓↓\n{}\n↑↑↑↑↑↑↑↑↑↑↑\n" ,ex.getMessage());
+        log.error("空指针异常", ex);
         return R.error("空指针错误: " + ex.getMessage());
     }
 
     /** 兜底异常处理方法 */
     @ExceptionHandler({RuntimeException.class}) // 捕获所有继承自RuntimeException的异常
-    public R<String> exceptionHandler(RuntimeException ex) {
-        log.error(ex.getMessage());
+    public R<String> exceptionHandler(RuntimeException ex, HttpServletRequest request) {
+        log.error("请求 {} {} 发生未处理异常", request.getMethod(), request.getRequestURI(), ex);
         return R.error(ex.getMessage());
     }
 }

@@ -5,7 +5,7 @@
 ## 项目概况
 
 - 项目名称：`yc-page`
-- 技术栈：Java 8、Spring Boot 2.7.5、Maven、MyBatis Plus、MySQL、Redis、JWT、Swagger、Lombok、Validation、AOP。
+- 技术栈：Java 21、Spring Boot 3.5.16、Maven、MyBatis Plus、MySQL、Redis、JWT、Lombok、Validation、AOP。
 - 主包路径：`src/main/java/ikun/yc/ycpage`
 - 资源路径：`src/main/resources`
 - 测试路径：`src/test/java`
