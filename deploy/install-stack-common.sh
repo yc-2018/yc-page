@@ -16,6 +16,7 @@ CREDENTIAL_DIR="/root/.yc-stack"
 CREDENTIAL_FILE="${CREDENTIAL_DIR}/credentials.env"
 CACHE_DIR="/var/cache/yc-stack"
 JDK_MIRROR_BASE="${JDK_MIRROR_BASE:-https://mirrors.tuna.tsinghua.edu.cn/Adoptium/21/jdk/x64/linux}"
+MAVEN_MIRROR_BASE="${MAVEN_MIRROR_BASE:-https://mirrors.huaweicloud.com/apache/maven/maven-3}"
 WORK_DIR=""
 
 log() {
@@ -216,6 +217,8 @@ install_maven() {
     local actual_checksum
     local target="/opt/apache-maven-${MAVEN_VERSION}"
     local base_url="https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries"
+    local mirror_url="${MAVEN_MIRROR_BASE}/${MAVEN_VERSION}/binaries/$(basename "${archive}")"
+    local origin_url="${base_url}/$(basename "${archive}")"
 
     if command -v mvn >/dev/null; then
         existing_version="$(mvn -v 2>/dev/null | awk 'NR == 1 {print $3}' || true)"
@@ -232,10 +235,19 @@ install_maven() {
         expected_checksum="$(awk '{print $1}' "${checksum_file}")"
         actual_checksum="$(sha512sum "${archive}" 2>/dev/null | awk '{print $1}' || true)"
         if [[ "${actual_checksum}" != "${expected_checksum}" ]]; then
-            download_resumable "${base_url}/$(basename "${archive}")" "${archive}"
+            if ! download_resumable "${mirror_url}" "${archive}"; then
+                warn "Maven 镜像下载失败，回退到 Apache Archive"
+                download_resumable "${origin_url}" "${archive}"
+            fi
             actual_checksum="$(sha512sum "${archive}" | awk '{print $1}')"
         else
             log "使用已校验的 Maven 缓存：${archive}"
+        fi
+        if [[ "${actual_checksum}" != "${expected_checksum}" ]]; then
+            warn "Maven 缓存校验失败，删除缓存后从 Apache Archive 重试"
+            rm -f -- "${archive}"
+            download_resumable "${origin_url}" "${archive}"
+            actual_checksum="$(sha512sum "${archive}" | awk '{print $1}')"
         fi
         [[ "${actual_checksum}" == "${expected_checksum}" ]] || die "Maven 下载文件校验失败"
         tar -xzf "${archive}" -C /opt
