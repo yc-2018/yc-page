@@ -19,9 +19,6 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -120,8 +117,8 @@ public class WechatServiceImpl implements WechatService {
                     strArr[1] = strArr[1].toUpperCase();    // 统一转为大写
                     url += strArr[1];
                     if (strArr.length >= 3) url += "&date=" + strArr[2];
-                    List result = restTemplate.getForObject(url, List.class);
-                    if (result == null || result.isEmpty())
+                    String[] result = restTemplate.getForObject(url, String[].class); // 考勤接口返回的文本记录
+                    if (result == null || result.length == 0)
                         return (strArr.length >= 3 ? strArr[2] : "今天") + "无记录";
                     return String.join("\n", result);
                 } catch (RestClientException exception) {

@@ -61,7 +61,7 @@ public class OtherController {
             // 在新的线程中执行脚本
             new Thread(() -> {
                 try {
-                    Process process = Runtime.getRuntime().exec(scriptPath);
+                    Process process = new ProcessBuilder(scriptPath).start(); // 后台脚本进程
                     process.waitFor();
                 } catch (Exception e) {log.error(e.getMessage());}
             }).start();

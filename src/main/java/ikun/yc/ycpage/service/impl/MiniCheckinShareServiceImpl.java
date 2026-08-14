@@ -149,7 +149,6 @@ public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMap
                         .orderByDesc(MiniCheckinShare::getUpdateTime)
                         .orderByDesc(MiniCheckinShare::getCreateTime));
         Page<MiniCheckinShareManageItem> resultPage = new Page<>(sharePage.getCurrent(), sharePage.getSize(), sharePage.getTotal());
-        resultPage.setPages(sharePage.getPages());
 
         List<MiniCheckinShare> shares = sharePage.getRecords(); // 当前页分享记录
         if (shares.isEmpty()) {

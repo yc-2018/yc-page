@@ -87,7 +87,7 @@ public class MemoTagRelationServiceImpl extends ServiceImpl<MemoTagRelationMappe
                 .map(MemoTagRelation::getTagId)
                 .distinct()
                 .collect(Collectors.toList());
-        Map<Integer, MemoTag> tagMap = memoTagMapper.selectBatchIds(tagIds).stream()
+        Map<Integer, MemoTag> tagMap = memoTagMapper.selectByIds(tagIds).stream()
                 .collect(Collectors.toMap(MemoTag::getId, Function.identity()));
         Map<Integer, List<MemoTagRelation>> relationMap = relations.stream()
                 .collect(Collectors.groupingBy(MemoTagRelation::getMemoId));
