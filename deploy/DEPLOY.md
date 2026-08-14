@@ -115,6 +115,7 @@ ls -l /etc/yc-page/yc-page.env
 ```bash
 cd /var/javaCode/yc-page
 install -m 700 deploy/runJava.sh /root/runJava.sh
+install -m 700 deploy/catJavaLog.sh /root/catJavaLog.sh
 ```
 
 执行首次部署：
@@ -149,7 +150,13 @@ tail -n 100 /var/java/yc-page/logs/yc-page.log
 持续观察日志：
 
 ```bash
-tail -f /var/java/yc-page/logs/yc-page.log
+/root/catJavaLog.sh
+```
+
+日志脚本默认先显示最近 200 行再持续跟踪。临时调整首次显示的行数：
+
+```bash
+LINES=500 /root/catJavaLog.sh
 ```
 
 运行文件位置：
@@ -174,6 +181,7 @@ tail -f /var/java/yc-page/logs/yc-page.log
 cd /var/javaCode/yc-page
 git pull --ff-only
 install -m 700 deploy/runJava.sh /root/runJava.sh
+install -m 700 deploy/catJavaLog.sh /root/catJavaLog.sh
 /root/runJava.sh
 ```
 
