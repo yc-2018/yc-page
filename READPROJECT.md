@@ -23,8 +23,8 @@
 - Java 21
 - Spring Boot 3.5.16
 - MyBatis-Plus 3.5.8
-- MySQL
-- Redis
+- MySQL 5.7.25
+- Redis 7.2.4
 - JWT
 - AOP
 - Lombok
