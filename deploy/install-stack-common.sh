@@ -211,6 +211,8 @@ EOF
 
 install_maven() {
     local existing_version=""
+    local existing_bin=""
+    local nested_maven=""
     local archive="${CACHE_DIR}/apache-maven-${MAVEN_VERSION}-bin.tar.gz"
     local checksum_file="${WORK_DIR}/apache-maven-${MAVEN_VERSION}-bin.tar.gz.sha512"
     local expected_checksum
@@ -221,11 +223,28 @@ install_maven() {
     local origin_url="${base_url}/$(basename "${archive}")"
 
     if command -v mvn >/dev/null; then
-        existing_version="$(mvn -v 2>/dev/null | awk 'NR == 1 {print $3}' || true)"
+        existing_bin="$(command -v mvn)"
+    elif [[ -x /usr/local/maven/bin/mvn ]]; then
+        # 有些旧安装没有写入当前 Shell 的 PATH，但目录本身仍然可用。
+        existing_bin="/usr/local/maven/bin/mvn"
+    elif [[ -d /usr/local/maven ]]; then
+        # 兼容 /usr/local/maven/apache-maven-x.y.z/bin/mvn 这种旧目录结构。
+        nested_maven="$(find /usr/local/maven -mindepth 3 -maxdepth 3 -type f -path '*/apache-maven-*/bin/mvn' -print | sort -V | tail -n 1)"
+        [[ -x "${nested_maven}" ]] && existing_bin="${nested_maven}"
+    fi
+
+    if [[ -n "${existing_bin}" ]]; then
+        existing_version="$("${existing_bin}" -v 2>/dev/null | awk 'NR == 1 {print $3}' || true)"
     fi
 
     if [[ -n "${existing_version}" ]] && version_ge "${existing_version}" "3.6.3"; then
-        log "已安装可用的 Maven ${existing_version}，跳过下载"
+        if [[ "${existing_bin}" == "/usr/local/maven/bin/mvn" ]]; then
+            configure_maven_home
+        elif [[ -n "${nested_maven}" ]]; then
+            # 不改动原目录，只在系统 PATH 中增加一个统一命令入口。
+            ln -sfn "${nested_maven}" /usr/local/bin/mvn
+        fi
+        log "已安装可用的 Maven ${existing_version}，跳过下载：${existing_bin}"
         return
     fi
 
