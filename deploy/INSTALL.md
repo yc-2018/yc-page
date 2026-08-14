@@ -80,3 +80,5 @@ Redis 优先使用系统包提供的服务，通常为 `redis` 或 `redis-server
 ```bash
 /root/runJava.sh
 ```
+
+首次部署、环境变量配置、JWT 密钥和后续更新的完整步骤见 [`DEPLOY.md`](DEPLOY.md)。

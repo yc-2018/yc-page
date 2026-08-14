@@ -70,6 +70,7 @@ YcPage 是一个基于 Spring Boot 的多功能后端服务项目，旨在为用
 - 使用 `pom.xml` 构建项目，支持 Maven 打包部署
 - 运行和构建均需要 Java 21 或更高版本；部署前必须配置至少 32 字节的 `YC_JWT_SECRET`
 - CentOS 7 和 Ubuntu 的基础环境安装方式见 `deploy/INSTALL.md`
+- 首次部署、环境变量配置和后续更新方式见 `deploy/DEPLOY.md`
 
 ---
 
