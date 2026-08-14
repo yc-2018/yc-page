@@ -29,11 +29,11 @@ public class JwtUtils {
      * @param claims JWT第二部分负载 payload 中存储的内容
      * @return JWT令牌
      */
-    public static String generateJwt(Map<String, Object> claims,Long expire){
-      return Jwts.builder()
-                .addClaims(claims)                                                   // 添加JWT第二部分负载
+    public static String generateJwt(Map<String, Object> claims, Long expire) {
+        return Jwts.builder()
+                .claims(claims)                                                      // 添加JWT第二部分负载
                 .signWith(signingKey())                                              // 使用HS256加密算法
-                .setExpiration(new Date(System.currentTimeMillis() + expire))      // 设置过期时间
+                .expiration(new Date(System.currentTimeMillis() + expire))           // 设置过期时间
                 .compact();                                                       // 压缩为字符串
     }
 
