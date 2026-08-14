@@ -17,6 +17,8 @@ CREDENTIAL_FILE="${CREDENTIAL_DIR}/credentials.env"
 CACHE_DIR="/var/cache/yc-stack"
 JDK_MIRROR_BASE="${JDK_MIRROR_BASE:-https://mirrors.tuna.tsinghua.edu.cn/Adoptium/21/jdk/x64/linux}"
 MAVEN_MIRROR_BASE="${MAVEN_MIRROR_BASE:-https://mirrors.huaweicloud.com/apache/maven/maven-3}"
+MAVEN_REPOSITORY_MIRROR_URL="${MAVEN_REPOSITORY_MIRROR_URL:-https://mirrors.huaweicloud.com/repository/maven/}"
+REDIS_MIRROR_BASE="${REDIS_MIRROR_BASE:-https://mirrors.huaweicloud.com/redis}"
 WORK_DIR=""
 
 log() {
@@ -209,6 +211,35 @@ EOF
     export PATH="${MAVEN_HOME}/bin:${PATH}"
 }
 
+configure_maven_repository_mirror() {
+    local settings_file="/root/.m2/settings.xml"
+
+    if [[ -e "${settings_file}" ]]; then
+        log "发现现有 Maven 用户配置，保留不修改：${settings_file}"
+        return
+    fi
+
+    mkdir -p /root/.m2
+    chmod 700 /root/.m2
+    cat > "${settings_file}" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<settings xmlns="http://maven.apache.org/SETTINGS/1.2.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.2.0 https://maven.apache.org/xsd/settings-1.2.0.xsd">
+  <mirrors>
+    <mirror>
+      <id>huawei-cloud-central</id>
+      <name>Huawei Cloud Maven Central Mirror</name>
+      <url>${MAVEN_REPOSITORY_MIRROR_URL}</url>
+      <mirrorOf>central</mirrorOf>
+    </mirror>
+  </mirrors>
+</settings>
+EOF
+    chmod 600 "${settings_file}"
+    log "已配置 Maven Central 国内镜像：${MAVEN_REPOSITORY_MIRROR_URL}"
+}
+
 install_maven() {
     local existing_version=""
     local existing_bin=""
@@ -244,6 +275,7 @@ install_maven() {
             # 不改动原目录，只在系统 PATH 中增加一个统一命令入口。
             ln -sfn "${nested_maven}" /usr/local/bin/mvn
         fi
+        configure_maven_repository_mirror
         log "已安装可用的 Maven ${existing_version}，跳过下载：${existing_bin}"
         return
     fi
@@ -274,6 +306,7 @@ install_maven() {
 
     link_directory "${target}" /usr/local/maven
     configure_maven_home
+    configure_maven_repository_mirror
     log "Maven 安装完成：$(mvn -v | awk 'NR == 1 {first=$0} END {print first}')"
 }
 
@@ -490,12 +523,22 @@ install_redis_from_source() {
     local archive="${CACHE_DIR}/redis-${redis_version}.tar.gz"
     local source_dir="${WORK_DIR}/redis-${redis_version}"
     local target="/opt/redis-${redis_version}"
+    local mirror_url="${REDIS_MIRROR_BASE}/redis-${redis_version}.tar.gz"
+    local origin_url="https://download.redis.io/releases/redis-${redis_version}.tar.gz"
 
     log "系统仓库无法提供 Redis，回退为源码安装 Redis ${redis_version}"
     if [[ -f "${archive}" ]] && tar -tzf "${archive}" >/dev/null 2>&1; then
         log "使用已验证可解压的 Redis 缓存：${archive}"
     else
-        download_resumable "https://download.redis.io/releases/redis-${redis_version}.tar.gz" "${archive}"
+        if ! download_resumable "${mirror_url}" "${archive}"; then
+            warn "Redis 镜像下载失败，回退到 Redis 官方地址"
+            download_resumable "${origin_url}" "${archive}"
+        fi
+        if ! tar -tzf "${archive}" >/dev/null 2>&1; then
+            warn "Redis 镜像文件无法解压，删除缓存后从官方地址重试"
+            rm -f -- "${archive}"
+            download_resumable "${origin_url}" "${archive}"
+        fi
     fi
     tar -xzf "${archive}" -C "${WORK_DIR}"
     make -C "${source_dir}" -j "$(nproc)"

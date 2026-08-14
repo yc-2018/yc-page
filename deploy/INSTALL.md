@@ -46,7 +46,7 @@ bash deploy/install-ubuntu.sh
 
 直接用 `bash` 执行即可，不要对仓库里的脚本运行 `chmod`，否则 Git 会把执行权限变化识别为本地修改。脚本必须由 root 执行。安装过程需要连接系统软件源、Adoptium、Apache、MySQL 官方归档站；CentOS 7 默认镜像失效时，会先备份原 Yum repo 文件，再切换到 CentOS 7.9.2009 归档镜像。
 
-JDK 默认优先从清华 TUNA 的 Adoptium 镜像下载，镜像未同步时自动回退到 Adoptium/GitHub 官方地址。Maven 默认优先使用华为云镜像，并使用 Apache 官方 SHA-512 校验，镜像失败时回退 Apache Archive。JDK、Maven、MySQL 和源码版 Redis 的大文件缓存在 `/var/cache/yc-stack`，下载中断后重新执行脚本会尝试断点续传；安装完成后可以保留缓存供排障或重装使用。
+JDK 默认优先从清华 TUNA 的 Adoptium 镜像下载，镜像未同步时自动回退到 Adoptium/GitHub 官方地址。Maven 安装包和 Maven Central 项目依赖默认优先使用华为云镜像，安装包仍使用 Apache 官方 SHA-512 校验；已有 `/root/.m2/settings.xml` 时脚本会保留原配置。源码版 Redis 默认优先使用华为云镜像。MySQL 5.7.25 在常用国内镜像中没有旧归档，仍使用官方 Archive。JDK、Maven、MySQL 和源码版 Redis 的大文件缓存在 `/var/cache/yc-stack`，下载中断后重新执行脚本会尝试断点续传；安装完成后可以保留缓存供排障或重装使用。
 
 ## 数据库凭据
 

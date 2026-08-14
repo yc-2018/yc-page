@@ -50,7 +50,7 @@ install_os_packages() {
     log "安装 CentOS 7 基础工具和 MySQL 运行库"
     yum -y install \
         ca-certificates curl tar gzip xz unzip openssl git python \
-        procps-ng iproute libaio numactl-libs ncurses-compat-libs \
+        procps-ng iproute libaio numactl-libs ncurses-libs \
         gcc gcc-c++ make tcl
     update-ca-trust
 }
