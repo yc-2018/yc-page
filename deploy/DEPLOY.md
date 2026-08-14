@@ -209,6 +209,22 @@ tail -n 200 /var/java/yc-page/logs/yc-page.log
 
 检查 MySQL、Redis 是否可连接，以及微信、JWT 环境变量是否完整。应用错误会记录在 `/var/java/yc-page/logs/yc-page.log`。
 
+### 提示端口 8080 已被占用
+
+先查看监听进程，不要直接按端口强制结束未知服务：
+
+```bash
+ss -ltnp | grep ':8080'
+```
+
+从输出取得 PID 后确认完整命令：
+
+```bash
+ps -fp PID
+```
+
+确认它确实是旧版 `yc-page` 后，先执行 `kill -15 PID` 正常停止，再重新运行 `/root/runJava.sh`。
+
 ## 九、安全说明
 
 - `/etc/yc-page/yc-page.env` 和 `/root/.yc-stack/credentials.env` 不得提交到 Git。

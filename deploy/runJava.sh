@@ -103,6 +103,20 @@ find_app_pids() {
     ps -eo pid=,args= | awk '$0 ~ /[j]ava/ && $0 ~ /yc-page.*[.]jar/ {print $1}'
 }
 
+# 输出占用应用端口的监听信息，便于识别未被脚本管理的旧进程。
+port_listener_details() {
+    ss -ltnp | awk -v port="${APP_PORT}" '$4 ~ (":" port "$") {print}'
+}
+
+# 只有监听端口确实属于本次启动的 Java PID，才认为应用启动成功。
+port_is_owned_by_pid() {
+    local pid="$1"
+    ss -ltnp | awk -v port="${APP_PORT}" -v marker="pid=${pid}," '
+        $4 ~ (":" port "$") && index($0, marker) > 0 {found = 1}
+        END {exit found ? 0 : 1}
+    '
+}
+
 # 先发送 TERM，让应用有机会正常释放端口和连接；30 秒仍未退出才强制结束。
 stop_app() {
     local pids
@@ -133,7 +147,7 @@ wait_for_start() {
     pid="$(cat "${PID_FILE}")"
     for _ in {1..30}; do
         kill -0 "${pid}" 2>/dev/null || return 1
-        if ss -ltn | awk '{print $4}' | grep -Eq ":${APP_PORT}$"; then
+        if port_is_owned_by_pid "${pid}"; then
             return 0
         fi
         sleep 1
@@ -143,6 +157,16 @@ wait_for_start() {
 
 # ==================== 切换到新版本 ====================
 stop_app
+
+# 如果停止旧应用后端口仍被占用，不启动新进程，避免把其他监听者误判为部署成功。
+PORT_LISTENER="$(port_listener_details)"
+if [[ -n "${PORT_LISTENER}" ]]; then
+    echo "端口 ${APP_PORT} 仍被其他进程占用，无法启动新版本："
+    echo "${PORT_LISTENER}"
+    echo "请确认占用进程后停止它，再重新执行本脚本"
+    exit 1
+fi
+
 # 只切换软链接，不覆盖历史 jar，因此后面可以快速回滚。
 ln -sfn "${NEW_JAR}" "${CURRENT_JAR}"
 start_app
