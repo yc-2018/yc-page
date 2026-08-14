@@ -6,7 +6,7 @@ set -Eeuo pipefail
 
 # ==================== 基础配置 ====================
 APP_NAME="yc-page"                                      # 用于识别 Java 进程和命名日志。
-APP_PORT="${APP_PORT:-8080}"                            # 可在执行脚本前用 APP_PORT 覆盖。
+APP_PORT="${APP_PORT:-8080}"                            # 项目独占端口，可在执行脚本前用 APP_PORT 覆盖。
 SOURCE_DIR="/var/javaCode/yc-page"                      # Git 源码目录。
 DEPLOY_DIR="/var/java/yc-page"                          # 独立的运行目录，避免直接运行 target 中的 jar。
 RELEASE_DIR="${DEPLOY_DIR}/releases"                    # 保存每次构建的 jar，供失败回滚。
@@ -97,15 +97,57 @@ REVISION="$(git rev-parse --short HEAD)"
 NEW_JAR="${RELEASE_DIR}/${APP_NAME}-${REVISION}-$(date +%Y%m%d%H%M%S).jar"
 cp "${BUILD_JAR}" "${NEW_JAR}"
 
-# 查找命令行中同时包含 java、yc-page 和 .jar 的进程号。
-# [j]ava 的写法可避免 awk 把自己的命令行误认为 Java 进程。
+# 判断指定 PID 是否为本项目进程。
+# 直接读取 /proc 可以避免 CentOS 7 的 ps 输出被截断后找不到 jar 路径。
+pid_is_app() {
+    local pid="$1"
+    local executable
+    local cmdline
+    local process_cwd
+
+    [[ "${pid}" =~ ^[0-9]+$ ]] || return 1
+    [[ -r "/proc/${pid}/cmdline" ]] || return 1
+
+    executable="$(readlink -f "/proc/${pid}/exe" 2>/dev/null || true)" # 进程实际可执行文件
+    [[ "${executable##*/}" == "java" ]] || return 1
+
+    cmdline="$(tr '\0' ' ' < "/proc/${pid}/cmdline")" # 以空格还原完整启动命令
+    [[ "${cmdline}" == *" -jar "* ]] || return 1
+
+    # 识别当前部署软链接、历史发布包和源码 target 中使用绝对路径启动的包。
+    case "${cmdline}" in
+        *"${DEPLOY_DIR}/current.jar"* | *"${RELEASE_DIR}/${APP_NAME}-"*.jar* | *"${SOURCE_DIR}/target/${APP_NAME}-"*.jar*)
+            return 0
+            ;;
+    esac
+
+    # 兼容旧脚本在 target 目录使用相对 jar 文件名启动的进程。
+    process_cwd="$(readlink -f "/proc/${pid}/cwd" 2>/dev/null || true)" # 进程启动目录
+    [[ "${process_cwd}" == "${SOURCE_DIR}/target" && "${cmdline}" == *"${APP_NAME}"*.jar* ]]
+}
+
+# 扫描所有进程，输出确认属于本项目的 Java PID。
 find_app_pids() {
-    ps -eo pid=,args= | awk '$0 ~ /[j]ava/ && $0 ~ /yc-page.*[.]jar/ {print $1}'
+    local proc_dir
+    local pid
+
+    for proc_dir in /proc/[0-9]*; do
+        [[ -d "${proc_dir}" ]] || continue
+        pid="${proc_dir##*/}"
+        if pid_is_app "${pid}"; then
+            echo "${pid}"
+        fi
+    done
 }
 
 # 输出占用应用端口的监听信息，便于识别未被脚本管理的旧进程。
 port_listener_details() {
     ss -ltnp | awk -v port="${APP_PORT}" '$4 ~ (":" port "$") {print}'
+}
+
+# 输出占用应用端口的全部 PID；同一端口存在多个监听者时会去重。
+find_port_pids() {
+    port_listener_details | grep -o 'pid=[0-9]\+' | cut -d= -f2 | sort -u || true
 }
 
 # 只有监听端口确实属于本次启动的 Java PID，才认为应用启动成功。
@@ -135,6 +177,25 @@ stop_app() {
     kill -KILL ${pids}
 }
 
+# APP_PORT 由本项目独占：停止应用后仍有监听者时，接管端口并停止占用进程。
+stop_port_listeners() {
+    local pids
+    pids="$(find_port_pids)"
+    [[ -z "${pids}" ]] && return 0
+
+    echo "端口 ${APP_PORT} 被进程占用，停止进程: ${pids//$'\n'/ }"
+    kill -TERM ${pids} 2>/dev/null || true
+    for _ in {1..30}; do
+        sleep 1
+        pids="$(find_port_pids)"
+        [[ -z "${pids}" ]] && return 0
+    done
+
+    echo "端口 ${APP_PORT} 的占用进程未退出，强制停止: ${pids//$'\n'/ }"
+    kill -KILL ${pids} 2>/dev/null || true
+    sleep 1
+}
+
 # 后台启动 current.jar，将标准输出和错误输出追加到同一日志，并记录 PID。
 start_app() {
     nohup "${JAVA_BIN}" ${JAVA_OPTS:-} -jar "${CURRENT_JAR}" >> "${LOG_DIR}/${APP_NAME}.log" 2>&1 &
@@ -157,13 +218,14 @@ wait_for_start() {
 
 # ==================== 切换到新版本 ====================
 stop_app
+stop_port_listeners
 
-# 如果停止旧应用后端口仍被占用，不启动新进程，避免把其他监听者误判为部署成功。
+# 强制接管后再次确认端口；进程被 systemd 自动拉起等情况仍会阻止部署。
 PORT_LISTENER="$(port_listener_details)"
 if [[ -n "${PORT_LISTENER}" ]]; then
-    echo "端口 ${APP_PORT} 仍被其他进程占用，无法启动新版本："
+    echo "端口 ${APP_PORT} 的占用进程无法停止，无法启动新版本："
     echo "${PORT_LISTENER}"
-    echo "请确认占用进程后停止它，再重新执行本脚本"
+    echo "请检查该进程是否被 systemd 等服务自动拉起"
     exit 1
 fi
 
