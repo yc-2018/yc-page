@@ -48,6 +48,8 @@ chmod 700 deploy/install-ubuntu.sh deploy/install-stack-common.sh
 
 脚本必须由 root 执行。安装过程需要连接系统软件源、Adoptium、Apache、MySQL 官方归档站；CentOS 7 默认镜像失效时，会先备份原 Yum repo 文件，再切换到 CentOS 7.9.2009 归档镜像。
 
+JDK 默认优先从清华 TUNA 的 Adoptium 镜像下载，镜像未同步时自动回退到 Adoptium/GitHub 官方地址。JDK、Maven、MySQL 和源码版 Redis 的大文件缓存在 `/var/cache/yc-stack`，下载中断后重新执行脚本会尝试断点续传；安装完成后可以保留缓存供排障或重装使用。
+
 ## 数据库凭据
 
 全新安装 MySQL 时会自动生成 root 密码和应用账号密码，保存在：

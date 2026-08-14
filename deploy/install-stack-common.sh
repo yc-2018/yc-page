@@ -14,6 +14,8 @@ MYSQL_APP_DATABASE="${MYSQL_APP_DATABASE:-yc_page}"
 MYSQL_APP_USER="${MYSQL_APP_USER:-yc_page}"
 CREDENTIAL_DIR="/root/.yc-stack"
 CREDENTIAL_FILE="${CREDENTIAL_DIR}/credentials.env"
+CACHE_DIR="/var/cache/yc-stack"
+JDK_MIRROR_BASE="${JDK_MIRROR_BASE:-https://mirrors.tuna.tsinghua.edu.cn/Adoptium/21/jdk/x64/linux}"
 WORK_DIR=""
 
 log() {
@@ -51,6 +53,24 @@ download_file() {
     local destination="$2"
     log "下载 ${url}"
     curl --fail --location --retry 3 --connect-timeout 20 --output "${destination}" "${url}"
+}
+
+download_resumable() {
+    local url="$1"
+    local destination="$2"
+
+    log "下载 ${url}"
+    # -C - 会根据现有文件大小继续下载，网络中断后重新执行脚本不必从头开始。
+    if curl --fail --location --retry 3 --connect-timeout 20 \
+        --continue-at - --output "${destination}" "${url}"; then
+        return
+    fi
+
+    # 少数服务器不接受续传请求；保留明确提示后再从头下载该文件。
+    warn "断点续传失败，尝试从头下载 $(basename "${destination}")"
+    rm -f -- "${destination}"
+    curl --fail --location --retry 3 --connect-timeout 20 \
+        --output "${destination}" "${url}"
 }
 
 link_directory() {
@@ -112,7 +132,9 @@ install_jdk() {
     local metadata_file="${WORK_DIR}/temurin.json"
     local package_url
     local package_checksum
-    local archive="${WORK_DIR}/temurin-jdk21.tar.gz"
+    local package_name
+    local mirror_url
+    local archive
     local extracted_root
     local installed_home
 
@@ -143,8 +165,25 @@ install_jdk() {
     package_checksum="$("${JSON_PYTHON}" -c 'import json,sys; print(json.load(open(sys.argv[1]))[0]["binary"]["package"]["checksum"])' "${metadata_file}")"
     [[ -n "${package_url}" && -n "${package_checksum}" ]] || die "无法从 Adoptium 响应中读取 JDK 下载信息"
 
-    download_file "${package_url}" "${archive}"
-    [[ "$(sha256sum "${archive}" | awk '{print $1}')" == "${package_checksum}" ]] || die "JDK 下载文件校验失败"
+    package_name="$(basename "${package_url}")"
+    mirror_url="${JDK_MIRROR_BASE}/${package_name}"
+    archive="${CACHE_DIR}/${package_name}"
+
+    if [[ -f "${archive}" && "$(sha256sum "${archive}" | awk '{print $1}')" == "${package_checksum}" ]]; then
+        log "使用已校验的 JDK 缓存：${archive}"
+    else
+        # 国内服务器优先使用清华镜像；镜像没有同步该版本时回退 Adoptium/GitHub。
+        if ! download_resumable "${mirror_url}" "${archive}"; then
+            warn "JDK 镜像下载失败，回退到 Adoptium 官方地址"
+            download_resumable "${package_url}" "${archive}"
+        fi
+        if [[ "$(sha256sum "${archive}" | awk '{print $1}')" != "${package_checksum}" ]]; then
+            warn "JDK 缓存校验失败，删除缓存后从官方地址重试"
+            rm -f -- "${archive}"
+            download_resumable "${package_url}" "${archive}"
+        fi
+        [[ "$(sha256sum "${archive}" | awk '{print $1}')" == "${package_checksum}" ]] || die "JDK 下载文件校验失败"
+    fi
 
     mkdir -p "${WORK_DIR}/jdk"
     tar -xzf "${archive}" -C "${WORK_DIR}/jdk"
@@ -171,8 +210,8 @@ EOF
 
 install_maven() {
     local existing_version=""
-    local archive="${WORK_DIR}/apache-maven-${MAVEN_VERSION}-bin.tar.gz"
-    local checksum_file="${archive}.sha512"
+    local archive="${CACHE_DIR}/apache-maven-${MAVEN_VERSION}-bin.tar.gz"
+    local checksum_file="${WORK_DIR}/apache-maven-${MAVEN_VERSION}-bin.tar.gz.sha512"
     local expected_checksum
     local actual_checksum
     local target="/opt/apache-maven-${MAVEN_VERSION}"
@@ -189,10 +228,15 @@ install_maven() {
 
     if [[ ! -x "${target}/bin/mvn" ]]; then
         log "未发现 Maven 3.6.3 或更高版本，安装 Maven ${MAVEN_VERSION}"
-        download_file "${base_url}/$(basename "${archive}")" "${archive}"
         download_file "${base_url}/$(basename "${checksum_file}")" "${checksum_file}"
         expected_checksum="$(awk '{print $1}' "${checksum_file}")"
-        actual_checksum="$(sha512sum "${archive}" | awk '{print $1}')"
+        actual_checksum="$(sha512sum "${archive}" 2>/dev/null | awk '{print $1}' || true)"
+        if [[ "${actual_checksum}" != "${expected_checksum}" ]]; then
+            download_resumable "${base_url}/$(basename "${archive}")" "${archive}"
+            actual_checksum="$(sha512sum "${archive}" | awk '{print $1}')"
+        else
+            log "使用已校验的 Maven 缓存：${archive}"
+        fi
         [[ "${actual_checksum}" == "${expected_checksum}" ]] || die "Maven 下载文件校验失败"
         tar -xzf "${archive}" -C /opt
     fi
@@ -226,7 +270,7 @@ install_mysql() {
     local existing_version
     local mysql_home="/opt/mysql-${MYSQL_VERSION}"
     local mysql_link="/usr/local/mysql"
-    local archive="${WORK_DIR}/mysql-${MYSQL_VERSION}.tar.gz"
+    local archive="${CACHE_DIR}/mysql-${MYSQL_VERSION}-linux-glibc2.12-x86_64.tar.gz"
     local archive_url="https://downloads.mysql.com/archives/get/p/23/file/mysql-${MYSQL_VERSION}-linux-glibc2.12-x86_64.tar.gz"
     local extracted_root
     local missing_libraries
@@ -276,7 +320,11 @@ install_mysql() {
 
     if [[ ! -x "${mysql_home}/bin/mysqld" ]]; then
         log "未发现 MySQL，安装官方归档版 MySQL ${MYSQL_VERSION}"
-        download_file "${archive_url}" "${archive}"
+        if [[ -f "${archive}" ]] && tar -tzf "${archive}" >/dev/null 2>&1; then
+            log "使用已验证可解压的 MySQL 缓存：${archive}"
+        else
+            download_resumable "${archive_url}" "${archive}"
+        fi
         # MySQL 归档站未提供独立校验文件；HTTPS 下载后至少先验证 gzip/tar 完整性。
         tar -tzf "${archive}" >/dev/null || die "MySQL 下载文件无法正常解压"
         mkdir -p "${WORK_DIR}/mysql"
@@ -408,12 +456,16 @@ enable_existing_redis_service() {
 
 install_redis_from_source() {
     local redis_version="${REDIS_FALLBACK_VERSION:-7.2.4}"
-    local archive="${WORK_DIR}/redis-${redis_version}.tar.gz"
+    local archive="${CACHE_DIR}/redis-${redis_version}.tar.gz"
     local source_dir="${WORK_DIR}/redis-${redis_version}"
     local target="/opt/redis-${redis_version}"
 
     log "系统仓库无法提供 Redis，回退为源码安装 Redis ${redis_version}"
-    download_file "https://download.redis.io/releases/redis-${redis_version}.tar.gz" "${archive}"
+    if [[ -f "${archive}" ]] && tar -tzf "${archive}" >/dev/null 2>&1; then
+        log "使用已验证可解压的 Redis 缓存：${archive}"
+    else
+        download_resumable "https://download.redis.io/releases/redis-${redis_version}.tar.gz" "${archive}"
+    fi
     tar -xzf "${archive}" -C "${WORK_DIR}"
     make -C "${source_dir}" -j "$(nproc)"
     make -C "${source_dir}" PREFIX="${target}" install
@@ -503,6 +555,8 @@ main() {
     [[ "$(uname -s)" == "Linux" ]] || die "此脚本只能在 Linux 上运行"
     WORK_DIR="$(mktemp -d /tmp/yc-stack.XXXXXX)"
     trap cleanup EXIT
+    mkdir -p "${CACHE_DIR}"
+    chmod 700 "${CACHE_DIR}"
 
     install_os_packages
     if command -v python3 >/dev/null; then
