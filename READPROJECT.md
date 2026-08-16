@@ -362,6 +362,8 @@
 - `src/main/java/ikun/yc/ycpage/common/WechatMiniAuthService.java`
 - `src/main/java/ikun/yc/ycpage/entity/MiniUser.java`
 - `src/main/java/ikun/yc/ycpage/entity/MiniCheckinRecords.java`
+- `src/main/java/ikun/yc/ycpage/controller/MiniCommonPhraseController.java`
+- `src/main/java/ikun/yc/ycpage/entity/MiniCommonPhrase.java`
 
 主要接口：
 
@@ -370,6 +372,11 @@
 - `POST /mini/checkinList/{page}`
 - `POST /mini/deleteCheckin/{id}`
 - `POST /mini/updateCheckin`
+- `GET /mini/commonPhrase/list`
+- `POST /mini/commonPhrase`
+- `POST /mini/commonPhrase/update`
+- `POST /mini/commonPhrase/top/{id}`
+- `POST /mini/commonPhrase/delete/{id}`
 - `POST /mini/getUserInfo`
 - `POST /mini/updateUserInfo`
 
@@ -379,6 +386,7 @@
 - 小程序用户表是 `mini_user`
 - 登录成功后返回 JWT，JWT 里用 `openid` 作为 `userId`
 - 打卡记录保存在 `mini_checkin_records`
+- 打卡常用语保存在 `mini_common_phrase`，按 JWT 中的 `openid` 隔离，支持长按置顶排序
 
 打卡逻辑有几个约束：
 
@@ -481,6 +489,7 @@
 - `operate_log`
 - `mini_user`
 - `mini_checkin_records`
+- `mini_common_phrase`
 - `mini_account_memo`
 - `dy_see_time`
 - `device_usage_log`
