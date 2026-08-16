@@ -22,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -141,12 +140,12 @@ class MiniCommonPhraseServiceImplTest {
 
         @SuppressWarnings("unchecked")
         ArgumentCaptor<Wrapper<MiniCommonPhrase>> updateCaptor = ArgumentCaptor.forClass(Wrapper.class); // 置顶更新条件
-        verify(mapper).update(isNull(MiniCommonPhrase.class), updateCaptor.capture());
+        ArgumentCaptor<MiniCommonPhrase> entityCaptor = ArgumentCaptor.forClass(MiniCommonPhrase.class); // 置顶更新实体
+        verify(mapper).update(entityCaptor.capture(), updateCaptor.capture());
+        assertEquals(8L, entityCaptor.getValue().getSortOrder());
         LambdaUpdateWrapper<MiniCommonPhrase> updateWrapper =
-                (LambdaUpdateWrapper<MiniCommonPhrase>) updateCaptor.getValue(); // 置顶更新 Wrapper
-        updateWrapper.getSqlSet();
+                (LambdaUpdateWrapper<MiniCommonPhrase>) updateCaptor.getValue(); // 置顶用户归属条件
         updateWrapper.getSqlSegment();
-        assertTrue(updateWrapper.getParamNameValuePairs().containsValue(8L));
         assertTrue(updateWrapper.getParamNameValuePairs().containsValue("openid-a"));
     }
 }

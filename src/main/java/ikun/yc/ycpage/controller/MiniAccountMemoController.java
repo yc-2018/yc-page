@@ -14,8 +14,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
-
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/mini/accountMemo")
@@ -36,8 +34,6 @@ public class MiniAccountMemoController {
         validateForSave(miniAccountMemo);
 
         miniAccountMemo.setId(null);
-        miniAccountMemo.setCreatedAt(null);
-        miniAccountMemo.setUpdatedAt(null);
 
         return R.success(miniAccountMemoService.save(miniAccountMemo));
     }
@@ -71,7 +67,8 @@ public class MiniAccountMemoController {
         }
         validateForUpdate(miniAccountMemo);
 
-        boolean updateOk = miniAccountMemoService.update(Wrappers.<MiniAccountMemo>lambdaUpdate()
+        MiniAccountMemo updateEntity = new MiniAccountMemo(); // 触发 updatedAt 自动填充的更新实体
+        boolean updateOk = miniAccountMemoService.update(updateEntity, Wrappers.<MiniAccountMemo>lambdaUpdate()
                 .eq(MiniAccountMemo::getId, miniAccountMemo.getId())
                 .eq(MiniAccountMemo::getUserOpenid, BaseContext.getCurrentId())
                 .eq(MiniAccountMemo::getIsDeleted, 0)
@@ -83,7 +80,6 @@ public class MiniAccountMemoController {
                 .set(StringUtils.hasText(miniAccountMemo.getPassword()), MiniAccountMemo::getPassword, miniAccountMemo.getPassword())
                 .set(MiniAccountMemo::getRemark, miniAccountMemo.getRemark())
                 .set(StringUtils.hasText(miniAccountMemo.getImgs()), MiniAccountMemo::getImgs, miniAccountMemo.getImgs())
-                .set(MiniAccountMemo::getUpdatedAt, LocalDateTime.now())
         );
         return updateOk ? R.success(true) : R.error("修改失败");
     }
@@ -91,12 +87,12 @@ public class MiniAccountMemoController {
     @PostMapping("/delete/{id}")
     @CountControl(operationType = CountControlAspect.DELETE)
     public R<Boolean> deleteMiniAccountMemo(@PathVariable Integer id) {
-        boolean updateOk = miniAccountMemoService.update(Wrappers.<MiniAccountMemo>lambdaUpdate()
+        MiniAccountMemo updateEntity = new MiniAccountMemo(); // 触发 updatedAt 自动填充的更新实体
+        boolean updateOk = miniAccountMemoService.update(updateEntity, Wrappers.<MiniAccountMemo>lambdaUpdate()
                 .eq(MiniAccountMemo::getId, id)
                 .eq(MiniAccountMemo::getUserOpenid, BaseContext.getCurrentId())
                 .eq(MiniAccountMemo::getIsDeleted, 0)
                 .set(MiniAccountMemo::getIsDeleted, 1)
-                .set(MiniAccountMemo::getUpdatedAt, LocalDateTime.now())
         );
         return updateOk ? R.success(true) : R.error("删除失败");
     }

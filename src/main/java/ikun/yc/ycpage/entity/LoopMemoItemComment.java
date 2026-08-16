@@ -52,10 +52,11 @@ public class LoopMemoItemComment implements Serializable {
     private String imgArr;
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    @TableField(fill = FieldFill.UPDATE)
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
 
     @TableField(exist = false)

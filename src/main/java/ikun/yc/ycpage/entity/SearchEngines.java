@@ -67,6 +67,6 @@ public class SearchEngines extends Model<SearchEngines> implements Serializable 
     private String userId;
 
     @JsonIgnore
-    @TableField(fill = FieldFill.UPDATE, select = false)
+    @TableField(fill = FieldFill.INSERT_UPDATE, select = false)
     private LocalDateTime updateTime;
 }

@@ -70,14 +70,16 @@ public class LoopMemoItemServiceImpl extends ServiceImpl<LoopMemoItemMapper, Loo
                 .count(); // 属于源循环备忘的记录数量
         if (sourceItemCount != distinctLoopItemIds.size()) throw new FieldIsNullException("循环记录不存在");
 
-        boolean itemUpdate = this.update(Wrappers.<LoopMemoItem>lambdaUpdate()
+        LoopMemoItem itemUpdateEntity = new LoopMemoItem(); // 触发循环记录更新时间自动填充的实体
+        boolean itemUpdate = this.update(itemUpdateEntity, Wrappers.<LoopMemoItem>lambdaUpdate()
                 .in(LoopMemoItem::getId, distinctLoopItemIds)
                 .eq(LoopMemoItem::getMemoId, sourceMemo.getId())
                 .set(LoopMemoItem::getMemoId, targetMemo.getId())
         ); // 循环记录归属更新结果
         if (!itemUpdate) throw new ParamException("转移失败");
 
-        loopMemoItemCommentService.update(Wrappers.<LoopMemoItemComment>lambdaUpdate()
+        LoopMemoItemComment commentUpdateEntity = new LoopMemoItemComment(); // 触发评论更新时间自动填充的实体
+        loopMemoItemCommentService.update(commentUpdateEntity, Wrappers.<LoopMemoItemComment>lambdaUpdate()
                 .in(LoopMemoItemComment::getLoopItemId, distinctLoopItemIds)
                 .eq(LoopMemoItemComment::getMemoId, sourceMemo.getId())
                 .set(LoopMemoItemComment::getMemoId, targetMemo.getId())
@@ -130,9 +132,6 @@ public class LoopMemoItemServiceImpl extends ServiceImpl<LoopMemoItemMapper, Loo
 
     /**
      * 刷新循环备忘冗余次数
-     *
-     * @param memoId 循环备忘主键
-     * @return 最新循环次数
      */
     private int refreshMemoLoopCount(Memo memo, Integer expectedVersion) {
         Integer memoId = memo.getId();

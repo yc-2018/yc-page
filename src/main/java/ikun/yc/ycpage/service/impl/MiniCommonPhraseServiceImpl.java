@@ -10,7 +10,6 @@ import ikun.yc.ycpage.service.MiniCommonPhraseService;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -61,12 +60,12 @@ public class MiniCommonPhraseServiceImpl
         String content = normalizeContent(phrase.getContent()); // 标准化后的内容
         ensureContentUnique(userOpenid, content, oldPhrase.getId());
 
+        MiniCommonPhrase updateEntity = new MiniCommonPhrase(); // 触发 MyBatis Plus 更新时间自动填充的更新实体
+        updateEntity.setContent(content);
         try {
-            return baseMapper.update(null, Wrappers.<MiniCommonPhrase>lambdaUpdate()
+            return baseMapper.update(updateEntity, Wrappers.<MiniCommonPhrase>lambdaUpdate()
                     .eq(MiniCommonPhrase::getId, oldPhrase.getId())
                     .eq(MiniCommonPhrase::getUserOpenid, userOpenid)
-                    .set(MiniCommonPhrase::getContent, content)
-                    .set(MiniCommonPhrase::getUpdateTime, LocalDateTime.now())
             ) > 0;
         } catch (DuplicateKeyException ex) {
             throw new ParamException("常用语已存在");
@@ -87,11 +86,11 @@ public class MiniCommonPhraseServiceImpl
                 ? 1L
                 : currentTop.getSortOrder() + 1L; // 新置顶排序值
 
-        return baseMapper.update(null, Wrappers.<MiniCommonPhrase>lambdaUpdate()
+        MiniCommonPhrase updateEntity = new MiniCommonPhrase(); // 触发 MyBatis Plus 更新时间自动填充的更新实体
+        updateEntity.setSortOrder(topSortOrder);
+        return baseMapper.update(updateEntity, Wrappers.<MiniCommonPhrase>lambdaUpdate()
                 .eq(MiniCommonPhrase::getId, phrase.getId())
                 .eq(MiniCommonPhrase::getUserOpenid, userOpenid)
-                .set(MiniCommonPhrase::getSortOrder, topSortOrder)
-                .set(MiniCommonPhrase::getUpdateTime, LocalDateTime.now())
         ) > 0;
     }
 

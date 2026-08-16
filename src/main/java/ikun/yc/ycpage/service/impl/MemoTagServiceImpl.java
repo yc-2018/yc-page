@@ -59,11 +59,12 @@ public class MemoTagServiceImpl extends ServiceImpl<MemoTagMapper, MemoTag> impl
         String tagName = memoTag.getName().trim(); // 标签名称
         MemoTag oldTag = getCurrentUserTag(memoTag.getId());
         if (existsTagName(oldTag.getItemType(), tagName, oldTag.getId())) throw new ParamException("标签已存在");
-        return this.lambdaUpdate()
+        MemoTag updateEntity = new MemoTag(); // 触发 updateTime 自动填充的更新实体
+        updateEntity.setName(tagName);
+        return this.update(updateEntity, com.baomidou.mybatisplus.core.toolkit.Wrappers.<MemoTag>lambdaUpdate()
                 .eq(MemoTag::getId, oldTag.getId())
                 .eq(MemoTag::getUserId, BaseContext.getCurrentId())
-                .set(MemoTag::getName, tagName)
-                .update();
+        );
     }
 
     /** 删除当前用户的标签和标签关联 */

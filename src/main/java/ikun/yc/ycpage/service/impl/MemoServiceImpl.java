@@ -43,7 +43,6 @@ public class MemoServiceImpl extends ServiceImpl<MemoMapper, Memo> implements Me
         String userId = BaseContext.getCurrentId();
 
         memo.validateImgArr(); // 校验备忘图片字段长度
-        memo.setCreateTime(null);
         memo.setUserId(userId);
         memoTagRelationService.validateMemoTags(memo.getItemType(), memo.getTagIds());
 
@@ -112,14 +111,15 @@ public class MemoServiceImpl extends ServiceImpl<MemoMapper, Memo> implements Me
     @Override
     public boolean deleteItem(Integer id, Integer version) {
         OptimisticLockUtils.requireVersion(version);
-        boolean updated = this.lambdaUpdate()
+        Memo updateEntity = new Memo(); // 触发 updateTime 自动填充的逻辑删除实体
+        boolean updated = this.update(updateEntity, Wrappers.<Memo>lambdaUpdate()
                 .eq(Memo::getId, id)
                 .eq(Memo::getUserId, BaseContext.getCurrentId())
                 .eq(Memo::getVersion, version)
                 .lt(Memo::getCompleted, 10)
                 .setSql("completed = completed + 10")
                 .setSql("version = version + 1")
-                .update(); // CAS 逻辑删除结果
+        ); // CAS 逻辑删除结果
         OptimisticLockUtils.requireUpdated(updated);
         return true;
     }

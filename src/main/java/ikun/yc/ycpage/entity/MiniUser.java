@@ -1,9 +1,12 @@
 package ikun.yc.ycpage.entity;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -31,8 +34,10 @@ public class MiniUser extends Model<MiniUser> implements Serializable {
     /** 微信头像URL */
     private String avatarUrl;
     /** 创建时间 */
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
     /** 更新时间 */
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
     /** 最后登录时间 */
     private LocalDateTime lastLoginTime;
@@ -43,6 +48,7 @@ public class MiniUser extends Model<MiniUser> implements Serializable {
     /** 是否订阅消息 0-未订阅 1-已订阅 */
     private Integer isSubscribe;
 
+    @Serial
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 }

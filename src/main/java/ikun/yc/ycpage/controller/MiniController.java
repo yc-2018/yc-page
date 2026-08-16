@@ -173,7 +173,6 @@ public class MiniController {
                 .set(MiniCheckinRecords::getImgs, miniCheckinRecords.getImgs())         // 图片
                 .set(StringUtils.hasText(miniCheckinRecords.getLocationType()), MiniCheckinRecords::getLocationType, miniCheckinRecords.getLocationType())
                 .set(miniCheckinRecords.getCheckinTime() != null, MiniCheckinRecords::getCheckinTime, miniCheckinRecords.getCheckinTime())
-                .set( MiniCheckinRecords::getUpdateTime, LocalDate.now())
                 .eq(MiniCheckinRecords::getId, miniCheckinRecords.getId())
                 .eq(MiniCheckinRecords::getUserOpenid, BaseContext.getCurrentId())
         );

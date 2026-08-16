@@ -185,11 +185,11 @@ public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMap
         MiniCheckinShare share = getCurrentUserShare(id); // 当前用户的分享记录
         LocalDateTime expireTime = MiniCheckinShareDurationType.fromCode(durationType)
                 .resolveExpireTime(LocalDateTime.now()); // 新有效截止时间
-        boolean updateOk = update(Wrappers.<MiniCheckinShare>lambdaUpdate()
+        MiniCheckinShare updateEntity = new MiniCheckinShare(); // 触发 updateTime 自动填充的更新实体
+        boolean updateOk = update(updateEntity, Wrappers.<MiniCheckinShare>lambdaUpdate()
                 .eq(MiniCheckinShare::getId, share.getId())
                 .eq(MiniCheckinShare::getUserOpenid, BaseContext.getCurrentId())
-                .set(MiniCheckinShare::getExpireTime, expireTime)
-                .set(MiniCheckinShare::getUpdateTime, LocalDateTime.now()));
+                .set(MiniCheckinShare::getExpireTime, expireTime));
         if (!updateOk) {
             throw new SqlUpdateException("修改分享时间失败");
         }
@@ -209,11 +209,11 @@ public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMap
         if (share.getExpireTime() == null || !share.getExpireTime().isAfter(now)) {
             throw new ParamException("分享已经停用");
         }
-        boolean updateOk = update(Wrappers.<MiniCheckinShare>lambdaUpdate()
+        MiniCheckinShare updateEntity = new MiniCheckinShare(); // 触发 updateTime 自动填充的更新实体
+        boolean updateOk = update(updateEntity, Wrappers.<MiniCheckinShare>lambdaUpdate()
                 .eq(MiniCheckinShare::getId, share.getId())
                 .eq(MiniCheckinShare::getUserOpenid, BaseContext.getCurrentId())
-                .set(MiniCheckinShare::getExpireTime, now)
-                .set(MiniCheckinShare::getUpdateTime, now));
+                .set(MiniCheckinShare::getExpireTime, now));
         if (!updateOk) {
             throw new SqlUpdateException("停用分享失败");
         }

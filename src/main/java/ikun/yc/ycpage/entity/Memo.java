@@ -58,11 +58,12 @@ public class Memo extends Model<Memo> implements Serializable {
     /** 备忘图片地址，多个地址用逗号分隔 */
     private String imgArr;
     /** 创建时间 */
+    @TableField(fill = FieldFill.INSERT)
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
     /** 修改时间 */
-    @TableField(fill = FieldFill.UPDATE)
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updateTime;
     /** 完成时间 */
