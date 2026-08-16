@@ -4,6 +4,25 @@
 # 这样可以避免 git pull 或 Maven 打包失败后仍继续停服、启动旧包。
 set -Eeuo pipefail
 
+# 不带参数时正常部署；--rollback 只切换到上一个成功版本，不拉代码和打包。
+if (( $# > 1 )); then
+    echo "用法: $0 [--rollback]" >&2
+    exit 1
+fi
+
+case "${1:-}" in
+    "")
+        RUN_MODE="deploy"
+        ;;
+    --rollback)
+        RUN_MODE="rollback"
+        ;;
+    *)
+        echo "用法: $0 [--rollback]" >&2
+        exit 1
+        ;;
+esac
+
 # ==================== 基础配置 ====================
 APP_NAME="yc-page"                                      # 用于识别 Java 进程和命名日志。
 APP_PORT="${APP_PORT:-8080}"                            # 项目独占端口，可在执行脚本前用 APP_PORT 覆盖。
@@ -11,7 +30,11 @@ SOURCE_DIR="/var/javaCode/yc-page"                      # Git 源码目录。
 DEPLOY_DIR="/var/java/yc-page"                          # 独立的运行目录，避免直接运行 target 中的 jar。
 RELEASE_DIR="${DEPLOY_DIR}/releases"                    # 保存每次构建的 jar，供失败回滚。
 LOG_DIR="${DEPLOY_DIR}/logs"                            # 应用日志目录。
+LOG_FILE="${LOG_DIR}/${APP_NAME}.log"                  # 只保存当前这次启动的日志。
+HISTORY_LOG_FILE="${LOG_DIR}/${APP_NAME}-history.log"  # 合并保存此前各次启动的日志。
+HISTORY_LOG_MAX_BYTES=104857600                         # 历史日志最多保留最近 100 MB。
 CURRENT_JAR="${DEPLOY_DIR}/current.jar"                 # 指向当前版本 jar 的软链接。
+PREVIOUS_JAR_LINK="${DEPLOY_DIR}/previous.jar"          # 指向上一个成功运行版本的软链接。
 PID_FILE="${DEPLOY_DIR}/${APP_NAME}.pid"                # 记录本次启动的进程号。
 ENV_FILE="${ENV_FILE:-/etc/yc-page/yc-page.env}"        # 密钥和数据库等环境变量文件。
 
@@ -57,45 +80,51 @@ fi
 
 # 将所选 JDK 放到 PATH 最前面，确保 Maven 也使用这个 JDK，而不是系统里的 JDK 8。
 export PATH="${JAVA_HOME}/bin:/usr/local/maven/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-# 部署依赖 git 拉代码、mvn 打包、ss 检查监听端口，缺少任一工具都不继续。
-command -v git >/dev/null || { echo "未找到 git"; exit 1; }
-command -v mvn >/dev/null || { echo "未找到 mvn"; exit 1; }
+# 正常部署依赖 git 拉代码和 mvn 打包；回滚模式不需要这两个工具。
+if [[ "${RUN_MODE}" == "deploy" ]]; then
+    command -v git >/dev/null || { echo "未找到 git"; exit 1; }
+    command -v mvn >/dev/null || { echo "未找到 mvn"; exit 1; }
+fi
+# 两种模式都需要 ss 检查监听端口。
 command -v ss >/dev/null || { echo "未找到 ss"; exit 1; }
 
 mkdir -p "${RELEASE_DIR}" "${LOG_DIR}"
 
-# ==================== 保存可回滚版本 ====================
-# 正常部署后 current.jar 是软链接，读取它即可找到上一版 jar。
-PREVIOUS_JAR=""
-if [[ -L "${CURRENT_JAR}" ]]; then
-    PREVIOUS_JAR="$(readlink -f "${CURRENT_JAR}")"
-else
-    # 第一次使用本脚本时还没有 current.jar，先备份 target 中原有的 jar。
-    OLD_JAR="$(find "${SOURCE_DIR}/target" -maxdepth 1 -type f -name '*.jar' ! -name 'original-*.jar' -print -quit 2>/dev/null || true)"
-    if [[ -n "${OLD_JAR}" ]]; then
-        PREVIOUS_JAR="${RELEASE_DIR}/${APP_NAME}-before-java21-$(date +%Y%m%d%H%M%S).jar"
-        cp "${OLD_JAR}" "${PREVIOUS_JAR}"
+# 回滚模式不拉代码、不打包；正常部署才准备新发布文件。
+if [[ "${RUN_MODE}" == "deploy" ]]; then
+    # ==================== 保存可回滚版本 ====================
+    # 正常部署后 current.jar 是软链接，读取它即可找到上一版 jar。
+    PREVIOUS_JAR=""
+    if [[ -L "${CURRENT_JAR}" ]]; then
+        PREVIOUS_JAR="$(readlink -f "${CURRENT_JAR}")"
+    else
+        # 第一次使用本脚本时还没有 current.jar，先备份 target 中原有的 jar。
+        OLD_JAR="$(find "${SOURCE_DIR}/target" -maxdepth 1 -type f -name '*.jar' ! -name 'original-*.jar' -print -quit 2>/dev/null || true)"
+        if [[ -n "${OLD_JAR}" ]]; then
+            PREVIOUS_JAR="${RELEASE_DIR}/${APP_NAME}-before-java21-$(date +%Y%m%d%H%M%S).jar"
+            cp "${OLD_JAR}" "${PREVIOUS_JAR}"
+        fi
     fi
+
+    # ==================== 拉代码并构建新版本 ====================
+    # 这里尚未停止旧进程；拉取或构建失败时，线上旧服务不受影响。
+    echo "拉取最新代码并打包（此阶段旧服务继续运行）"
+    cd "${SOURCE_DIR}"
+    git pull --ff-only                         # 只允许快进更新，避免服务器自动产生合并提交。
+    mvn -B clean package -DskipTests           # 批处理模式构建；编译测试代码但不执行测试。
+
+    # Spring Boot 打包可能同时生成 original-*.jar，这里只选择可直接运行的 jar。
+    BUILD_JAR="$(find target -maxdepth 1 -type f -name '*.jar' ! -name 'original-*.jar' -print -quit)"
+    if [[ -z "${BUILD_JAR}" ]]; then
+        echo "打包完成但没有找到可运行的 jar"
+        exit 1
+    fi
+
+    # 发布文件名加入 Git 提交号和时间，方便确认版本，也避免覆盖旧包。
+    REVISION="$(git rev-parse --short HEAD)"
+    NEW_JAR="${RELEASE_DIR}/${APP_NAME}-${REVISION}-$(date +%Y%m%d%H%M%S).jar"
+    cp "${BUILD_JAR}" "${NEW_JAR}"
 fi
-
-# ==================== 拉代码并构建新版本 ====================
-# 这里尚未停止旧进程；拉取或构建失败时，线上旧服务不受影响。
-echo "拉取最新代码并打包（此阶段旧服务继续运行）"
-cd "${SOURCE_DIR}"
-git pull --ff-only                         # 只允许快进更新，避免服务器自动产生合并提交。
-mvn -B clean package -DskipTests           # 批处理模式构建；编译测试代码但不执行测试。
-
-# Spring Boot 打包可能同时生成 original-*.jar，这里只选择可直接运行的 jar。
-BUILD_JAR="$(find target -maxdepth 1 -type f -name '*.jar' ! -name 'original-*.jar' -print -quit)"
-if [[ -z "${BUILD_JAR}" ]]; then
-    echo "打包完成但没有找到可运行的 jar"
-    exit 1
-fi
-
-# 发布文件名加入 Git 提交号和时间，方便确认版本，也避免覆盖旧包。
-REVISION="$(git rev-parse --short HEAD)"
-NEW_JAR="${RELEASE_DIR}/${APP_NAME}-${REVISION}-$(date +%Y%m%d%H%M%S).jar"
-cp "${BUILD_JAR}" "${NEW_JAR}"
 
 # 判断指定 PID 是否为本项目进程。
 # 直接读取 /proc 可以避免 CentOS 7 的 ps 输出被截断后找不到 jar 路径。
@@ -196,9 +225,33 @@ stop_port_listeners() {
     sleep 1
 }
 
-# 后台启动 current.jar，将标准输出和错误输出追加到同一日志，并记录 PID。
+# 把上一次启动日志并入历史日志，再创建空的当前日志。
+rotate_app_log() {
+    local history_temp
+
+    if [[ -s "${LOG_FILE}" ]]; then
+        {
+            printf '\n===== 归档时间: %s =====\n' "$(date '+%Y-%m-%d %H:%M:%S %z')"
+            cat "${LOG_FILE}"
+        } >> "${HISTORY_LOG_FILE}"
+    fi
+
+    # 历史日志超出 100 MB 时只保留末尾，防止长期部署后占满磁盘。
+    if [[ -f "${HISTORY_LOG_FILE}" ]] && (( $(wc -c < "${HISTORY_LOG_FILE}") > HISTORY_LOG_MAX_BYTES )); then
+        history_temp="${HISTORY_LOG_FILE}.tmp.$$"
+        tail -c "${HISTORY_LOG_MAX_BYTES}" "${HISTORY_LOG_FILE}" > "${history_temp}"
+        mv "${history_temp}" "${HISTORY_LOG_FILE}"
+    fi
+
+    : > "${LOG_FILE}"
+}
+
+# 后台启动 current.jar，将标准输出和错误输出写入本次日志，并记录 PID。
 start_app() {
-    nohup "${JAVA_BIN}" ${JAVA_OPTS:-} -jar "${CURRENT_JAR}" >> "${LOG_DIR}/${APP_NAME}.log" 2>&1 &
+    rotate_app_log
+    printf '===== 启动时间: %s | JAR: %s =====\n' \
+        "$(date '+%Y-%m-%d %H:%M:%S %z')" "$(readlink -f "${CURRENT_JAR}")" > "${LOG_FILE}"
+    nohup "${JAVA_BIN}" ${JAVA_OPTS:-} -jar "${CURRENT_JAR}" >> "${LOG_FILE}" 2>&1 &
     echo $! > "${PID_FILE}"
 }
 
@@ -215,6 +268,74 @@ wait_for_start() {
     done
     return 1
 }
+
+# 切换到上一个成功版本；若目标版本启动失败，则恢复回滚前的版本。
+rollback_release() {
+    local current_release
+    local rollback_release
+    local port_listener
+
+    if [[ ! -L "${CURRENT_JAR}" ]] || [[ ! -f "$(readlink -f "${CURRENT_JAR}" 2>/dev/null || true)" ]]; then
+        echo "当前版本链接无效: ${CURRENT_JAR}"
+        return 1
+    fi
+    if [[ ! -L "${PREVIOUS_JAR_LINK}" ]] || [[ ! -f "$(readlink -f "${PREVIOUS_JAR_LINK}" 2>/dev/null || true)" ]]; then
+        echo "没有可回滚的上一个成功版本: ${PREVIOUS_JAR_LINK}"
+        echo "请先使用新版 runJava.sh 成功部署一次"
+        return 1
+    fi
+
+    current_release="$(readlink -f "${CURRENT_JAR}")" # 回滚失败时需要恢复的当前版本
+    rollback_release="$(readlink -f "${PREVIOUS_JAR_LINK}")" # 本次准备切换到的版本
+    if [[ "${current_release}" == "${rollback_release}" ]]; then
+        echo "当前版本与上一个版本相同，无需回滚: ${current_release}"
+        return 1
+    fi
+
+    echo "准备回滚"
+    echo "当前版本: ${current_release}"
+    echo "目标版本: ${rollback_release}"
+    stop_app
+    stop_port_listeners
+
+    port_listener="$(port_listener_details)"
+    if [[ -n "${port_listener}" ]]; then
+        echo "端口 ${APP_PORT} 的占用进程无法停止，取消回滚："
+        echo "${port_listener}"
+        return 1
+    fi
+
+    ln -sfn "${rollback_release}" "${CURRENT_JAR}"
+    start_app
+    if wait_for_start; then
+        # 回滚前的版本成为新的 previous，再执行一次回滚即可撤销本次操作。
+        ln -sfn "${current_release}" "${PREVIOUS_JAR_LINK}"
+        echo "回滚成功: ${rollback_release}，PID $(cat "${PID_FILE}")，端口 ${APP_PORT}"
+        return 0
+    fi
+
+    echo "回滚目标启动失败，最近日志如下："
+    tail -n 80 "${LOG_FILE}" || true
+    stop_app
+    stop_port_listeners
+
+    echo "正在恢复回滚前版本: ${current_release}"
+    ln -sfn "${current_release}" "${CURRENT_JAR}"
+    start_app
+    if wait_for_start; then
+        echo "已恢复回滚前版本"
+    else
+        echo "回滚前版本也未能恢复，请检查日志: ${LOG_FILE}"
+    fi
+    return 1
+}
+
+if [[ "${RUN_MODE}" == "rollback" ]]; then
+    if rollback_release; then
+        exit 0
+    fi
+    exit 1
+fi
 
 # ==================== 切换到新版本 ====================
 stop_app
@@ -234,6 +355,9 @@ ln -sfn "${NEW_JAR}" "${CURRENT_JAR}"
 start_app
 
 if wait_for_start; then
+    if [[ -n "${PREVIOUS_JAR}" && -f "${PREVIOUS_JAR}" ]]; then
+        ln -sfn "${PREVIOUS_JAR}" "${PREVIOUS_JAR_LINK}"
+    fi
     echo "部署成功: ${NEW_JAR}，PID $(cat "${PID_FILE}")，端口 ${APP_PORT}"
     exit 0
 fi
@@ -241,7 +365,7 @@ fi
 # ==================== 启动失败时回滚 ====================
 # 先打印最近 80 行日志帮助定位问题，再停止失败的新进程。
 echo "新版本启动失败，最近日志如下："
-tail -n 80 "${LOG_DIR}/${APP_NAME}.log" || true
+tail -n 80 "${LOG_FILE}" || true
 stop_app
 
 # 如果上一版 jar 存在，将 current.jar 重新指向上一版并启动。
@@ -252,7 +376,7 @@ if [[ -n "${PREVIOUS_JAR}" && -f "${PREVIOUS_JAR}" ]]; then
     if wait_for_start; then
         echo "回滚成功，旧版本已恢复"
     else
-        echo "回滚版本也未能启动，请检查日志: ${LOG_DIR}/${APP_NAME}.log"
+        echo "回滚版本也未能启动，请检查日志: ${LOG_FILE}"
     fi
 fi
 

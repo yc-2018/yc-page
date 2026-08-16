@@ -116,6 +116,7 @@ ls -l /etc/yc-page/yc-page.env
 cd /var/javaCode/yc-page
 install -m 700 deploy/runJava.sh /root/runJava.sh
 install -m 700 deploy/catJavaLog.sh /root/catJavaLog.sh
+install -m 700 deploy/rollbackJava.sh /root/rollbackJava.sh
 ```
 
 执行首次部署：
@@ -153,18 +154,34 @@ tail -n 100 /var/java/yc-page/logs/yc-page.log
 /root/catJavaLog.sh
 ```
 
-日志脚本默认先显示最近 200 行再持续跟踪。临时调整首次显示的行数：
+`yc-page.log` 只保存本次启动日志。每次启动前，部署脚本会把原内容追加到 `yc-page-history.log`，历史日志最多保留最近 100 MB。
+
+日志脚本默认先显示当前启动的最近 200 行再持续跟踪。临时调整首次显示的行数：
 
 ```bash
 LINES=500 /root/catJavaLog.sh
+```
+
+查看历史日志最近 200 行：
+
+```bash
+/root/catJavaLog.sh history
+```
+
+调整历史日志显示行数：
+
+```bash
+LINES=500 /root/catJavaLog.sh history
 ```
 
 运行文件位置：
 
 ```text
 /var/java/yc-page/current.jar
+/var/java/yc-page/previous.jar
 /var/java/yc-page/releases/
 /var/java/yc-page/logs/yc-page.log
+/var/java/yc-page/logs/yc-page-history.log
 ```
 
 ## 七、以后更新版本
@@ -182,12 +199,32 @@ cd /var/javaCode/yc-page
 git pull --ff-only
 install -m 700 deploy/runJava.sh /root/runJava.sh
 install -m 700 deploy/catJavaLog.sh /root/catJavaLog.sh
+install -m 700 deploy/rollbackJava.sh /root/rollbackJava.sh
 /root/runJava.sh
 ```
 
 修改 `/etc/yc-page/yc-page.env` 后，也需要重新执行 `/root/runJava.sh` 才会让新环境变量生效。
 
-## 八、常见问题
+## 八、手动回滚版本
+
+正常部署成功后，`current.jar` 指向当前运行版本，`previous.jar` 指向上一个成功运行版本。如果上线后才发现某些接口存在问题，执行：
+
+```bash
+/root/rollbackJava.sh
+```
+
+回滚脚本不会拉代码或重新打包。它会停止当前服务、启动上一个版本并检查 8080 端口；如果目标版本启动失败，会自动恢复回滚前版本。
+
+回滚成功后，刚才退出的版本会成为新的 `previous.jar`。因此再次执行同一命令，可以撤销回滚并切回刚才的版本。
+
+查看当前和上一个版本：
+
+```bash
+readlink -f /var/java/yc-page/current.jar
+readlink -f /var/java/yc-page/previous.jar
+```
+
+## 九、常见问题
 
 ### 拉取或打包失败
 
@@ -227,7 +264,7 @@ ps -fp PID
 
 如果监听者就是上一次由旧版部署脚本启动的 `yc-page`，请先拉取最新代码并重新安装 `deploy/runJava.sh`。新版脚本直接从 `/proc` 识别应用进程，不受 CentOS 7 的 `ps` 输出截断影响。
 
-## 九、安全说明
+## 十、安全说明
 
 - `/etc/yc-page/yc-page.env` 和 `/root/.yc-stack/credentials.env` 不得提交到 Git。
 - MySQL、Redis 默认只供本机访问，不需要向公网开放 3306 和 6379 端口。
