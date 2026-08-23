@@ -5,6 +5,7 @@
     <select id="selectPreviewByLoopItemIds" resultType="ikun.yc.ycpage.entity.LoopMemoItemComment">
         SELECT
             c.id,
+            c.version,
             c.memo_id,
             c.loop_item_id,
             c.comment_date,
