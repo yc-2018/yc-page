@@ -172,6 +172,8 @@ public class MiniController {
                 .set(MiniCheckinRecords::getRemark, miniCheckinRecords.getRemark())     // 描述
                 .set(MiniCheckinRecords::getImgs, miniCheckinRecords.getImgs())         // 图片
                 .set(StringUtils.hasText(miniCheckinRecords.getLocationType()), MiniCheckinRecords::getLocationType, miniCheckinRecords.getLocationType())
+                .set(miniCheckinRecords.getLongitude() != null, MiniCheckinRecords::getLongitude, miniCheckinRecords.getLongitude()) // 经度
+                .set(miniCheckinRecords.getLatitude() != null, MiniCheckinRecords::getLatitude, miniCheckinRecords.getLatitude()) // 纬度
                 .set(miniCheckinRecords.getCheckinTime() != null, MiniCheckinRecords::getCheckinTime, miniCheckinRecords.getCheckinTime())
                 .eq(MiniCheckinRecords::getId, miniCheckinRecords.getId())
                 .eq(MiniCheckinRecords::getUserOpenid, BaseContext.getCurrentId())
