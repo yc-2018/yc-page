@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<trees>
+    <prefixes>
+        <prefix id="exception" path="/src/main/java/ikun/yc/ycpage/common/exception"/>
+        <prefix id="anno" path="/src/main/java/ikun/yc/ycpage/common/anno"/>
+    </prefixes>
+    <tree path="" title="注解" prefix="anno"/>
+    <tree path="/Log.java" title="记录日志" prefix="anno"/>
+    <tree path="/UserId.java" title="自动注入id" prefix="anno"/>
+    <tree path="/RedisCache.java" title="redis缓存" prefix="anno"/>
+    <tree path="/CountControl.java" title="请求控制" prefix="anno"/>
+    <tree path="/PassToken.java" title="无需Token 请求" prefix="anno"/>
+    <tree path="/CacheEvict.java" title="清除 redis 缓存" prefix="anno"/>
+    <tree path="" title="异常相关" prefix="exception"/>
+    <tree path="/PathException.java" title="路径异常" prefix="exception"/>
+    <tree path="/GlobalExceptionHandler.java" title="全局异常捕捉" prefix="exception"/>
+    <tree path="/src/main/java/ikun/yc/ycpage/common/BaseContext.java" title="一次请求上下文内容"/>
+    <tree path="/src/main/java/ikun/yc/ycpage/common/StringToLinkTypeConverter.java" title="枚举转换器"/>
+    <tree path="/deploy" title="服务器脚本"/>
+    <tree path="/src/main/java/ikun/yc/ycpage/interceptor" title="拦截器"/>
+    <tree path="/src/main/java/ikun/yc/ycpage/common" title="注解、切面、异常 等"/>
+    <tree path="/src/main/java/ikun/yc/ycpage/common/aop" title="切面"/>
+    <tree path="/src/main/java/ikun/yc/ycpage/common/aop/CountControlAspect.java" title="请求速率控制"/>
+    <tree path="/src/main/java/ikun/yc/ycpage/common/aop/DelCacheAspect.java" title="Redis缓存清理"/>
+    <tree path="/src/main/java/ikun/yc/ycpage/common/aop/LogAspect.java" title="记录日志"/>
+    <tree path="/src/main/java/ikun/yc/ycpage/common/aop/RedisCacheAspect.java" title="请求缓存"/>
+    <tree path="/src/main/java/ikun/yc/ycpage/common/aop/UserIdAspect.java" title="注入userID"/>
+</trees>
