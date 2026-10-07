@@ -8,7 +8,7 @@ YcPage 是一个基于 Spring Boot 的多功能后端服务项目，旨在为用
 
 - **书签管理**：支持添加、编辑、删除和拖拽排序书签，支持自定义图标和分类。
 - **备忘录系统**：支持创建、更新、删除备忘录，支持循环备忘录和打卡记录。
-- **微信小程序集成**：提供微信登录、用户信息管理、打卡记录、个人常用语、打卡分享、WiFi 小程序码生成等功能，WiFi 码按用户每天最多生成 10 次。
+- **微信小程序集成**：提供微信登录、用户信息管理、打卡记录、个人常用语、打卡分享、2FA 验证码保管、WiFi 小程序码生成等功能，WiFi 码按用户每天最多生成 10 次。
 - **搜索引擎配置**：支持自定义搜索引擎及其排序，适用于个性化搜索需求。
 - **用户配置管理**：支持用户自定义背景、书签排序等个性化设置。
 - **操作日志记录**：记录用户操作行为，便于审计和追踪。
@@ -34,6 +34,7 @@ YcPage 是一个基于 Spring Boot 的多功能后端服务项目，旨在为用
 - `MiniController`：微信小程序相关接口
 - `MiniCommonPhraseController`：微信小程序打卡常用语接口
 - `MiniCheckinShareController`：微信小程序打卡分享接口
+- `MiniTotpController`：微信小程序 2FA 验证码接口
 - `MiniWifiCodeController`：微信小程序 WiFi 码生成接口
 - `SearchEnginesController`：搜索引擎配置接口
 - `UserController`：用户管理接口
@@ -44,6 +45,7 @@ YcPage 是一个基于 Spring Boot 的多功能后端服务项目，旨在为用
 - `MiniUserService`：微信用户管理
 - `MiniCommonPhraseService`：按当前用户管理打卡常用语及置顶顺序
 - `MiniCheckinShareService`：微信小程序打卡分享业务逻辑
+- `MiniTotpService`：按当前用户管理 2FA 条目，密钥只在新增时写入，之后只允许改名称
 - `SearchEnginesService`：搜索引擎业务逻辑
 - `UserService`：用户管理业务逻辑
 
