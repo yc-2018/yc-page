@@ -45,7 +45,7 @@ YcPage 是一个基于 Spring Boot 的多功能后端服务项目，旨在为用
 - `MiniUserService`：微信用户管理
 - `MiniCommonPhraseService`：按当前用户管理打卡常用语及置顶顺序
 - `MiniCheckinShareService`：微信小程序打卡分享业务逻辑
-- `MiniTotpService`：按当前用户管理 2FA 条目，密钥只在新增时写入，之后只允许改名称
+- `MiniTotpService`：按当前用户管理 2FA 条目，名称/账号/密钥均可修改，排序值只能通过置顶接口变更
 - `SearchEnginesService`：搜索引擎业务逻辑
 - `UserService`：用户管理业务逻辑
 

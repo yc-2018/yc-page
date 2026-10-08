@@ -181,7 +181,7 @@ class MiniTotpServiceImplTest {
         totp.setId(9);
 
         ParamException exception = assertThrows(ParamException.class,
-                () -> service.updateCurrentUserTotpName(totp));
+                () -> service.updateCurrentUserTotp(totp));
 
         assertEquals("2FA条目不存在", exception.getMessage());
         @SuppressWarnings("unchecked")
@@ -198,22 +198,23 @@ class MiniTotpServiceImplTest {
     @Test
     void updateShouldRejectMissingId() {
         ParamException exception = assertThrows(ParamException.class,
-                () -> service.updateCurrentUserTotpName(newTotp("改名后的名称", "", "JG7Y3TK4RO4KJLND")));
+                () -> service.updateCurrentUserTotp(newTotp("改名后的名称", "", "JG7Y3TK4RO4KJLND")));
 
         assertEquals("2FA条目不存在", exception.getMessage());
     }
 
-    /** 修改只能落名称：即使请求带了新密钥和新账号也不能进更新实体 */
+    /** 修改应把名称、账号和密钥一起落库，并做归一化 */
     @Test
-    void updateShouldOnlyPersistName() {
+    void updateShouldPersistAllEditableFields() {
         MiniTotp stored = newTotp("openai", "old@mail.com", "JG7Y3TK4RO4KJLND"); // 库里已有的条目
         stored.setId(3);
         when(mapper.selectOne(any())).thenReturn(stored);
+        when(mapper.selectCount(any())).thenReturn(0L);
         when(mapper.update(any(MiniTotp.class), any())).thenReturn(1);
 
-        MiniTotp request = newTotp("  OpenAI  ", "hacker@mail.com", "AAAAAAAAAAAAAAAA"); // 试图顺带改密钥的请求
+        MiniTotp request = newTotp("  OpenAI  ", "  new@mail.com  ", " aaaa-bbbb cccc2345== "); // 三个字段都改
         request.setId(3);
-        assertTrue(service.updateCurrentUserTotpName(request));
+        assertTrue(service.updateCurrentUserTotp(request));
 
         ArgumentCaptor<MiniTotp> entityCaptor = ArgumentCaptor.forClass(MiniTotp.class); // 更新实体
         @SuppressWarnings("unchecked")
@@ -222,8 +223,10 @@ class MiniTotpServiceImplTest {
 
         MiniTotp updateEntity = entityCaptor.getValue(); // 实际提交的更新实体
         assertEquals("OpenAI", updateEntity.getName());
-        assertNull(updateEntity.getSecret());
-        assertNull(updateEntity.getAccount());
+        assertEquals("new@mail.com", updateEntity.getAccount());
+        assertEquals("AAAABBBBCCCC2345", updateEntity.getSecret());
+        // 排序值只能走置顶接口，普通修改不该带上
+        assertNull(updateEntity.getSortOrder());
         assertNull(updateEntity.getUserOpenid());
         assertNull(updateEntity.getId());
 
@@ -232,6 +235,61 @@ class MiniTotpServiceImplTest {
         Map<String, Object> values = updateWrapper.getParamNameValuePairs(); // 更新条件参数值
         assertTrue(values.containsValue(3));
         assertTrue(values.containsValue("openid-a"));
+    }
+
+    /** 改密钥时要排除自身查重，否则保持原密钥不动就会被误判成重复 */
+    @Test
+    void updateShouldExcludeSelfWhenCheckingDuplicateSecret() {
+        MiniTotp stored = newTotp("openai", "", "JG7Y3TK4RO4KJLND"); // 库里已有的条目
+        stored.setId(3);
+        when(mapper.selectOne(any())).thenReturn(stored);
+        when(mapper.selectCount(any())).thenReturn(0L);
+        when(mapper.update(any(MiniTotp.class), any())).thenReturn(1);
+
+        MiniTotp request = newTotp("openai", "", "JG7Y3TK4RO4KJLND"); // 只改名字，密钥保持原值
+        request.setId(3);
+        assertTrue(service.updateCurrentUserTotp(request));
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Wrapper<MiniTotp>> countCaptor = ArgumentCaptor.forClass(Wrapper.class); // 查重条件
+        verify(mapper).selectCount(countCaptor.capture());
+        LambdaQueryWrapper<MiniTotp> countWrapper = (LambdaQueryWrapper<MiniTotp>) countCaptor.getValue(); // 查重 Wrapper
+        String sqlSegment = countWrapper.getSqlSegment(); // 查重 SQL 片段
+        assertTrue(sqlSegment.contains("<>"));
+        assertTrue(countWrapper.getParamNameValuePairs().containsValue(3));
+    }
+
+    /** 改成别的条目已占用的密钥应被拒绝 */
+    @Test
+    void updateShouldRejectSecretUsedByAnotherTotp() {
+        MiniTotp stored = newTotp("openai", "", "JG7Y3TK4RO4KJLND"); // 库里已有的条目
+        stored.setId(3);
+        when(mapper.selectOne(any())).thenReturn(stored);
+        when(mapper.selectCount(any())).thenReturn(1L);
+
+        MiniTotp request = newTotp("openai", "", "AAAABBBBCCCC2345"); // 改成别人的密钥
+        request.setId(3);
+
+        ParamException exception = assertThrows(ParamException.class,
+                () -> service.updateCurrentUserTotp(request));
+
+        assertEquals("该2FA密钥已存在", exception.getMessage());
+    }
+
+    /** 修改时非法密钥应被拒绝 */
+    @Test
+    void updateShouldRejectInvalidSecret() {
+        MiniTotp stored = newTotp("openai", "", "JG7Y3TK4RO4KJLND"); // 库里已有的条目
+        stored.setId(3);
+        when(mapper.selectOne(any())).thenReturn(stored);
+
+        MiniTotp request = newTotp("openai", "", "JG7Y3TK4RO4KJL01"); // 含非 Base32 字符
+        request.setId(3);
+
+        ParamException exception = assertThrows(ParamException.class,
+                () -> service.updateCurrentUserTotp(request));
+
+        assertEquals("密钥只能包含A-Z和2-7", exception.getMessage());
     }
 
     /** 改名时空名称应被拒绝 */
@@ -245,7 +303,7 @@ class MiniTotpServiceImplTest {
         request.setId(3);
 
         ParamException exception = assertThrows(ParamException.class,
-                () -> service.updateCurrentUserTotpName(request));
+                () -> service.updateCurrentUserTotp(request));
 
         assertEquals("名称不能为空", exception.getMessage());
     }
@@ -338,20 +396,22 @@ class MiniTotpServiceImplTest {
         assertTrue(service.addCurrentUserTotp(newTotp("openai", "", "JG7Y3TK4RO4KJLND")));
     }
 
-    /** 列表应先按置顶排序值倒序，再按 id 升序，避免改名把条目顶上去 */
+    /** 列表应先按置顶排序值倒序，再按 id 倒序，置顶和未置顶都是新的在前 */
     @Test
-    void listShouldOrderBySortOrderThenId() {
+    void listShouldOrderBySortOrderThenIdDesc() {
         service.listCurrentUserTotps();
 
         @SuppressWarnings("unchecked")
         ArgumentCaptor<Wrapper<MiniTotp>> listCaptor = ArgumentCaptor.forClass(Wrapper.class); // 列表查询条件
         verify(mapper).selectList(listCaptor.capture());
-        String sqlSegment = listCaptor.getValue().getSqlSegment(); // 列表查询 SQL 片段
+        String sqlSegment = listCaptor.getValue().getSqlSegment().replaceAll("\\s+", " "); // 列表查询 SQL 片段
         assertTrue(sqlSegment.contains("ORDER BY"));
-        assertTrue(sqlSegment.replaceAll("\\s+", " ").contains("sort_order DESC"));
-        assertTrue(sqlSegment.replaceAll("\\s+", " ").contains("id ASC"));
-        assertTrue(sqlSegment.indexOf("sort_order") < sqlSegment.indexOf("id ASC"));
-        // 兜底刻意不用 update_time，否则改名会让条目往上跳
+        assertTrue(sqlSegment.contains("sort_order DESC"));
+        assertTrue(sqlSegment.contains("id DESC"));
+        assertTrue(sqlSegment.indexOf("sort_order") < sqlSegment.indexOf("id DESC"));
+        // 全列表统一倒序，不该再出现升序
+        assertFalse(sqlSegment.contains("ASC"));
+        // 兜底刻意不用 update_time，否则改条目会让它往上跳
         assertFalse(sqlSegment.contains("update_time"));
     }
 

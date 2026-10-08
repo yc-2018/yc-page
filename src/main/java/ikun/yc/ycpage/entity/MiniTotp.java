@@ -29,13 +29,13 @@ public class MiniTotp {
     @JsonIgnore
     private String userOpenid;
 
-    /** 名称，导出链接时作为label前缀和issuer，是唯一允许修改的字段 */
+    /** 名称，导出链接时作为label前缀和issuer */
     private String name;
 
-    /** 账号标签，导出链接时放在label冒号之后，新增后不可修改 */
+    /** 账号标签，导出链接时放在label冒号之后 */
     private String account;
 
-    /** Base32密钥，新增后不可修改 */
+    /** Base32密钥 */
     private String secret;
 
     /** 置顶时间戳(毫秒)，0表示未置顶，越大越靠前；只能通过置顶接口修改 */

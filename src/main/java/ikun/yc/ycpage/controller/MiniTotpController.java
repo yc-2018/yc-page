@@ -42,11 +42,11 @@ public class MiniTotpController {
                 : R.error("新增失败");
     }
 
-    /** 修改当前用户2FA条目的名称，密钥和账号不可修改 */
+    /** 修改当前用户的2FA条目，名称、账号和密钥都可以改 */
     @PostMapping("/update")
     @CountControl(operationType = CountControlAspect.UPDATE, frequency = 10)
     public R<Boolean> update(@RequestBody MiniTotp totp) {
-        return miniTotpService.updateCurrentUserTotpName(totp)
+        return miniTotpService.updateCurrentUserTotp(totp)
                 ? R.success(true)
                 : R.error("修改失败");
     }

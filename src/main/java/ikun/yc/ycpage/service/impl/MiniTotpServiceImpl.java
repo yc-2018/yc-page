@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 
 /**
  * 小程序2FA验证码服务实现。
- * 密钥和账号只在新增时写入，之后只允许改名称，这个约束由服务端兜底，不依赖前端。
+ * 名称、账号和密钥都允许修改；排序值只能通过置顶接口变更。
  *
  * @author cgl
  * @since 2026/10/06
@@ -35,12 +35,12 @@ public class MiniTotpServiceImpl
     /** 查询当前用户的全部2FA条目，导出功能需要全量数据所以不分页 */
     @Override
     public List<MiniTotp> listCurrentUserTotps() {
-        // 置顶的按置顶时间戳倒序；未置顶的 sort_order 都是 0，再按 id 升序保持添加顺序。
-        // 这里刻意不用 update_time 兜底：改名会动 update_time，会让条目莫名往上跳。
+        // 置顶的按置顶时间戳倒序；未置顶的 sort_order 都是 0，再按 id 倒序，新加的排在前面。
+        // 这里刻意不用 update_time 兜底：改条目会动 update_time，会让条目莫名往上跳。
         return baseMapper.selectList(Wrappers.<MiniTotp>lambdaQuery()
                 .eq(MiniTotp::getUserOpenid, requireCurrentUserId())
                 .orderByDesc(MiniTotp::getSortOrder)
-                .orderByAsc(MiniTotp::getId));
+                .orderByDesc(MiniTotp::getId));
     }
 
     /** 新增当前用户的2FA条目 */
@@ -51,7 +51,7 @@ public class MiniTotpServiceImpl
         String name = normalizeName(totp.getName()); // 标准化后的名称
         String account = normalizeAccount(totp.getAccount()); // 标准化后的账号标签
         String secret = normalizeSecret(totp.getSecret()); // 标准化后的密钥
-        ensureSecretUnique(userOpenid, secret);
+        ensureSecretUnique(userOpenid, secret, null);
 
         MiniTotp entity = new MiniTotp(); // 待保存的2FA实体
         entity.setUserOpenid(userOpenid);
@@ -67,22 +67,31 @@ public class MiniTotpServiceImpl
     }
 
     /**
-     * 修改当前用户2FA条目的名称。
-     * 更新实体只装名称，因此即使请求里带了 secret 或 account 也不会落库。
+     * 修改当前用户的2FA条目。
+     * 名称、账号和密钥都可以改；改密钥时要排除自身再查重，否则原值会被当成重复。
      */
     @Override
-    public boolean updateCurrentUserTotpName(MiniTotp totp) {
+    public boolean updateCurrentUserTotp(MiniTotp totp) {
         if (totp == null || totp.getId() == null) throw new ParamException("2FA条目不存在");
         String userOpenid = requireCurrentUserId(); // 当前登录用户openid
         MiniTotp oldTotp = getCurrentUserTotp(totp.getId(), userOpenid); // 原2FA条目
         String name = normalizeName(totp.getName()); // 标准化后的名称
+        String account = normalizeAccount(totp.getAccount()); // 标准化后的账号标签
+        String secret = normalizeSecret(totp.getSecret()); // 标准化后的密钥
+        ensureSecretUnique(userOpenid, secret, oldTotp.getId());
 
-        MiniTotp updateEntity = new MiniTotp(); // 只含名称的更新实体，顺带触发更新时间自动填充
+        MiniTotp updateEntity = new MiniTotp(); // 待更新的字段，顺带触发更新时间自动填充
         updateEntity.setName(name);
-        return baseMapper.update(updateEntity, Wrappers.<MiniTotp>lambdaUpdate()
-                .eq(MiniTotp::getId, oldTotp.getId())
-                .eq(MiniTotp::getUserOpenid, userOpenid)
-        ) > 0;
+        updateEntity.setAccount(account);
+        updateEntity.setSecret(secret);
+        try {
+            return baseMapper.update(updateEntity, Wrappers.<MiniTotp>lambdaUpdate()
+                    .eq(MiniTotp::getId, oldTotp.getId())
+                    .eq(MiniTotp::getUserOpenid, userOpenid)
+            ) > 0;
+        } catch (DuplicateKeyException ex) {
+            throw new ParamException("该2FA密钥已存在");
+        }
     }
 
     /**
@@ -123,11 +132,12 @@ public class MiniTotpServiceImpl
         return totp;
     }
 
-    /** 校验同一用户不存在重复密钥 */
-    private void ensureSecretUnique(String userOpenid, String secret) {
+    /** 校验同一用户不存在重复密钥，excludeId 用于修改时排除自身 */
+    private void ensureSecretUnique(String userOpenid, String secret, Integer excludeId) {
         long duplicateCount = baseMapper.selectCount(Wrappers.<MiniTotp>lambdaQuery()
                 .eq(MiniTotp::getUserOpenid, userOpenid)
-                .eq(MiniTotp::getSecret, secret)); // 同密钥条目数量
+                .eq(MiniTotp::getSecret, secret)
+                .ne(excludeId != null, MiniTotp::getId, excludeId)); // 同密钥条目数量
         if (duplicateCount > 0) throw new ParamException("该2FA密钥已存在");
     }
 

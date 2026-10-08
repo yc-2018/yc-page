@@ -19,8 +19,8 @@ public interface MiniTotpService extends IService<MiniTotp> {
     /** 新增当前用户的2FA条目 */
     boolean addCurrentUserTotp(MiniTotp totp);
 
-    /** 修改当前用户2FA条目的名称，密钥和账号不可修改 */
-    boolean updateCurrentUserTotpName(MiniTotp totp);
+    /** 修改当前用户的2FA条目，名称、账号和密钥都可以改 */
+    boolean updateCurrentUserTotp(MiniTotp totp);
 
     /**
      * 置顶或取消置顶当前用户的指定2FA条目
