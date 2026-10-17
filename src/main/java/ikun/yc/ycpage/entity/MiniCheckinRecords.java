@@ -63,8 +63,8 @@ public class MiniCheckinRecords extends Model<MiniCheckinRecords> {
     @Size(max = 999)
     private String imgs;
 
-    /** 备注（最长255个字符）  */
-    @Size(max = 255, message = "备注不能超过255个字符")
+    /** 备注 */
+    @Size(max = 600, message = "备注不能超过600个字符")
     private String remark;
 
     /** 打卡时间  */
