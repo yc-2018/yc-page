@@ -36,7 +36,7 @@ public class MiniCheckinShare {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime expireTime;
 
-    /** 分享类型 dynamic-动态 static-静态 */
+    /** 分享类型 dynamic-动态 static-静态 multi-多地 */
     private String shareType;
 
     /** 是否包含备注 0-否 1-是 */
@@ -45,7 +45,7 @@ public class MiniCheckinShare {
     /** 是否包含图片 0-否 1-是 */
     private Integer includeImgs;
 
-    /** 动态分享存记录ID，静态分享存记录JSON */
+    /** 动态分享存记录ID，静态分享存记录JSON，多地分享存记录ID数组JSON */
     private String content;
 
     /** 创建时间 */

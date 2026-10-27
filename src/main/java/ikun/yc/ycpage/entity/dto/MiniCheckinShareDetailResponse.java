@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 小程序打卡分享详情响应
@@ -49,8 +50,11 @@ public class MiniCheckinShareDetailResponse {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime expireTime;
 
-    /** 分享类型 dynamic-动态 static-静态 */
+    /** 分享类型 dynamic-动态 static-静态 multi-多地 */
     private String shareType;
+
+    /** 多地分享包含的地点列表，仅 shareType=multi 时有值 */
+    private List<MiniCheckinShareDetailResponse> points;
 
     /** 当前访问者是否分享创建人 */
     private Boolean isOwner;

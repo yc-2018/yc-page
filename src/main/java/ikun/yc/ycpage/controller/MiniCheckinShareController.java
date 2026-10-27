@@ -11,6 +11,7 @@ import ikun.yc.ycpage.entity.dto.MiniCheckinShareCreateResponse;
 import ikun.yc.ycpage.entity.dto.MiniCheckinShareDetailResponse;
 import ikun.yc.ycpage.entity.dto.MiniCheckinShareExtendRequest;
 import ikun.yc.ycpage.entity.dto.MiniCheckinShareManageItem;
+import ikun.yc.ycpage.entity.dto.MiniCheckinShareMultiCreateRequest;
 import ikun.yc.ycpage.service.MiniCheckinShareService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -40,6 +41,19 @@ public class MiniCheckinShareController {
     @CountControl(operationType = CountControlAspect.ADD, frequency = 10)
     public R<MiniCheckinShareCreateResponse> createShare(@RequestBody @Valid MiniCheckinShareCreateRequest request) {
         return R.success(miniCheckinShareService.createShare(request));
+    }
+
+    /**
+     * 创建多地打卡分享
+     *
+     * @param request 多地分享创建请求
+     * @return 分享ID和过期时间
+     */
+    @PostMapping("/multi")
+    @UserId(fieldName = "userOpenid")
+    @CountControl(operationType = CountControlAspect.ADD, frequency = 10)
+    public R<MiniCheckinShareCreateResponse> createMultiShare(@RequestBody @Valid MiniCheckinShareMultiCreateRequest request) {
+        return R.success(miniCheckinShareService.createMultiShare(request));
     }
 
     /**

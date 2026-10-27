@@ -36,8 +36,11 @@ public class MiniCheckinShareManageItem {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime expireTime;
 
-    /** 分享类型 dynamic-动态 static-静态 */
+    /** 分享类型 dynamic-动态 static-静态 multi-多地 */
     private String shareType;
+
+    /** 多地分享包含的地点数量，其他分享为空 */
+    private Integer pointCount;
 
     /** 是否包含备注 */
     private Integer includeRemark;

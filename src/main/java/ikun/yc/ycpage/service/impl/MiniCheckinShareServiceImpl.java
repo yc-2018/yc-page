@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ikun.yc.ycpage.common.exception.ParamException;
 import ikun.yc.ycpage.common.exception.SqlSaveException;
@@ -15,6 +16,7 @@ import ikun.yc.ycpage.entity.dto.MiniCheckinShareCreateRequest;
 import ikun.yc.ycpage.entity.dto.MiniCheckinShareCreateResponse;
 import ikun.yc.ycpage.entity.dto.MiniCheckinShareDetailResponse;
 import ikun.yc.ycpage.entity.dto.MiniCheckinShareManageItem;
+import ikun.yc.ycpage.entity.dto.MiniCheckinShareMultiCreateRequest;
 import ikun.yc.ycpage.entity.enumeration.MiniCheckinShareDurationType;
 import ikun.yc.ycpage.mapper.MiniCheckinShareMapper;
 import ikun.yc.ycpage.service.MiniCheckinRecordsService;
@@ -24,8 +26,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -39,6 +43,9 @@ import java.util.stream.Collectors;
 public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMapper, MiniCheckinShare> implements MiniCheckinShareService {
     private static final String SHARE_TYPE_DYNAMIC = "dynamic"; // 动态分享类型
     private static final String SHARE_TYPE_STATIC = "static"; // 静态分享类型
+    private static final String SHARE_TYPE_MULTI = "multi"; // 多地分享类型
+    private static final int MULTI_SHARE_MIN_POINTS = 2; // 多地分享最少地点数
+    private static final int MULTI_SHARE_MAX_POINTS = 100; // 多地分享最多地点数
     private static final String SHARE_NOT_FOUND_MSG = "分享已过期或不存在"; // 分享不可访问的统一提示
 
     private final MiniCheckinRecordsService miniCheckinRecordsService;
@@ -85,6 +92,56 @@ public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMap
         share.setIncludeRemark(includeRemark ? 1 : 0);
         share.setIncludeImgs(includeImgs ? 1 : 0);
         share.setContent(content);
+
+        if (!save(share)) {
+            throw new SqlSaveException("创建分享失败");
+        }
+        return new MiniCheckinShareCreateResponse(share.getId(), expireTime);
+    }
+
+    /**
+     * 创建多地打卡分享，content 保存参与分享的记录ID数组，详情按动态记录读取
+     *
+     * @param request 多地分享创建请求
+     * @return 分享ID和过期时间
+     */
+    @Override
+    public MiniCheckinShareCreateResponse createMultiShare(MiniCheckinShareMultiCreateRequest request) {
+        if (request == null) {
+            throw new ParamException("参数不能为空");
+        }
+        String userOpenid = request.getUserOpenid(); // 当前创建人openid
+        if (!StringUtils.hasText(userOpenid)) {
+            throw new ParamException("登录信息有误");
+        }
+        List<Integer> recordIds = normalizeRecordIds(request.getRecordIds()); // 去重并保持传入顺序的记录ID
+        if (recordIds.size() < MULTI_SHARE_MIN_POINTS) {
+            throw new ParamException("至少选择2个打卡记录");
+        }
+        if (recordIds.size() > MULTI_SHARE_MAX_POINTS) {
+            throw new ParamException("最多选择" + MULTI_SHARE_MAX_POINTS + "个打卡记录");
+        }
+        Map<Integer, MiniCheckinRecords> recordMap = miniCheckinRecordsService.list(
+                        Wrappers.<MiniCheckinRecords>lambdaQuery()
+                                .in(MiniCheckinRecords::getId, recordIds)
+                                .eq(MiniCheckinRecords::getUserOpenid, userOpenid)
+                                .eq(MiniCheckinRecords::getIsDeleted, 0))
+                .stream()
+                .collect(Collectors.toMap(MiniCheckinRecords::getId, record -> record, (left, right) -> left)); // 当前用户可用的记录
+        if (recordMap.size() != recordIds.size()) {
+            throw new ParamException("打卡记录不存在或已删除");
+        }
+
+        LocalDateTime expireTime = MiniCheckinShareDurationType.fromCode(request.getDurationType())
+                .resolveExpireTime(LocalDateTime.now()); // 有效截止时间
+        MiniCheckinShare share = new MiniCheckinShare();
+        share.setUserOpenid(userOpenid);
+        share.setRecordId(recordIds.get(0)); // record_id 非空，多地分享取第一个地点
+        share.setExpireTime(expireTime);
+        share.setShareType(SHARE_TYPE_MULTI);
+        share.setIncludeRemark(1);
+        share.setIncludeImgs(1);
+        share.setContent(buildMultiShareContent(recordIds));
 
         if (!save(share)) {
             throw new SqlSaveException("创建分享失败");
@@ -304,6 +361,42 @@ public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMap
     }
 
     /**
+     * 读取多地分享详情，按 content 中的记录ID顺序返回全部有效地点
+     *
+     * @param share 分享记录
+     * @return 多地分享详情
+     */
+    private MiniCheckinShareDetailResponse readMultiShareDetail(MiniCheckinShare share) {
+        List<Integer> recordIds = parseShareRecordIds(share.getContent()); // 多地分享包含的记录ID
+        if (recordIds.isEmpty()) {
+            throw new ParamException(SHARE_NOT_FOUND_MSG);
+        }
+        Map<Integer, MiniCheckinRecords> recordMap = miniCheckinRecordsService.list(
+                        Wrappers.<MiniCheckinRecords>lambdaQuery()
+                                .in(MiniCheckinRecords::getId, recordIds)
+                                .eq(MiniCheckinRecords::getIsDeleted, 0))
+                .stream()
+                .collect(Collectors.toMap(MiniCheckinRecords::getId, record -> record, (left, right) -> left)); // 仍存在的打卡记录
+        List<MiniCheckinShareDetailResponse> points = recordIds.stream()
+                .map(recordMap::get)
+                .filter(Objects::nonNull)
+                .map(this::buildDetailFromRecord)
+                .collect(Collectors.toList()); // 按分享顺序保留的有效地点
+        if (points.isEmpty()) {
+            throw new ParamException(SHARE_NOT_FOUND_MSG);
+        }
+        MiniCheckinShareDetailResponse firstPoint = points.get(0); // 第一个地点，用于兼容旧字段
+        MiniCheckinShareDetailResponse detail = new MiniCheckinShareDetailResponse();
+        detail.setName("多地打卡分享");
+        detail.setAddress("共" + points.size() + "个地点");
+        detail.setLongitude(firstPoint.getLongitude());
+        detail.setLatitude(firstPoint.getLatitude());
+        detail.setCheckinTime(firstPoint.getCheckinTime());
+        detail.setPoints(points);
+        return detail;
+    }
+
+    /**
      * 将打卡记录转换为分享详情
      *
      * @param record 打卡记录
@@ -334,6 +427,8 @@ public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMap
     private MiniCheckinShareDetailResponse buildShareDetail(MiniCheckinShare share, boolean isOwner, boolean isExpired) {
         MiniCheckinShareDetailResponse detail = SHARE_TYPE_STATIC.equals(share.getShareType())
                 ? readStaticShareDetail(share)
+                : SHARE_TYPE_MULTI.equals(share.getShareType())
+                ? readMultiShareDetail(share)
                 : readDynamicShareDetail(share);
         detail.setId(share.getId());
         detail.setRecordId(share.getRecordId());
@@ -408,6 +503,13 @@ public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMap
         item.setIncludeRemark(share.getIncludeRemark());
         item.setIncludeImgs(share.getIncludeImgs());
         item.setIsExpired(share.getExpireTime() == null || !share.getExpireTime().isAfter(now));
+        if (SHARE_TYPE_MULTI.equals(share.getShareType())) {
+            int pointCount = parseShareRecordIds(share.getContent()).size(); // 多地分享地点数量
+            item.setName("多地打卡分享");
+            item.setAddress(pointCount > 0 ? "共" + pointCount + "个地点" : "");
+            item.setPointCount(pointCount);
+            return item;
+        }
         if (record != null) {
             item.setName(record.getName());
             item.setAddress(record.getAddress());
@@ -418,6 +520,55 @@ public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMap
             item.setAddress("");
         }
         return item;
+    }
+
+    /**
+     * 将记录ID列表序列化为分享内容
+     *
+     * @param recordIds 记录ID列表
+     * @return 记录ID数组 JSON
+     */
+    private String buildMultiShareContent(List<Integer> recordIds) {
+        try {
+            return objectMapper.writeValueAsString(recordIds);
+        } catch (JsonProcessingException ex) {
+            throw new ParamException("分享内容生成失败");
+        }
+    }
+
+    /**
+     * 解析多地分享内容中的记录ID，内容异常时返回空列表
+     *
+     * @param content 分享内容
+     * @return 记录ID列表
+     */
+    private List<Integer> parseShareRecordIds(String content) {
+        if (!StringUtils.hasText(content)) {
+            return Collections.emptyList();
+        }
+        try {
+            List<Integer> recordIds = objectMapper.readValue(content, new TypeReference<List<Integer>>() {
+            }); // 内容中的记录ID
+            return recordIds == null ? Collections.emptyList() : recordIds;
+        } catch (JsonProcessingException ex) {
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * 过滤空ID并去重，保持前端传入顺序
+     *
+     * @param recordIds 原始记录ID列表
+     * @return 清洗后的记录ID列表
+     */
+    private List<Integer> normalizeRecordIds(List<Integer> recordIds) {
+        if (recordIds == null || recordIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return recordIds.stream()
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
     }
 
     /**

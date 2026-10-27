@@ -7,6 +7,7 @@ import ikun.yc.ycpage.entity.dto.MiniCheckinShareCreateRequest;
 import ikun.yc.ycpage.entity.dto.MiniCheckinShareCreateResponse;
 import ikun.yc.ycpage.entity.dto.MiniCheckinShareDetailResponse;
 import ikun.yc.ycpage.entity.dto.MiniCheckinShareManageItem;
+import ikun.yc.ycpage.entity.dto.MiniCheckinShareMultiCreateRequest;
 
 /**
  * 小程序打卡分享 Service
@@ -22,6 +23,14 @@ public interface MiniCheckinShareService extends IService<MiniCheckinShare> {
      * @return 分享ID和过期时间
      */
     MiniCheckinShareCreateResponse createShare(MiniCheckinShareCreateRequest request);
+
+    /**
+     * 创建多地打卡分享
+     *
+     * @param request 多地分享创建请求
+     * @return 分享ID和过期时间
+     */
+    MiniCheckinShareCreateResponse createMultiShare(MiniCheckinShareMultiCreateRequest request);
 
     /**
      * 获取分享详情

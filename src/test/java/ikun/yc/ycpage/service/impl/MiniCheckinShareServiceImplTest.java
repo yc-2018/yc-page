@@ -1,16 +1,24 @@
 package ikun.yc.ycpage.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ikun.yc.ycpage.entity.MiniCheckinRecords;
 import ikun.yc.ycpage.entity.MiniCheckinShare;
 import ikun.yc.ycpage.entity.dto.MiniCheckinShareDetailResponse;
 import ikun.yc.ycpage.entity.dto.MiniCheckinShareManageItem;
+import ikun.yc.ycpage.service.MiniCheckinRecordsService;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
 
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * 小程序打卡分享 Service 单元测试
@@ -127,6 +135,123 @@ class MiniCheckinShareServiceImplTest {
         MiniCheckinShareManageItem item = (MiniCheckinShareManageItem) method.invoke(service, share, record, LocalDateTime.now()); // 管理列表项
 
         assertEquals("学校", item.getLocationType());
+    }
+
+    /** 校验多地分享内容按传入顺序保存记录ID */
+    @Test
+    void buildMultiShareContentShouldKeepRecordOrder() throws Exception {
+        MiniCheckinShareServiceImpl service = new MiniCheckinShareServiceImpl(null, new ObjectMapper()); // 被测服务
+        Method method = MiniCheckinShareServiceImpl.class
+                .getDeclaredMethod("buildMultiShareContent", List.class); // 多地分享内容构建方法
+
+        method.setAccessible(true);
+        String content = (String) method.invoke(service, Arrays.asList(3, 1, 2)); // 多地分享内容
+
+        assertEquals("[3,1,2]", content);
+    }
+
+    /** 校验多地分享内容异常时解析结果为空 */
+    @Test
+    void parseShareRecordIdsShouldReturnEmptyWhenContentInvalid() throws Exception {
+        MiniCheckinShareServiceImpl service = new MiniCheckinShareServiceImpl(null, new ObjectMapper()); // 被测服务
+
+        assertEquals(Collections.emptyList(), invokeParseShareRecordIds(service, "not-json"));
+        assertEquals(Collections.emptyList(), invokeParseShareRecordIds(service, ""));
+    }
+
+    /** 校验多地分享记录ID会过滤空值并按原顺序去重 */
+    @Test
+    void normalizeRecordIdsShouldDropNullAndDuplicates() throws Exception {
+        MiniCheckinShareServiceImpl service = new MiniCheckinShareServiceImpl(null, new ObjectMapper()); // 被测服务
+        Method method = MiniCheckinShareServiceImpl.class
+                .getDeclaredMethod("normalizeRecordIds", List.class); // 记录ID清洗方法
+
+        method.setAccessible(true);
+        List<?> recordIds = (List<?>) method.invoke(service, Arrays.asList(3, null, 1, 3)); // 清洗后的记录ID
+
+        assertEquals(Arrays.asList(3, 1), recordIds);
+    }
+
+    /** 校验多地分享详情按内容顺序返回仍然存在的记录 */
+    @Test
+    void readMultiShareDetailShouldKeepContentOrder() throws Exception {
+        MiniCheckinRecordsService recordsService = mock(MiniCheckinRecordsService.class); // 打卡记录服务
+        when(recordsService.list(ArgumentMatchers.<Wrapper<MiniCheckinRecords>>any())).thenReturn(Arrays.asList(
+                buildRecord(2, "地点B"),
+                buildRecord(1, "地点A"))); // 数据库中仍存在的记录
+        MiniCheckinShareServiceImpl service = new MiniCheckinShareServiceImpl(recordsService, new ObjectMapper()); // 被测服务
+        MiniCheckinShare share = new MiniCheckinShare(); // 多地分享记录
+        share.setContent("[1,2,3]");
+        Method method = MiniCheckinShareServiceImpl.class
+                .getDeclaredMethod("readMultiShareDetail", MiniCheckinShare.class); // 多地分享详情读取方法
+
+        method.setAccessible(true);
+        MiniCheckinShareDetailResponse detail = (MiniCheckinShareDetailResponse) method.invoke(service, share); // 多地分享详情
+
+        assertEquals(2, detail.getPoints().size());
+        assertEquals("地点A", detail.getPoints().get(0).getName());
+        assertEquals("地点B", detail.getPoints().get(1).getName());
+        assertEquals("共2个地点", detail.getAddress());
+    }
+
+    /** 校验多地分享管理项展示地点数量和标题 */
+    @Test
+    void buildManageItemShouldShowMultiPointCount() throws Exception {
+        MiniCheckinShareServiceImpl service = new MiniCheckinShareServiceImpl(null, new ObjectMapper()); // 被测服务
+        MiniCheckinShare share = new MiniCheckinShare(); // 多地分享记录
+        share.setId(9);
+        share.setRecordId(4);
+        share.setShareType("multi");
+        share.setContent("[4,5,6]");
+        share.setExpireTime(LocalDateTime.now().plusDays(1));
+        Method method = MiniCheckinShareServiceImpl.class
+                .getDeclaredMethod("buildManageItem", MiniCheckinShare.class, MiniCheckinRecords.class, LocalDateTime.class); // 管理项构建方法
+
+        method.setAccessible(true);
+        MiniCheckinShareManageItem item = (MiniCheckinShareManageItem) method.invoke(service, share, null, LocalDateTime.now()); // 管理列表项
+
+        assertEquals("多地打卡分享", item.getName());
+        assertEquals("共3个地点", item.getAddress());
+        assertEquals(Integer.valueOf(3), item.getPointCount());
+    }
+
+    /**
+     * 构造打卡记录，便于多地分享测试
+     *
+     * @param id   记录ID
+     * @param name 地点名称
+     * @return 打卡记录
+     */
+    private MiniCheckinRecords buildRecord(Integer id, String name) {
+        MiniCheckinRecords record = new MiniCheckinRecords();
+        record.setId(id);
+        record.setName(name);
+        return record;
+    }
+
+    /**
+     * 调用多地分享内容解析方法
+     *
+     * @param service 被测服务
+     * @param content 分享内容
+     * @return 解析出的记录ID
+     */
+    private List<Integer> invokeParseShareRecordIds(MiniCheckinShareServiceImpl service, String content) throws Exception {
+        Method method = MiniCheckinShareServiceImpl.class
+                .getDeclaredMethod("parseShareRecordIds", String.class); // 多地分享内容解析方法
+        method.setAccessible(true);
+        return castRecordIds(method.invoke(service, content));
+    }
+
+    /**
+     * 将反射结果转换为记录ID列表，避免泛型擦除警告
+     *
+     * @param value 反射返回值
+     * @return 记录ID列表
+     */
+    @SuppressWarnings("unchecked")
+    private List<Integer> castRecordIds(Object value) {
+        return (List<Integer>) value;
     }
 
     /**
