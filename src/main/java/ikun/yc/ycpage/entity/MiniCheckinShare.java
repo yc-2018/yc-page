@@ -45,7 +45,7 @@ public class MiniCheckinShare {
     /** 是否包含图片 0-否 1-是 */
     private Integer includeImgs;
 
-    /** 动态分享存记录ID，静态分享存记录JSON，多地分享存记录ID数组JSON */
+    /** 动态分享存记录ID，静态分享存记录JSON，多地分享存 {"title":名称,"recordIds":记录ID数组} JSON */
     private String content;
 
     /** 创建时间 */

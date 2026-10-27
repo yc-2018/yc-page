@@ -83,7 +83,7 @@ YcPage 是一个基于 Spring Boot 的多功能后端服务项目，旨在为用
 - **日志记录**：所有操作日志记录在 `operate_log` 表中
 - **缓存机制**：使用 Redis 缓存书签和搜索引擎数据，提升访问效率
 - **权限控制**：通过 JWT 实现 Token 认证，部分接口需登录访问
-- **打卡分享**：创建分享需登录，静态分享创建请求可通过 `staticRemark` 和 `staticImgs` 覆盖本次快照的备注与图片；空字符串表示不展示对应内容，字段缺失时兼容使用原记录内容。动态分享仍读取原记录最新内容。分享详情接口 `/mini/checkinShare/{id}` 对好友公开读取，过期后不返回打卡内容；作者详情接口 `/mini/checkinShare/owner/{id}` 支持作者查看已过期分享；详情和管理列表会返回地点类型；管理接口支持列表、续期、停用和删除自己的分享记录。多地打卡分享通过 `/mini/checkinShare/multi` 创建，只支持动态分享，请求体提交按行程排序的 `recordIds`（2~100 条）和 `durationType`，记录以 `share_type=multi`、`content` 存记录 ID 的 JSON 数组保存；查看时按数组顺序实时拼接仍存在的打卡记录放到详情的 `points`，管理列表返回 `pointCount`
+- **打卡分享**：创建分享需登录，静态分享创建请求可通过 `staticRemark` 和 `staticImgs` 覆盖本次快照的备注与图片；空字符串表示不展示对应内容，字段缺失时兼容使用原记录内容。动态分享仍读取原记录最新内容。分享详情接口 `/mini/checkinShare/{id}` 对好友公开读取，过期后不返回打卡内容；作者详情接口 `/mini/checkinShare/owner/{id}` 支持作者查看已过期分享；详情和管理列表会返回地点类型；管理接口支持列表、续期、停用和删除自己的分享记录。多地打卡分享通过 `/mini/checkinShare/multi` 创建，只支持动态分享，请求体提交按行程排序的 `recordIds`（2~100 条）、`durationType` 和可选的 `title`（分享名称，最多 30 字），记录以 `share_type=multi`、`content` 存 `{"title":名称,"recordIds":记录ID数组}` JSON 对象保存；查看时按数组顺序实时拼接仍存在的打卡记录放到详情的 `points`，详情和管理列表名称优先使用 `title`、未命名时展示“多地打卡分享”，管理列表返回 `pointCount`
 - **打卡常用语**：`/mini/commonPhrase` 提供当前登录用户的列表、新增、编辑、置顶和删除接口；内容最长 255 字且同一用户不能重复，建表脚本为 `sql/20260816_create_mini_common_phrase.sql`
 
 ---

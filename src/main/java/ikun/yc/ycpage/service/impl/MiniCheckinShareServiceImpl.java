@@ -4,8 +4,10 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.NullNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import ikun.yc.ycpage.common.exception.ParamException;
 import ikun.yc.ycpage.common.exception.SqlSaveException;
 import ikun.yc.ycpage.common.exception.SqlUpdateException;
@@ -26,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +47,7 @@ public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMap
     private static final String SHARE_TYPE_DYNAMIC = "dynamic"; // 动态分享类型
     private static final String SHARE_TYPE_STATIC = "static"; // 静态分享类型
     private static final String SHARE_TYPE_MULTI = "multi"; // 多地分享类型
+    private static final String MULTI_SHARE_DEFAULT_NAME = "多地打卡分享"; // 多地分享未命名时的默认名称
     private static final int MULTI_SHARE_MIN_POINTS = 2; // 多地分享最少地点数
     private static final int MULTI_SHARE_MAX_POINTS = 100; // 多地分享最多地点数
     private static final String SHARE_NOT_FOUND_MSG = "分享已过期或不存在"; // 分享不可访问的统一提示
@@ -131,6 +135,7 @@ public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMap
         if (recordMap.size() != recordIds.size()) {
             throw new ParamException("打卡记录不存在或已删除");
         }
+        String title = request.getTitle() == null ? "" : request.getTitle().trim(); // 分享名称，空字符串表示未命名
 
         LocalDateTime expireTime = MiniCheckinShareDurationType.fromCode(request.getDurationType())
                 .resolveExpireTime(LocalDateTime.now()); // 有效截止时间
@@ -141,7 +146,7 @@ public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMap
         share.setShareType(SHARE_TYPE_MULTI);
         share.setIncludeRemark(1);
         share.setIncludeImgs(1);
-        share.setContent(buildMultiShareContent(recordIds));
+        share.setContent(buildMultiShareContent(title, recordIds));
 
         if (!save(share)) {
             throw new SqlSaveException("创建分享失败");
@@ -387,7 +392,7 @@ public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMap
         }
         MiniCheckinShareDetailResponse firstPoint = points.get(0); // 第一个地点，用于兼容旧字段
         MiniCheckinShareDetailResponse detail = new MiniCheckinShareDetailResponse();
-        detail.setName("多地打卡分享");
+        detail.setName(resolveMultiShareName(share.getContent()));
         detail.setAddress("共" + points.size() + "个地点");
         detail.setLongitude(firstPoint.getLongitude());
         detail.setLatitude(firstPoint.getLatitude());
@@ -505,7 +510,7 @@ public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMap
         item.setIsExpired(share.getExpireTime() == null || !share.getExpireTime().isAfter(now));
         if (SHARE_TYPE_MULTI.equals(share.getShareType())) {
             int pointCount = parseShareRecordIds(share.getContent()).size(); // 多地分享地点数量
-            item.setName("多地打卡分享");
+            item.setName(resolveMultiShareName(share.getContent()));
             item.setAddress(pointCount > 0 ? "共" + pointCount + "个地点" : "");
             item.setPointCount(pointCount);
             return item;
@@ -523,16 +528,38 @@ public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMap
     }
 
     /**
-     * 将记录ID列表序列化为分享内容
+     * 将分享名称和记录ID列表序列化为多地分享内容
      *
+     * @param title     分享名称，可为空字符串
      * @param recordIds 记录ID列表
-     * @return 记录ID数组 JSON
+     * @return 形如 {"title":"名称","recordIds":[1,2]} 的内容JSON
      */
-    private String buildMultiShareContent(List<Integer> recordIds) {
+    private String buildMultiShareContent(String title, List<Integer> recordIds) {
+        ObjectNode content = objectMapper.createObjectNode(); // 多地分享内容对象
+        content.put("title", title);
+        content.set("recordIds", objectMapper.valueToTree(recordIds)); // 记录ID数组节点
         try {
-            return objectMapper.writeValueAsString(recordIds);
+            return objectMapper.writeValueAsString(content);
         } catch (JsonProcessingException ex) {
             throw new ParamException("分享内容生成失败");
+        }
+    }
+
+    /**
+     * 读取多地分享内容节点，内容缺失或不是对象时返回空节点
+     *
+     * @param content 分享内容
+     * @return 内容JSON节点
+     */
+    private JsonNode readMultiShareContentNode(String content) {
+        if (!StringUtils.hasText(content)) {
+            return NullNode.getInstance();
+        }
+        try {
+            JsonNode contentNode = objectMapper.readTree(content); // 解析后的内容节点
+            return contentNode != null && contentNode.isObject() ? contentNode : NullNode.getInstance();
+        } catch (JsonProcessingException ex) {
+            return NullNode.getInstance();
         }
     }
 
@@ -543,16 +570,29 @@ public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMap
      * @return 记录ID列表
      */
     private List<Integer> parseShareRecordIds(String content) {
-        if (!StringUtils.hasText(content)) {
+        JsonNode recordIdsNode = readMultiShareContentNode(content).get("recordIds"); // 记录ID数组节点
+        if (recordIdsNode == null || !recordIdsNode.isArray()) {
             return Collections.emptyList();
         }
-        try {
-            List<Integer> recordIds = objectMapper.readValue(content, new TypeReference<List<Integer>>() {
-            }); // 内容中的记录ID
-            return recordIds == null ? Collections.emptyList() : recordIds;
-        } catch (JsonProcessingException ex) {
-            return Collections.emptyList();
+        List<Integer> recordIds = new ArrayList<>(); // 按内容顺序的记录ID
+        for (JsonNode idNode : recordIdsNode) {
+            if (idNode.canConvertToInt()) {
+                recordIds.add(idNode.asInt());
+            }
         }
+        return recordIds;
+    }
+
+    /**
+     * 解析多地分享名称，未命名时返回默认名称
+     *
+     * @param content 分享内容
+     * @return 分享名称
+     */
+    private String resolveMultiShareName(String content) {
+        JsonNode titleNode = readMultiShareContentNode(content).get("title"); // 名称节点
+        String title = titleNode == null ? "" : titleNode.asText("").trim(); // 名称文本
+        return StringUtils.hasText(title) ? title : MULTI_SHARE_DEFAULT_NAME;
     }
 
     /**

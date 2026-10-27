@@ -3,6 +3,7 @@ package ikun.yc.ycpage.entity.dto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.util.List;
@@ -22,6 +23,10 @@ public class MiniCheckinShareMultiCreateRequest {
     /** 有效期类型 */
     @NotBlank(message = "分享时长不能为空")
     private String durationType;
+
+    /** 多地分享名称，可不传，为空时读取侧展示默认名称 */
+    @Size(max = 30, message = "分享名称不能超过30字")
+    private String title;
 
     /** 创建人openid，由登录态注入 */
     @JsonIgnore

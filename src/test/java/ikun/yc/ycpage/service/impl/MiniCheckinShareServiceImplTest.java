@@ -137,17 +137,17 @@ class MiniCheckinShareServiceImplTest {
         assertEquals("学校", item.getLocationType());
     }
 
-    /** 校验多地分享内容按传入顺序保存记录ID */
+    /** 校验多地分享内容按传入顺序保存记录ID和名称 */
     @Test
     void buildMultiShareContentShouldKeepRecordOrder() throws Exception {
         MiniCheckinShareServiceImpl service = new MiniCheckinShareServiceImpl(null, new ObjectMapper()); // 被测服务
         Method method = MiniCheckinShareServiceImpl.class
-                .getDeclaredMethod("buildMultiShareContent", List.class); // 多地分享内容构建方法
+                .getDeclaredMethod("buildMultiShareContent", String.class, List.class); // 多地分享内容构建方法
 
         method.setAccessible(true);
-        String content = (String) method.invoke(service, Arrays.asList(3, 1, 2)); // 多地分享内容
+        String content = (String) method.invoke(service, "周末游", Arrays.asList(3, 1, 2)); // 多地分享内容
 
-        assertEquals("[3,1,2]", content);
+        assertEquals("{\"title\":\"周末游\",\"recordIds\":[3,1,2]}", content);
     }
 
     /** 校验多地分享内容异常时解析结果为空 */
@@ -181,7 +181,7 @@ class MiniCheckinShareServiceImplTest {
                 buildRecord(1, "地点A"))); // 数据库中仍存在的记录
         MiniCheckinShareServiceImpl service = new MiniCheckinShareServiceImpl(recordsService, new ObjectMapper()); // 被测服务
         MiniCheckinShare share = new MiniCheckinShare(); // 多地分享记录
-        share.setContent("[1,2,3]");
+        share.setContent("{\"title\":\"周末游\",\"recordIds\":[1,2,3]}");
         Method method = MiniCheckinShareServiceImpl.class
                 .getDeclaredMethod("readMultiShareDetail", MiniCheckinShare.class); // 多地分享详情读取方法
 
@@ -191,28 +191,40 @@ class MiniCheckinShareServiceImplTest {
         assertEquals(2, detail.getPoints().size());
         assertEquals("地点A", detail.getPoints().get(0).getName());
         assertEquals("地点B", detail.getPoints().get(1).getName());
+        assertEquals("周末游", detail.getName());
         assertEquals("共2个地点", detail.getAddress());
     }
 
-    /** 校验多地分享管理项展示地点数量和标题 */
+    /** 校验多地分享管理项展示名称和地点数量，未命名时回退默认名称 */
     @Test
     void buildManageItemShouldShowMultiPointCount() throws Exception {
         MiniCheckinShareServiceImpl service = new MiniCheckinShareServiceImpl(null, new ObjectMapper()); // 被测服务
-        MiniCheckinShare share = new MiniCheckinShare(); // 多地分享记录
-        share.setId(9);
-        share.setRecordId(4);
-        share.setShareType("multi");
-        share.setContent("[4,5,6]");
-        share.setExpireTime(LocalDateTime.now().plusDays(1));
         Method method = MiniCheckinShareServiceImpl.class
                 .getDeclaredMethod("buildManageItem", MiniCheckinShare.class, MiniCheckinRecords.class, LocalDateTime.class); // 管理项构建方法
-
         method.setAccessible(true);
-        MiniCheckinShareManageItem item = (MiniCheckinShareManageItem) method.invoke(service, share, null, LocalDateTime.now()); // 管理列表项
 
-        assertEquals("多地打卡分享", item.getName());
-        assertEquals("共3个地点", item.getAddress());
-        assertEquals(Integer.valueOf(3), item.getPointCount());
+        MiniCheckinShare namedShare = new MiniCheckinShare(); // 已命名的多地分享记录
+        namedShare.setId(9);
+        namedShare.setRecordId(4);
+        namedShare.setShareType("multi");
+        namedShare.setContent("{\"title\":\"出差路线\",\"recordIds\":[4,5,6]}");
+        namedShare.setExpireTime(LocalDateTime.now().plusDays(1));
+        MiniCheckinShareManageItem namedItem = (MiniCheckinShareManageItem) method.invoke(service, namedShare, null, LocalDateTime.now()); // 已命名管理列表项
+
+        assertEquals("出差路线", namedItem.getName());
+        assertEquals("共3个地点", namedItem.getAddress());
+        assertEquals(Integer.valueOf(3), namedItem.getPointCount());
+
+        MiniCheckinShare unnamedShare = new MiniCheckinShare(); // 未命名的多地分享记录
+        unnamedShare.setId(10);
+        unnamedShare.setRecordId(4);
+        unnamedShare.setShareType("multi");
+        unnamedShare.setContent("{\"title\":\"\",\"recordIds\":[4,5]}");
+        unnamedShare.setExpireTime(LocalDateTime.now().plusDays(1));
+        MiniCheckinShareManageItem unnamedItem = (MiniCheckinShareManageItem) method.invoke(service, unnamedShare, null, LocalDateTime.now()); // 未命名管理列表项
+
+        assertEquals("多地打卡分享", unnamedItem.getName());
+        assertEquals(Integer.valueOf(2), unnamedItem.getPointCount());
     }
 
     /**
