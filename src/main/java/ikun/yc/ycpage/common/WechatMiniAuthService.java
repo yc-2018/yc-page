@@ -1,7 +1,9 @@
 package ikun.yc.ycpage.common;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import ikun.yc.ycpage.common.exception.LoginException;
 import ikun.yc.ycpage.common.exception.ParamException;
 import ikun.yc.ycpage.entity.dto.WechatAccessTokenDTO;
@@ -33,6 +35,7 @@ public class WechatMiniAuthService {
 
   private final RestTemplate restTemplate;
   private final RedisTemplate<String, Object> redisTemplate;
+  private final ObjectMapper objectMapper;
 
   @Value("${mini.appid}")
   private String appid;
@@ -111,22 +114,33 @@ public class WechatMiniAuthService {
       throw new ParamException("评论内容不能为空");
     }
     String accessToken = getAccessToken(); // 当前微信接口调用凭证
-    JSONObject result = requestTextCheck(content, openid, accessToken); // 微信内容安全校验结果
-    Integer errcode = result.getInteger("errcode"); // 微信接口错误码
+    JsonNode result = requestTextCheck(content, openid, accessToken); // 微信内容安全校验结果
+    Integer errcode = getErrcode(result); // 微信接口错误码
     if (errcode != null && (errcode == 40001 || errcode == 42001)) {
       clearAccessToken();
       accessToken = getAccessToken();
       result = requestTextCheck(content, openid, accessToken);
-      errcode = result.getInteger("errcode");
+      errcode = getErrcode(result);
     }
     if (errcode == null || errcode != 0) {
       throw new ParamException("内容安全校验失败，请稍后重试");
     }
-    JSONObject checkResult = result.getJSONObject("result"); // 建议结果对象
-    String suggest = checkResult == null ? null : checkResult.getString("suggest"); // pass-通过 review-需人工复核 risky-违规
+    JsonNode checkResult = result.get("result"); // 建议结果对象
+    String suggest = checkResult == null ? null : checkResult.path("suggest").asText(null); // pass-通过 review-需人工复核 risky-违规
     if (!"pass".equals(suggest)) {
       throw new ParamException("评论内容可能包含敏感信息，请修改后重试");
     }
+  }
+
+  /**
+   * 读取微信响应中的错误码
+   *
+   * @param result 微信响应JSON
+   * @return 错误码，未返回时为null
+   */
+  private Integer getErrcode(JsonNode result) {
+    JsonNode errcodeNode = result.get("errcode"); // 错误码节点
+    return errcodeNode == null || errcodeNode.isNull() ? null : errcodeNode.asInt();
   }
 
   /**
@@ -137,7 +151,7 @@ public class WechatMiniAuthService {
    * @param accessToken 微信接口调用凭证
    * @return 微信返回的JSON结果
    */
-  private JSONObject requestTextCheck(String content, String openid, String accessToken) {
+  private JsonNode requestTextCheck(String content, String openid, String accessToken) {
     String url = "https://api.weixin.qq.com/wxa/msg_sec_check?access_token={accessToken}"; // 内容安全校验地址
     Map<String, Object> body = new HashMap<>(); // 校验请求体
     body.put("content", content);
@@ -146,12 +160,12 @@ public class WechatMiniAuthService {
     body.put("openid", openid);
     try {
       ResponseEntity<String> response = restTemplate.postForEntity(url, body, String.class, accessToken);
-      JSONObject result = JSON.parseObject(response.getBody()); // 微信校验响应
-      if (result == null) {
+      JsonNode result = objectMapper.readTree(response.getBody()); // 微信校验响应
+      if (result == null || result.isNull()) {
         throw new ParamException("内容安全校验失败，请稍后重试");
       }
       return result;
-    } catch (RestClientException ex) {
+    } catch (JsonProcessingException | RestClientException ex) {
       throw new ParamException("内容安全校验失败，请稍后重试");
     }
   }
