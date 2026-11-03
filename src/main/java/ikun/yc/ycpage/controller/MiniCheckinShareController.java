@@ -59,12 +59,14 @@ public class MiniCheckinShareController {
     /**
      * 获取当前用户的分享管理列表
      *
-     * @param page 第几页
+     * @param page      第几页
+     * @param shareType 分享类型筛选，可为空；支持 dynamic/static/multi
      * @return 分享管理列表
      */
     @PostMapping("/manage/list/{page}")
-    public R<Page<MiniCheckinShareManageItem>> getManageList(@PathVariable Integer page) {
-        return R.success(miniCheckinShareService.getManageList(page));
+    public R<Page<MiniCheckinShareManageItem>> getManageList(@PathVariable Integer page,
+                                                             @RequestParam(required = false) String shareType) {
+        return R.success(miniCheckinShareService.getManageList(page, shareType));
     }
 
     /**
@@ -103,6 +105,17 @@ public class MiniCheckinShareController {
     @CountControl(operationType = CountControlAspect.DELETE, frequency = 10)
     public R<Boolean> deleteShare(@PathVariable Integer id) {
         return R.success(miniCheckinShareService.deleteShare(id));
+    }
+
+    /**
+     * 一键清除当前用户已停用或已过期的分享
+     *
+     * @return 清除的分享数量
+     */
+    @PostMapping("/manage/deleteExpired")
+    @CountControl(operationType = CountControlAspect.DELETE, frequency = 10)
+    public R<Integer> deleteExpiredShares() {
+        return R.success(miniCheckinShareService.deleteExpiredShares());
     }
 
     /**

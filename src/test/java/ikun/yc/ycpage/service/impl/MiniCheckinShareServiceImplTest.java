@@ -2,6 +2,7 @@ package ikun.yc.ycpage.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import ikun.yc.ycpage.common.exception.ParamException;
 import ikun.yc.ycpage.entity.MiniCheckinRecords;
 import ikun.yc.ycpage.entity.MiniCheckinShare;
 import ikun.yc.ycpage.entity.dto.MiniCheckinShareDetailResponse;
@@ -10,6 +11,7 @@ import ikun.yc.ycpage.service.MiniCheckinRecordsService;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -17,6 +19,9 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -247,6 +252,22 @@ class MiniCheckinShareServiceImplTest {
         assertEquals("新路线", item.getName());
         assertEquals("共4个地点", item.getAddress());
         assertEquals(Integer.valueOf(4), item.getPointCount());
+    }
+
+    /** 校验管理列表筛选类型仅接受受支持的分享类型 */
+    @Test
+    void normalizeManageShareTypeShouldValidateSupportedTypes() throws Exception {
+        MiniCheckinShareServiceImpl service = new MiniCheckinShareServiceImpl(null, new ObjectMapper()); // 被测服务
+        Method method = MiniCheckinShareServiceImpl.class
+                .getDeclaredMethod("normalizeManageShareType", String.class); // 筛选类型标准化方法
+        method.setAccessible(true);
+
+        assertNull(method.invoke(service, " "));
+        assertEquals("multi", method.invoke(service, "multi"));
+        assertEquals("static", method.invoke(service, " static "));
+        InvocationTargetException exception = assertThrows(InvocationTargetException.class,
+                () -> method.invoke(service, "unknown")); // 非法筛选类型触发的反射异常
+        assertInstanceOf(ParamException.class, exception.getCause());
     }
 
     /**

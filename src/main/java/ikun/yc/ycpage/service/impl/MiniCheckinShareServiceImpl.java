@@ -210,16 +210,19 @@ public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMap
     /**
      * 分页获取当前用户的分享列表
      *
-     * @param page 第几页
+     * @param page      第几页
+     * @param shareType 分享类型筛选，可为空；支持 dynamic/static/multi
      * @return 分享管理列表
      */
     @Override
-    public Page<MiniCheckinShareManageItem> getManageList(Integer page) {
+    public Page<MiniCheckinShareManageItem> getManageList(Integer page, String shareType) {
         String userOpenid = BaseContext.getCurrentId(); // 当前登录用户openid
+        String filterShareType = normalizeManageShareType(shareType); // 列表筛选的分享类型，空表示不筛选
         Page<MiniCheckinShare> sharePage = page(new Page<>(page == null ? 1 : page, 10),
                 Wrappers.<MiniCheckinShare>lambdaQuery()
                         .select(MiniCheckinShare.class, field -> !"content".equals(field.getColumn()))
                         .eq(MiniCheckinShare::getUserOpenid, userOpenid)
+                        .eq(filterShareType != null, MiniCheckinShare::getShareType, filterShareType)
                         .orderByDesc(MiniCheckinShare::getUpdateTime)
                         .orderByDesc(MiniCheckinShare::getCreateTime));
         Page<MiniCheckinShareManageItem> resultPage = new Page<>(sharePage.getCurrent(), sharePage.getSize(), sharePage.getTotal());
@@ -245,6 +248,23 @@ public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMap
                 .collect(Collectors.toList());
         resultPage.setRecords(records);
         return resultPage;
+    }
+
+    /**
+     * 标准化管理列表筛选的分享类型，空值表示不筛选
+     *
+     * @param shareType 分享类型
+     * @return 标准化后的分享类型，null 表示不筛选
+     */
+    private String normalizeManageShareType(String shareType) {
+        if (!StringUtils.hasText(shareType)) {
+            return null;
+        }
+        String trimmed = shareType.trim(); // 去除首尾空白后的分享类型
+        if (SHARE_TYPE_DYNAMIC.equals(trimmed) || SHARE_TYPE_STATIC.equals(trimmed) || SHARE_TYPE_MULTI.equals(trimmed)) {
+            return trimmed;
+        }
+        throw new ParamException("分享类型有误");
     }
 
     /**
@@ -308,6 +328,34 @@ public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMap
             throw new SqlUpdateException("删除分享失败");
         }
         return true;
+    }
+
+    /**
+     * 清除当前用户已停用或已过期的分享
+     *
+     * @return 清除的分享数量
+     */
+    @Override
+    public Integer deleteExpiredShares() {
+        String userOpenid = BaseContext.getCurrentId(); // 当前登录用户openid
+        LocalDateTime now = LocalDateTime.now(); // 当前服务器时间
+        List<MiniCheckinShare> expiredShares = list(Wrappers.<MiniCheckinShare>lambdaQuery()
+                .select(MiniCheckinShare::getId)
+                .eq(MiniCheckinShare::getUserOpenid, userOpenid)
+                .and(wrapper -> wrapper.isNull(MiniCheckinShare::getExpireTime)
+                        .or()
+                        .le(MiniCheckinShare::getExpireTime, now))); // 当前用户的已停用或已过期分享
+        if (expiredShares.isEmpty()) {
+            return 0;
+        }
+        List<Integer> shareIds = expiredShares.stream()
+                .map(MiniCheckinShare::getId)
+                .collect(Collectors.toList()); // 待清除的分享ID
+        boolean removeOk = removeByIds(shareIds); // 批量删除结果
+        if (!removeOk) {
+            throw new SqlUpdateException("清除分享失败");
+        }
+        return shareIds.size();
     }
 
     /**

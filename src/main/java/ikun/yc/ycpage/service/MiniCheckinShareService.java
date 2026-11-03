@@ -53,10 +53,11 @@ public interface MiniCheckinShareService extends IService<MiniCheckinShare> {
     /**
      * 分页获取当前用户的分享列表
      *
-     * @param page 第几页
+     * @param page      第几页
+     * @param shareType 分享类型筛选，可为空；支持 dynamic/static/multi
      * @return 分享管理列表
      */
-    Page<MiniCheckinShareManageItem> getManageList(Integer page);
+    Page<MiniCheckinShareManageItem> getManageList(Integer page, String shareType);
 
     /**
      * 从当前时间重新计算分享过期时间
@@ -82,6 +83,13 @@ public interface MiniCheckinShareService extends IService<MiniCheckinShare> {
      * @return 是否删除成功
      */
     Boolean deleteShare(Integer id);
+
+    /**
+     * 清除当前用户已停用或已过期的分享
+     *
+     * @return 清除的分享数量
+     */
+    Integer deleteExpiredShares();
 
     /**
      * 解析多地分享内容中的记录ID
