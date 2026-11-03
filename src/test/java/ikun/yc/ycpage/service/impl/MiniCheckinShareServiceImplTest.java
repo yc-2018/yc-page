@@ -227,6 +227,28 @@ class MiniCheckinShareServiceImplTest {
         assertEquals(Integer.valueOf(2), unnamedItem.getPointCount());
     }
 
+    /** 校验管理列表优先使用多地分享名称和地点数量独立字段 */
+    @Test
+    void buildManageItemShouldUseMultiShareColumns() throws Exception {
+        MiniCheckinShareServiceImpl service = new MiniCheckinShareServiceImpl(null, new ObjectMapper()); // 被测服务
+        Method method = MiniCheckinShareServiceImpl.class
+                .getDeclaredMethod("buildManageItem", MiniCheckinShare.class, MiniCheckinRecords.class, LocalDateTime.class); // 管理项构建方法
+        method.setAccessible(true);
+
+        MiniCheckinShare share = new MiniCheckinShare(); // 已有独立字段的多地分享记录
+        share.setId(11);
+        share.setRecordId(4);
+        share.setShareType("multi");
+        share.setShareTitle("新路线");
+        share.setPointCount(4);
+        share.setExpireTime(LocalDateTime.now().plusDays(1));
+        MiniCheckinShareManageItem item = (MiniCheckinShareManageItem) method.invoke(service, share, null, LocalDateTime.now()); // 管理列表项
+
+        assertEquals("新路线", item.getName());
+        assertEquals("共4个地点", item.getAddress());
+        assertEquals(Integer.valueOf(4), item.getPointCount());
+    }
+
     /**
      * 构造打卡记录，便于多地分享测试
      *

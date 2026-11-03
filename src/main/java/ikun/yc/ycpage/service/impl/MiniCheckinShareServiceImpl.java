@@ -83,6 +83,9 @@ public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMap
         boolean includeRemark = request.getIncludeRemark() == null || request.getIncludeRemark(); // 是否分享备注
         boolean includeImgs = request.getIncludeImgs() == null || request.getIncludeImgs(); // 是否分享图片
         String shareType = normalizeShareType(request.getShareType()); // 标准化分享类型
+        boolean commentsEnabled = !SHARE_TYPE_STATIC.equals(shareType)
+                && !Boolean.FALSE.equals(request.getCommentsEnabled()); // 静态分享不支持评论
+        boolean commentsPublic = commentsEnabled && Boolean.TRUE.equals(request.getCommentsPublic()); // 仅在允许评论时公开全部评论
         LocalDateTime expireTime = MiniCheckinShareDurationType.fromCode(request.getDurationType())
                 .resolveExpireTime(LocalDateTime.now()); // 有效截止时间
         String content = buildShareContent(record, shareType, includeRemark, includeImgs,
@@ -95,6 +98,8 @@ public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMap
         share.setShareType(shareType);
         share.setIncludeRemark(includeRemark ? 1 : 0);
         share.setIncludeImgs(includeImgs ? 1 : 0);
+        share.setCommentsEnabled(commentsEnabled ? 1 : 0);
+        share.setCommentsPublic(commentsPublic ? 1 : 0);
         share.setContent(content);
 
         if (!save(share)) {
@@ -136,6 +141,8 @@ public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMap
             throw new ParamException("打卡记录不存在或已删除");
         }
         String title = request.getTitle() == null ? "" : request.getTitle().trim(); // 分享名称，空字符串表示未命名
+        boolean commentsEnabled = !Boolean.FALSE.equals(request.getCommentsEnabled()); // 是否允许评论，默认允许
+        boolean commentsPublic = commentsEnabled && Boolean.TRUE.equals(request.getCommentsPublic()); // 是否公开全部评论
 
         LocalDateTime expireTime = MiniCheckinShareDurationType.fromCode(request.getDurationType())
                 .resolveExpireTime(LocalDateTime.now()); // 有效截止时间
@@ -146,6 +153,10 @@ public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMap
         share.setShareType(SHARE_TYPE_MULTI);
         share.setIncludeRemark(1);
         share.setIncludeImgs(1);
+        share.setCommentsEnabled(commentsEnabled ? 1 : 0);
+        share.setCommentsPublic(commentsPublic ? 1 : 0);
+        share.setShareTitle(title);
+        share.setPointCount(recordIds.size());
         share.setContent(buildMultiShareContent(title, recordIds));
 
         if (!save(share)) {
@@ -207,6 +218,7 @@ public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMap
         String userOpenid = BaseContext.getCurrentId(); // 当前登录用户openid
         Page<MiniCheckinShare> sharePage = page(new Page<>(page == null ? 1 : page, 10),
                 Wrappers.<MiniCheckinShare>lambdaQuery()
+                        .select(MiniCheckinShare.class, field -> !"content".equals(field.getColumn()))
                         .eq(MiniCheckinShare::getUserOpenid, userOpenid)
                         .orderByDesc(MiniCheckinShare::getUpdateTime)
                         .orderByDesc(MiniCheckinShare::getCreateTime));
@@ -392,7 +404,7 @@ public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMap
         }
         MiniCheckinShareDetailResponse firstPoint = points.get(0); // 第一个地点，用于兼容旧字段
         MiniCheckinShareDetailResponse detail = new MiniCheckinShareDetailResponse();
-        detail.setName(resolveMultiShareName(share.getContent()));
+        detail.setName(resolveMultiShareName(share));
         detail.setAddress("共" + points.size() + "个地点");
         detail.setLongitude(firstPoint.getLongitude());
         detail.setLatitude(firstPoint.getLatitude());
@@ -441,6 +453,10 @@ public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMap
         detail.setShareType(share.getShareType());
         detail.setIsOwner(isOwner);
         detail.setIsExpired(isExpired);
+        boolean commentsEnabled = !SHARE_TYPE_STATIC.equals(share.getShareType())
+                && !Integer.valueOf(0).equals(share.getCommentsEnabled()); // 静态分享强制关闭，历史空值按允许处理
+        detail.setCommentsEnabled(commentsEnabled);
+        detail.setCommentsPublic(commentsEnabled && Integer.valueOf(1).equals(share.getCommentsPublic()));
         applyIncludeOptions(detail, share);
         return detail;
     }
@@ -509,8 +525,11 @@ public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMap
         item.setIncludeImgs(share.getIncludeImgs());
         item.setIsExpired(share.getExpireTime() == null || !share.getExpireTime().isAfter(now));
         if (SHARE_TYPE_MULTI.equals(share.getShareType())) {
-            int pointCount = parseShareRecordIds(share.getContent()).size(); // 多地分享地点数量
-            item.setName(resolveMultiShareName(share.getContent()));
+            int pointCount = share.getPointCount() == null ? 0 : share.getPointCount(); // 多地分享地点数量
+            if (pointCount == 0 && StringUtils.hasText(share.getContent())) {
+                pointCount = parseShareRecordIds(share.getContent()).size();
+            }
+            item.setName(resolveMultiShareName(share));
             item.setAddress(pointCount > 0 ? "共" + pointCount + "个地点" : "");
             item.setPointCount(pointCount);
             return item;
@@ -569,7 +588,8 @@ public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMap
      * @param content 分享内容
      * @return 记录ID列表
      */
-    private List<Integer> parseShareRecordIds(String content) {
+    @Override
+    public List<Integer> parseShareRecordIds(String content) {
         JsonNode recordIdsNode = readMultiShareContentNode(content).get("recordIds"); // 记录ID数组节点
         if (recordIdsNode == null || !recordIdsNode.isArray()) {
             return Collections.emptyList();
@@ -581,6 +601,19 @@ public class MiniCheckinShareServiceImpl extends ServiceImpl<MiniCheckinShareMap
             }
         }
         return recordIds;
+    }
+
+    /**
+     * 读取多地分享名称，优先使用独立字段，兼容旧数据时回退解析内容
+     *
+     * @param share 多地分享记录
+     * @return 分享名称
+     */
+    private String resolveMultiShareName(MiniCheckinShare share) {
+        if (StringUtils.hasText(share.getShareTitle())) {
+            return share.getShareTitle().trim();
+        }
+        return resolveMultiShareName(share.getContent());
     }
 
     /**

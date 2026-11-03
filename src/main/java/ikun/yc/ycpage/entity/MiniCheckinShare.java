@@ -45,8 +45,20 @@ public class MiniCheckinShare {
     /** 是否包含图片 0-否 1-是 */
     private Integer includeImgs;
 
+    /** 是否允许评论 0-否 1-是 */
+    private Integer commentsEnabled;
+
+    /** 是否公开全部评论 0-否 1-是 */
+    private Integer commentsPublic;
+
     /** 动态分享存记录ID，静态分享存记录JSON，多地分享存 {"title":名称,"recordIds":记录ID数组} JSON */
     private String content;
+
+    /** 多地分享名称，其他分享为空字符串 */
+    private String shareTitle;
+
+    /** 多地分享地点数量，其他分享为0 */
+    private Integer pointCount;
 
     /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)

@@ -53,6 +53,12 @@ public class MiniCheckinShareDetailResponse {
     /** 分享类型 dynamic-动态 static-静态 multi-多地 */
     private String shareType;
 
+    /** 是否允许评论 */
+    private Boolean commentsEnabled;
+
+    /** 是否公开全部评论 */
+    private Boolean commentsPublic;
+
     /** 多地分享包含的地点列表，仅 shareType=multi 时有值 */
     private List<MiniCheckinShareDetailResponse> points;
 

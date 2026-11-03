@@ -37,6 +37,12 @@ public class MiniCheckinShareCreateRequest {
     /** 静态分享图片覆盖值，多个地址用逗号拼接；允许空字符串；未传时使用原记录图片 */
     private String staticImgs;
 
+    /** 是否允许评论，默认允许；静态分享不支持评论 */
+    private Boolean commentsEnabled;
+
+    /** 是否公开全部评论，默认不公开；仅在允许评论时生效 */
+    private Boolean commentsPublic;
+
     /** 创建人openid，由登录态注入 */
     @JsonIgnore
     private String userOpenid;

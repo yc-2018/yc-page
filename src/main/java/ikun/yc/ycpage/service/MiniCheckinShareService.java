@@ -9,6 +9,8 @@ import ikun.yc.ycpage.entity.dto.MiniCheckinShareDetailResponse;
 import ikun.yc.ycpage.entity.dto.MiniCheckinShareManageItem;
 import ikun.yc.ycpage.entity.dto.MiniCheckinShareMultiCreateRequest;
 
+import java.util.List;
+
 /**
  * 小程序打卡分享 Service
  *
@@ -80,4 +82,12 @@ public interface MiniCheckinShareService extends IService<MiniCheckinShare> {
      * @return 是否删除成功
      */
     Boolean deleteShare(Integer id);
+
+    /**
+     * 解析多地分享内容中的记录ID
+     *
+     * @param content 分享内容
+     * @return 按内容顺序排列的记录ID列表，内容异常时返回空列表
+     */
+    List<Integer> parseShareRecordIds(String content);
 }

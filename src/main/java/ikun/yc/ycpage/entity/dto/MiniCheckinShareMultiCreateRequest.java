@@ -28,6 +28,12 @@ public class MiniCheckinShareMultiCreateRequest {
     @Size(max = 30, message = "分享名称不能超过30字")
     private String title;
 
+    /** 是否允许评论，默认允许 */
+    private Boolean commentsEnabled;
+
+    /** 是否公开全部评论，默认不公开；仅在允许评论时生效 */
+    private Boolean commentsPublic;
+
     /** 创建人openid，由登录态注入 */
     @JsonIgnore
     private String userOpenid;

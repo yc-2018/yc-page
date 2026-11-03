@@ -1,7 +1,9 @@
 package ikun.yc.ycpage.common;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import ikun.yc.ycpage.common.exception.LoginException;
+import ikun.yc.ycpage.common.exception.ParamException;
 import ikun.yc.ycpage.entity.dto.WechatAccessTokenDTO;
 import ikun.yc.ycpage.entity.dto.MiniSessionDTO;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
@@ -95,5 +98,61 @@ public class WechatMiniAuthService {
     }
     return session;
 
+  }
+
+  /**
+   * 校验用户文本是否包含违规内容
+   *
+   * @param content 待校验文本
+   * @param openid  发表文本的用户openid
+   */
+  public void checkText(String content, String openid) {
+    if (content == null || content.isBlank()) {
+      throw new ParamException("评论内容不能为空");
+    }
+    String accessToken = getAccessToken(); // 当前微信接口调用凭证
+    JSONObject result = requestTextCheck(content, openid, accessToken); // 微信内容安全校验结果
+    Integer errcode = result.getInteger("errcode"); // 微信接口错误码
+    if (errcode != null && (errcode == 40001 || errcode == 42001)) {
+      clearAccessToken();
+      accessToken = getAccessToken();
+      result = requestTextCheck(content, openid, accessToken);
+      errcode = result.getInteger("errcode");
+    }
+    if (errcode == null || errcode != 0) {
+      throw new ParamException("内容安全校验失败，请稍后重试");
+    }
+    JSONObject checkResult = result.getJSONObject("result"); // 建议结果对象
+    String suggest = checkResult == null ? null : checkResult.getString("suggest"); // pass-通过 review-需人工复核 risky-违规
+    if (!"pass".equals(suggest)) {
+      throw new ParamException("评论内容可能包含敏感信息，请修改后重试");
+    }
+  }
+
+  /**
+   * 调用微信文本内容安全接口
+   *
+   * @param content     待校验文本
+   * @param openid      用户openid
+   * @param accessToken 微信接口调用凭证
+   * @return 微信返回的JSON结果
+   */
+  private JSONObject requestTextCheck(String content, String openid, String accessToken) {
+    String url = "https://api.weixin.qq.com/wxa/msg_sec_check?access_token={accessToken}"; // 内容安全校验地址
+    Map<String, Object> body = new HashMap<>(); // 校验请求体
+    body.put("content", content);
+    body.put("version", 2);
+    body.put("scene", 2);
+    body.put("openid", openid);
+    try {
+      ResponseEntity<String> response = restTemplate.postForEntity(url, body, String.class, accessToken);
+      JSONObject result = JSON.parseObject(response.getBody()); // 微信校验响应
+      if (result == null) {
+        throw new ParamException("内容安全校验失败，请稍后重试");
+      }
+      return result;
+    } catch (RestClientException ex) {
+      throw new ParamException("内容安全校验失败，请稍后重试");
+    }
   }
 }
