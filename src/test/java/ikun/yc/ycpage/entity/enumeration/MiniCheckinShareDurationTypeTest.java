@@ -24,6 +24,9 @@ class MiniCheckinShareDurationTypeTest {
         assertEquals(BASE_TIME.plusDays(3), MiniCheckinShareDurationType.THREE_DAYS.resolveExpireTime(BASE_TIME));
         assertEquals(BASE_TIME.plusDays(7), MiniCheckinShareDurationType.SEVEN_DAYS.resolveExpireTime(BASE_TIME));
         assertEquals(BASE_TIME.plusMonths(1), MiniCheckinShareDurationType.ONE_MONTH.resolveExpireTime(BASE_TIME));
+        assertEquals(BASE_TIME.plusMonths(6), MiniCheckinShareDurationType.HALF_YEAR.resolveExpireTime(BASE_TIME));
+        assertEquals(BASE_TIME.plusYears(1), MiniCheckinShareDurationType.ONE_YEAR.resolveExpireTime(BASE_TIME));
+        assertEquals(BASE_TIME.plusYears(2), MiniCheckinShareDurationType.TWO_YEARS.resolveExpireTime(BASE_TIME));
         assertEquals(LocalDateTime.of(2099, 12, 31, 23, 59, 59), MiniCheckinShareDurationType.FOREVER.resolveExpireTime(BASE_TIME));
     }
 

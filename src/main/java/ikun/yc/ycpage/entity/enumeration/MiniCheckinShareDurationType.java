@@ -19,6 +19,12 @@ public enum MiniCheckinShareDurationType {
     SEVEN_DAYS,
     /** 一个月 */
     ONE_MONTH,
+    /** 半年 */
+    HALF_YEAR,
+    /** 一年 */
+    ONE_YEAR,
+    /** 两年 */
+    TWO_YEARS,
     /** 永久有效到 2099 年 */
     FOREVER;
 
@@ -55,6 +61,12 @@ public enum MiniCheckinShareDurationType {
                 return now.plusDays(7);
             case ONE_MONTH:
                 return now.plusMonths(1);
+            case HALF_YEAR:
+                return now.plusMonths(6);
+            case ONE_YEAR:
+                return now.plusYears(1);
+            case TWO_YEARS:
+                return now.plusYears(2);
             case FOREVER:
                 return LocalDateTime.of(2099, 12, 31, 23, 59, 59);
             default:
