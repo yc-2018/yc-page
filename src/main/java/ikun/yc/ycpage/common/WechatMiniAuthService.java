@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
@@ -41,6 +42,8 @@ public class WechatMiniAuthService {
   private String appid;
   @Value("${mini.secret}")
   private String secret;
+  @Value("${mini.subscribe.state:formal}")
+  private String subscribeState; // 订阅消息打开的小程序版本
 
   /**
    * 获取小程序接口调用凭证
@@ -133,12 +136,78 @@ public class WechatMiniAuthService {
   }
 
   /**
+   * 发送小程序一次性订阅消息
+   *
+   * @param openid     接收人openid
+   * @param templateId 订阅消息模板ID
+   * @param page       点击消息打开的小程序页面，可为空
+   * @param data       模板字段值
+   * @return 微信错误码，0表示成功；null表示请求异常
+   */
+  public Integer sendSubscribeMessage(String openid, String templateId, String page, Map<String, String> data) {
+    String accessToken = getAccessToken(); // 当前微信接口调用凭证
+    JsonNode result = requestSubscribeSend(accessToken, openid, templateId, page, data); // 首次发送结果
+    Integer errcode = getErrcode(result); // 微信接口错误码
+    if (errcode != null && (errcode == 40001 || errcode == 42001)) {
+      clearAccessToken();
+      accessToken = getAccessToken();
+      result = requestSubscribeSend(accessToken, openid, templateId, page, data);
+      errcode = getErrcode(result);
+    }
+    return errcode;
+  }
+
+  /**
+   * 调用微信一次性订阅消息发送接口
+   *
+   * @param accessToken 微信接口调用凭证
+   * @param openid      接收人openid
+   * @param templateId  订阅消息模板ID
+   * @param page        点击消息打开的页面
+   * @param data        模板字段值
+   * @return 微信返回的JSON结果，请求异常时为null
+   */
+  private JsonNode requestSubscribeSend(String accessToken, String openid, String templateId,
+                                        String page, Map<String, String> data) {
+    String url = "https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token={accessToken}"; // 订阅消息发送地址
+    Map<String, Object> body = new HashMap<>(); // 订阅消息请求体
+    body.put("touser", openid);
+    body.put("template_id", templateId);
+    if (StringUtils.hasText(page)) {
+      body.put("page", page);
+    }
+    if (StringUtils.hasText(subscribeState)) {
+      body.put("miniprogram_state", subscribeState);
+    }
+    body.put("lang", "zh_CN");
+    Map<String, Object> dataBody = new HashMap<>(); // 模板字段对象
+    for (Map.Entry<String, String> entry : data.entrySet()) {
+      String value = entry.getValue() == null ? "" : entry.getValue(); // 模板字段值不能为空
+      dataBody.put(entry.getKey(), Map.of("value", value));
+    }
+    body.put("data", dataBody);
+    try {
+      ResponseEntity<String> response = restTemplate.postForEntity(url, body, String.class, accessToken);
+      if (response == null || !StringUtils.hasText(response.getBody())) {
+        return null;
+      }
+      JsonNode result = objectMapper.readTree(response.getBody()); // 微信发送响应
+      return result == null || result.isNull() ? null : result;
+    } catch (JsonProcessingException | RestClientException ex) {
+      return null;
+    }
+  }
+
+  /**
    * 读取微信响应中的错误码
    *
    * @param result 微信响应JSON
    * @return 错误码，未返回时为null
    */
   private Integer getErrcode(JsonNode result) {
+    if (result == null || result.isNull()) {
+      return null;
+    }
     JsonNode errcodeNode = result.get("errcode"); // 错误码节点
     return errcodeNode == null || errcodeNode.isNull() ? null : errcodeNode.asInt();
   }

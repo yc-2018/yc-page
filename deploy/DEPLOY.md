@@ -67,6 +67,11 @@ YC_WECHAT_ENCODINGAESKEY='填写真实值'
 YC_WECHAT_MINI_APPID='填写真实值'
 YC_WECHAT_MINI_APPSECRET='填写真实值'
 
+# 可选：评论订阅消息模板；保持注释时使用 application.properties 中的默认模板。
+# YC_MINI_SUBSCRIBE_COMMENT_TEMPLATE_ID='填写留言通知模板ID'
+# YC_MINI_SUBSCRIBE_REPLY_TEMPLATE_ID='填写回复通知模板ID'
+# YC_MINI_SUBSCRIBE_STATE='formal'
+
 # Redis 配置；全新本机安装且未设置密码时，密码保持为空。
 YC_REDIS_HOST='127.0.0.1'
 YC_REDIS_PASSWORD=''

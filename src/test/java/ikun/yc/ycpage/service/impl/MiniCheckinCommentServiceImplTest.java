@@ -14,6 +14,7 @@ import ikun.yc.ycpage.entity.dto.MiniCheckinCommentResponse;
 import ikun.yc.ycpage.mapper.MiniCheckinCommentMapper;
 import ikun.yc.ycpage.service.MiniCheckinRecordsService;
 import ikun.yc.ycpage.service.MiniCheckinShareService;
+import ikun.yc.ycpage.service.MiniSubscribeMessageService;
 import ikun.yc.ycpage.service.MiniUserService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,15 +23,18 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -46,6 +50,7 @@ class MiniCheckinCommentServiceImplTest {
     private MiniCheckinShareService shareService; // 模拟分享服务
     private MiniUserService userService; // 模拟用户服务
     private WechatMiniAuthService wechatMiniAuthService; // 模拟微信内容安全服务
+    private MiniSubscribeMessageService miniSubscribeMessageService; // 模拟订阅消息服务
 
     /** 初始化测试依赖和当前登录用户 */
     @BeforeEach
@@ -55,7 +60,9 @@ class MiniCheckinCommentServiceImplTest {
         shareService = mock(MiniCheckinShareService.class);
         userService = mock(MiniUserService.class);
         wechatMiniAuthService = mock(WechatMiniAuthService.class);
-        service = new MiniCheckinCommentServiceImpl(recordsService, shareService, userService, wechatMiniAuthService);
+        miniSubscribeMessageService = mock(MiniSubscribeMessageService.class);
+        service = new MiniCheckinCommentServiceImpl(recordsService, shareService, userService,
+                wechatMiniAuthService, miniSubscribeMessageService);
         ReflectionTestUtils.setField(service, "baseMapper", commentMapper);
         BaseContext.setCurrentId("user-1");
     }
@@ -100,6 +107,63 @@ class MiniCheckinCommentServiceImplTest {
         assertTrue(response.getIsMine());
         assertTrue(response.getCanDelete());
         verify(wechatMiniAuthService).checkText("你好", "user-1");
+        verifyNoInteractions(miniSubscribeMessageService);
+    }
+
+    /** 非主人发表顶级评论后通知记录主人 */
+    @Test
+    void createCommentShouldNotifyOwnerForNonOwnerRootComment() {
+        BaseContext.setCurrentId("user-2");
+        MiniCheckinRecords record = buildRecord(10, "owner");
+        record.setName("西湖");
+        when(recordsService.getOne(any())).thenReturn(record);
+        when(shareService.getById(5)).thenReturn(buildShare(5, 10, "owner", true, true));
+        when(userService.getOne(any())).thenReturn(buildUser("user-2", "小红", "avatar.jpg"));
+        when(userService.list(any(Wrapper.class))).thenReturn(List.of(buildUser("user-2", "小红", "avatar.jpg")));
+        when(commentMapper.insert(any(MiniCheckinComment.class))).thenAnswer(invocation -> {
+            MiniCheckinComment comment = invocation.getArgument(0); // 实际插入的评论
+            comment.setId(99);
+            return 1;
+        });
+        MiniCheckinCommentCreateRequest request = buildCreateRequest(10, 5, "你好");
+
+        service.createComment(request);
+
+        verify(miniSubscribeMessageService).notifyNewComment(eq("owner"), eq("西湖"), eq("小红"),
+                eq("你好"), any(LocalDateTime.class), eq(5), eq("dynamic"));
+        verify(miniSubscribeMessageService, never()).notifyReply(any(), any(), any(), any(), any(), any(), any());
+    }
+
+    /** 回复其他用户后同时通知被回复人和记录主人 */
+    @Test
+    void createCommentShouldNotifyReplyTargetAndOwnerForReply() {
+        BaseContext.setCurrentId("user-2");
+        MiniCheckinRecords record = buildRecord(10, "owner");
+        record.setName("西湖");
+        when(recordsService.getOne(any())).thenReturn(record);
+        when(shareService.getById(5)).thenReturn(buildShare(5, 10, "owner", true, true));
+        when(userService.getOne(any())).thenReturn(buildUser("user-2", "小红", "avatar.jpg"));
+        when(userService.list(any(Wrapper.class))).thenReturn(List.of(
+                buildUser("user-2", "小红", "avatar.jpg"),
+                buildUser("user-3", "小蓝", "avatar2.jpg")));
+        when(commentMapper.selectById(50)).thenReturn(buildReply(50, 30, 10, "user-3"));
+        when(commentMapper.selectById(30)).thenReturn(buildRoot(30, 10, "owner"));
+        when(commentMapper.selectCount(any())).thenReturn(1L, 2L);
+        when(commentMapper.selectOne(any())).thenReturn(null);
+        when(commentMapper.insert(any(MiniCheckinComment.class))).thenAnswer(invocation -> {
+            MiniCheckinComment comment = invocation.getArgument(0); // 实际插入的回复
+            comment.setId(99);
+            return 1;
+        });
+        MiniCheckinCommentCreateRequest request = buildCreateRequest(10, 5, "你好");
+        request.setReplyToCommentId(50);
+
+        service.createComment(request);
+
+        verify(miniSubscribeMessageService).notifyReply(eq("user-3"), eq("西湖"), eq("小红"),
+                eq("你好"), any(LocalDateTime.class), eq(5), eq("dynamic"));
+        verify(miniSubscribeMessageService).notifyNewComment(eq("owner"), eq("西湖"), eq("小红"),
+                eq("你好"), any(LocalDateTime.class), eq(5), eq("dynamic"));
     }
 
     /** 主人未回复前，非主人最多连续评论三条 */

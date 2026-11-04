@@ -23,8 +23,10 @@ import ikun.yc.ycpage.mapper.MiniCheckinCommentMapper;
 import ikun.yc.ycpage.service.MiniCheckinCommentService;
 import ikun.yc.ycpage.service.MiniCheckinRecordsService;
 import ikun.yc.ycpage.service.MiniCheckinShareService;
+import ikun.yc.ycpage.service.MiniSubscribeMessageService;
 import ikun.yc.ycpage.service.MiniUserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -50,6 +52,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MiniCheckinCommentServiceImpl extends ServiceImpl<MiniCheckinCommentMapper, MiniCheckinComment>
         implements MiniCheckinCommentService {
     private static final String SHARE_TYPE_DYNAMIC = "dynamic"; // 动态分享类型
@@ -69,6 +72,7 @@ public class MiniCheckinCommentServiceImpl extends ServiceImpl<MiniCheckinCommen
     private final MiniCheckinShareService miniCheckinShareService;
     private final MiniUserService miniUserService;
     private final WechatMiniAuthService wechatMiniAuthService;
+    private final MiniSubscribeMessageService miniSubscribeMessageService;
 
     /**
      * 发表评论或回复
@@ -151,11 +155,56 @@ public class MiniCheckinCommentServiceImpl extends ServiceImpl<MiniCheckinCommen
         if (replyToComment != null) {
             openids.add(replyToComment.getUserOpenid());
         }
-        MiniCheckinCommentResponse response = buildResponse(comment, viewer, context.ownerOpenid, loadUsers(openids)); // 新评论响应
+        Map<String, MiniUser> users = loadUsers(openids); // 评论相关用户资料
+        MiniCheckinCommentResponse response = buildResponse(comment, viewer, context.ownerOpenid, users); // 新评论响应
         response.setReplyCount(0);
         response.setHasMoreReplies(false);
         response.setReplies(Collections.emptyList());
+
+        MiniUser author = users.get(viewer); // 当前评论人资料
+        String authorNickname = author != null && StringUtils.hasText(author.getNickname())
+                ? author.getNickname().trim()
+                : "微信用户"; // 订阅消息中展示的评论人昵称
+        sendCommentSubscribeMessages(comment, context, replyToComment, viewer, authorNickname, request.getShareId());
         return response;
+    }
+
+    /**
+     * 发送评论相关订阅消息，失败不影响评论结果
+     *
+     * @param comment      新评论
+     * @param context      当前评论场景
+     * @param replyToComment 直接回复的评论，顶级评论为空
+     * @param viewer       当前评论人openid
+     * @param authorNickname 当前评论人昵称
+     * @param shareId      分享ID，可为空
+     */
+    private void sendCommentSubscribeMessages(MiniCheckinComment comment, CommentContext context,
+                                              MiniCheckinComment replyToComment, String viewer,
+                                              String authorNickname, Integer shareId) {
+        try {
+            LocalDateTime noticeTime = comment.getCreateTime() == null
+                    ? LocalDateTime.now()
+                    : comment.getCreateTime(); // 订阅消息展示的评论时间
+            if (replyToComment != null) {
+                String targetOpenid = replyToComment.getUserOpenid(); // 被回复人openid
+                if (StringUtils.hasText(targetOpenid) && !targetOpenid.equals(viewer)) {
+                    miniSubscribeMessageService.notifyReply(targetOpenid, context.noticeProjectName,
+                            authorNickname, comment.getContent(), noticeTime, shareId, context.shareType);
+                }
+                if (!context.ownerOpenid.equals(viewer) && !context.ownerOpenid.equals(targetOpenid)) {
+                    miniSubscribeMessageService.notifyNewComment(context.ownerOpenid, context.noticeProjectName,
+                            authorNickname, comment.getContent(), noticeTime, shareId, context.shareType);
+                }
+                return;
+            }
+            if (!context.ownerOpenid.equals(viewer)) {
+                miniSubscribeMessageService.notifyNewComment(context.ownerOpenid, context.noticeProjectName,
+                        authorNickname, comment.getContent(), noticeTime, shareId, context.shareType);
+            }
+        } catch (Exception ex) {
+            log.warn("发送评论订阅消息失败, commentId={}", comment.getId(), ex);
+        }
     }
 
     /**
@@ -393,7 +442,8 @@ public class MiniCheckinCommentServiceImpl extends ServiceImpl<MiniCheckinCommen
             if (!viewer.equals(record.getUserOpenid())) {
                 throw new ParamException("无权查看该评论");
             }
-            return new CommentContext(record.getUserOpenid(), true, true, true);
+            return new CommentContext(record.getUserOpenid(), true, true, true,
+                    resolveNoticeProjectName(record), null);
         }
 
         MiniCheckinShare share = requireShare(shareId);
@@ -415,7 +465,24 @@ public class MiniCheckinCommentServiceImpl extends ServiceImpl<MiniCheckinCommen
         }
         boolean commentsEnabled = !Integer.valueOf(0).equals(share.getCommentsEnabled()); // 是否允许评论
         boolean commentsPublic = commentsEnabled && Integer.valueOf(1).equals(share.getCommentsPublic()); // 是否公开全部评论
-        return new CommentContext(share.getUserOpenid(), isOwner, commentsEnabled, commentsPublic);
+        return new CommentContext(share.getUserOpenid(), isOwner, commentsEnabled, commentsPublic,
+                resolveNoticeProjectName(record), share.getShareType());
+    }
+
+    /**
+     * 生成订阅消息中的评论项目名称
+     *
+     * @param record 打卡记录
+     * @return 优先使用地点名称，缺失时使用地址
+     */
+    private String resolveNoticeProjectName(MiniCheckinRecords record) {
+        if (StringUtils.hasText(record.getName())) {
+            return record.getName().trim();
+        }
+        if (StringUtils.hasText(record.getAddress())) {
+            return record.getAddress().trim();
+        }
+        return "打卡分享";
     }
 
     /**
@@ -900,13 +967,17 @@ public class MiniCheckinCommentServiceImpl extends ServiceImpl<MiniCheckinCommen
         private final boolean isOwner; // 当前访问者是否记录主人
         private final boolean commentsEnabled; // 是否允许评论
         private final boolean commentsPublic; // 是否公开全部评论
+        private final String noticeProjectName; // 订阅消息中的评论项目名称
+        private final String shareType; // 分享类型，用于订阅消息跳转，记录列表评论为空
 
         private CommentContext(String ownerOpenid, boolean isOwner, boolean commentsEnabled,
-                               boolean commentsPublic) {
+                               boolean commentsPublic, String noticeProjectName, String shareType) {
             this.ownerOpenid = ownerOpenid;
             this.isOwner = isOwner;
             this.commentsEnabled = commentsEnabled;
             this.commentsPublic = commentsPublic;
+            this.noticeProjectName = noticeProjectName;
+            this.shareType = shareType;
         }
     }
 
