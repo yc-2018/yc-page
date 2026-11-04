@@ -68,6 +68,7 @@ public class MiniSubscribeMessageServiceImpl implements MiniSubscribeMessageServ
             }
             String key = quotaKey(openid, templateId); // 当前模板的剩余次数 key
             Long remain = stringRedisTemplate.opsForValue().increment(key); // 本次授权后的剩余次数
+            log.info("记录订阅授权, openid={}, templateId={}, remain={}", openid, templateId, remain);
             if (remain != null && remain > QUOTA_MAX) {
                 stringRedisTemplate.opsForValue().set(key, String.valueOf(QUOTA_MAX));
             }
