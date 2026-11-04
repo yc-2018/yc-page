@@ -36,6 +36,8 @@ class MiniSubscribeMessageServiceImplTest {
     private static final String REPLY_TEMPLATE_ID = "reply-template"; // 测试用回复通知模板
     private static final String COMMENT_QUOTA_KEY = "mini:subscribe:quota:owner:" + COMMENT_TEMPLATE_ID; // 主人留言额度key
     private static final String REPLY_QUOTA_KEY = "mini:subscribe:quota:user-2:" + REPLY_TEMPLATE_ID; // 被回复人回复额度key
+    private static final String COMMENT_COOLDOWN_KEY = "mini:subscribe:cooldown:owner:" + COMMENT_TEMPLATE_ID; // 主人留言冷却key
+    private static final String REPLY_COOLDOWN_KEY = "mini:subscribe:cooldown:user-2:" + REPLY_TEMPLATE_ID; // 被回复人回复冷却key
 
     private MiniSubscribeMessageServiceImpl service; // 被测订阅消息服务
     private StringRedisTemplate redisTemplate; // 模拟Redis模板
@@ -72,13 +74,27 @@ class MiniSubscribeMessageServiceImplTest {
         service.recordAcceptedTemplates("owner", List.of(COMMENT_TEMPLATE_ID));
 
         verify(valueOperations).increment(COMMENT_QUOTA_KEY);
-        verify(redisTemplate).expire(COMMENT_QUOTA_KEY, Duration.ofDays(30));
+        verify(redisTemplate).delete(COMMENT_COOLDOWN_KEY);
     }
 
-    /** 没有剩余次数时不调用微信发送接口 */
+    /** 没有本地额度时仍尝试发送，以微信实际订阅状态为准 */
     @Test
-    void notifyNewCommentShouldSkipWithoutQuota() {
-        when(valueOperations.get(COMMENT_QUOTA_KEY)).thenReturn("0");
+    void notifyNewCommentShouldTrySendWithoutQuota() {
+        when(wechatMiniAuthService.sendSubscribeMessage(eq("owner"), eq(COMMENT_TEMPLATE_ID),
+                eq("pages/checkinShare/checkinShare?id=5"), anyMap())).thenReturn(0);
+
+        service.notifyNewComment("owner", "西湖", "小红", "你好",
+                LocalDateTime.of(2026, 11, 5, 14, 30), 5, "dynamic");
+
+        verify(wechatMiniAuthService).sendSubscribeMessage(eq("owner"), eq(COMMENT_TEMPLATE_ID),
+                eq("pages/checkinShare/checkinShare?id=5"), anyMap());
+        verify(valueOperations).decrement(COMMENT_QUOTA_KEY);
+    }
+
+    /** 微信明确拒绝后的冷却期内不再重复尝试 */
+    @Test
+    void notifyNewCommentShouldSkipWhenCooldownActive() {
+        when(redisTemplate.hasKey(COMMENT_COOLDOWN_KEY)).thenReturn(true);
 
         service.notifyNewComment("owner", "西湖", "小红", "你好",
                 LocalDateTime.of(2026, 11, 5, 14, 30), 5, "dynamic");
@@ -89,7 +105,6 @@ class MiniSubscribeMessageServiceImplTest {
     /** 发送留言通知成功后扣减一次额度 */
     @Test
     void notifyNewCommentShouldSendAndConsumeQuota() {
-        when(valueOperations.get(COMMENT_QUOTA_KEY)).thenReturn("1");
         when(wechatMiniAuthService.sendSubscribeMessage(eq("owner"), eq(COMMENT_TEMPLATE_ID),
                 eq("pages/checkinShare/checkinShare?id=5"), anyMap())).thenReturn(0);
 
@@ -109,7 +124,6 @@ class MiniSubscribeMessageServiceImplTest {
     /** 发送回复通知时打开对应多地分享页并截断过长文本 */
     @Test
     void notifyReplyShouldSendToMultiSharePage() {
-        when(valueOperations.get(REPLY_QUOTA_KEY)).thenReturn("1");
         when(wechatMiniAuthService.sendSubscribeMessage(eq("user-2"), eq(REPLY_TEMPLATE_ID),
                 eq("pages/multiCheckinShare/multiCheckinShare?id=8"), anyMap())).thenReturn(0);
         String longContent = "一二三四五六七八九十一二三四五六七八九十一二三四五"; // 超长回复内容
@@ -130,10 +144,9 @@ class MiniSubscribeMessageServiceImplTest {
         verify(valueOperations).decrement(REPLY_QUOTA_KEY);
     }
 
-    /** 微信返回未订阅时清除本地剩余次数 */
+    /** 微信返回未订阅时清除额度并进入冷却期 */
     @Test
     void notifyReplyShouldClearQuotaWhenWechatRejects() {
-        when(valueOperations.get(REPLY_QUOTA_KEY)).thenReturn("1");
         when(wechatMiniAuthService.sendSubscribeMessage(eq("user-2"), eq(REPLY_TEMPLATE_ID),
                 eq("pages/checkinShare/checkinShare?id=5"), anyMap())).thenReturn(43101);
 
@@ -141,6 +154,7 @@ class MiniSubscribeMessageServiceImplTest {
                 LocalDateTime.of(2026, 11, 5, 14, 30), 5, "dynamic");
 
         verify(redisTemplate).delete(REPLY_QUOTA_KEY);
+        verify(valueOperations).set(REPLY_COOLDOWN_KEY, "1", Duration.ofDays(1));
         verify(valueOperations, never()).decrement(REPLY_QUOTA_KEY);
     }
 }

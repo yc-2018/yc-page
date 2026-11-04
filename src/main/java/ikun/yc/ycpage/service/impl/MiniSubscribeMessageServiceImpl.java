@@ -29,8 +29,9 @@ import java.util.Map;
 @Slf4j
 public class MiniSubscribeMessageServiceImpl implements MiniSubscribeMessageService {
     private static final String QUOTA_KEY_PREFIX = "mini:subscribe:quota:"; // 一次性订阅剩余次数 key 前缀
+    private static final String COOLDOWN_KEY_PREFIX = "mini:subscribe:cooldown:"; // 微信拒绝后的冷却 key 前缀
     private static final int QUOTA_MAX = 20; // 单个模板最多累计的待发送次数
-    private static final Duration QUOTA_TTL = Duration.ofDays(30); // 订阅授权记录保留时长
+    private static final Duration COOLDOWN_TTL = Duration.ofDays(1); // 微信返回未订阅后的重试间隔
     private static final String SHARE_TYPE_MULTI = "multi"; // 多地分享类型
     private static final String DEFAULT_NICKNAME = "微信用户"; // 昵称缺失时的兜底
     private static final String DEFAULT_PROJECT = "打卡分享"; // 项目名称缺失时的兜底
@@ -47,6 +48,8 @@ public class MiniSubscribeMessageServiceImpl implements MiniSubscribeMessageServ
 
     /**
      * 记录用户已同意接收的订阅消息模板
+     *
+     * <p>微信一次性订阅不限时间，本地次数只作辅助记录，因此不设置过期时间。</p>
      *
      * @param openid      当前用户openid
      * @param templateIds 用户已同意的模板ID
@@ -68,7 +71,7 @@ public class MiniSubscribeMessageServiceImpl implements MiniSubscribeMessageServ
             if (remain != null && remain > QUOTA_MAX) {
                 stringRedisTemplate.opsForValue().set(key, String.valueOf(QUOTA_MAX));
             }
-            stringRedisTemplate.expire(key, QUOTA_TTL);
+            clearCooldown(openid, templateId);
         }
     }
 
@@ -87,7 +90,15 @@ public class MiniSubscribeMessageServiceImpl implements MiniSubscribeMessageServ
     public void notifyNewComment(String ownerOpenid, String projectName, String commenterName,
                                  String content, LocalDateTime time, Integer shareId, String shareType) {
         try {
-            if (!StringUtils.hasText(ownerOpenid) || !hasQuota(ownerOpenid, commentTemplateId)) {
+            if (!StringUtils.hasText(ownerOpenid)) {
+                return;
+            }
+            if (!StringUtils.hasText(commentTemplateId)) {
+                log.warn("未配置评论留言通知模板，跳过发送");
+                return;
+            }
+            if (inCooldown(ownerOpenid, commentTemplateId)) {
+                log.info("跳过评论留言通知：订阅失效冷却中, openid={}", ownerOpenid);
                 return;
             }
             Map<String, String> data = new LinkedHashMap<>(); // 评论留言模板字段
@@ -116,7 +127,15 @@ public class MiniSubscribeMessageServiceImpl implements MiniSubscribeMessageServ
     public void notifyReply(String targetOpenid, String projectName, String replierName,
                             String content, LocalDateTime time, Integer shareId, String shareType) {
         try {
-            if (!StringUtils.hasText(targetOpenid) || !hasQuota(targetOpenid, replyTemplateId)) {
+            if (!StringUtils.hasText(targetOpenid)) {
+                return;
+            }
+            if (!StringUtils.hasText(replyTemplateId)) {
+                log.warn("未配置评论回复通知模板，跳过发送");
+                return;
+            }
+            if (inCooldown(targetOpenid, replyTemplateId)) {
+                log.info("跳过评论回复通知：订阅失效冷却中, openid={}", targetOpenid);
                 return;
             }
             Map<String, String> data = new LinkedHashMap<>(); // 评论回复模板字段
@@ -131,29 +150,23 @@ public class MiniSubscribeMessageServiceImpl implements MiniSubscribeMessageServ
     }
 
     /**
-     * 判断当前用户是否还有指定模板的订阅次数
+     * 判断接收人是否处于微信拒绝后的冷却期
      *
-     * @param openid     用户openid
+     * @param openid     接收人openid
      * @param templateId 模板ID
-     * @return 是否还有剩余次数
+     * @return 是否仍在冷却期
      */
-    private boolean hasQuota(String openid, String templateId) {
-        if (!StringUtils.hasText(templateId)) {
-            return false;
-        }
-        String remain = stringRedisTemplate.opsForValue().get(quotaKey(openid, templateId)); // 剩余次数文本
-        if (!StringUtils.hasText(remain)) {
-            return false;
-        }
+    private boolean inCooldown(String openid, String templateId) {
         try {
-            return Integer.parseInt(remain) > 0;
-        } catch (NumberFormatException ex) {
+            return Boolean.TRUE.equals(stringRedisTemplate.hasKey(cooldownKey(openid, templateId)));
+        } catch (Exception ex) {
+            log.warn("读取订阅冷却状态失败，继续尝试发送, openid={}, templateId={}", openid, templateId);
             return false;
         }
     }
 
     /**
-     * 发送订阅消息，发送成功后扣减剩余次数
+     * 发送订阅消息，发送成功扣减额度，微信返回未订阅时进入冷却期
      *
      * @param openid     接收人openid
      * @param templateId 模板ID
@@ -164,27 +177,33 @@ public class MiniSubscribeMessageServiceImpl implements MiniSubscribeMessageServ
         Integer errcode = wechatMiniAuthService.sendSubscribeMessage(openid, templateId, page, data); // 微信发送结果
         if (errcode != null && errcode == 0) {
             consumeQuota(openid, templateId);
+            log.info("订阅消息发送成功, openid={}, templateId={}, page={}", openid, templateId, page);
             return;
         }
         if (errcode != null && errcode == 43101) {
             clearQuota(openid, templateId);
-            log.info("用户未订阅或已取消订阅, openid={}, templateId={}", openid, templateId);
+            markCooldown(openid, templateId);
+            log.info("用户未订阅或已取消订阅，暂停尝试1天, openid={}, templateId={}", openid, templateId);
             return;
         }
         log.warn("发送订阅消息失败, openid={}, templateId={}, errcode={}", openid, templateId, errcode);
     }
 
     /**
-     * 发送成功后扣减一次订阅次数
+     * 发送成功后扣减一次订阅次数，Redis 异常不影响已发送结果
      *
      * @param openid     用户openid
      * @param templateId 模板ID
      */
     private void consumeQuota(String openid, String templateId) {
-        String key = quotaKey(openid, templateId); // 剩余次数 key
-        Long remain = stringRedisTemplate.opsForValue().decrement(key); // 扣减后的剩余次数
-        if (remain != null && remain <= 0) {
-            stringRedisTemplate.delete(key);
+        try {
+            String key = quotaKey(openid, templateId); // 剩余次数 key
+            Long remain = stringRedisTemplate.opsForValue().decrement(key); // 扣减后的剩余次数
+            if (remain != null && remain <= 0) {
+                stringRedisTemplate.delete(key);
+            }
+        } catch (Exception ex) {
+            log.warn("扣减订阅额度失败, openid={}, templateId={}", openid, templateId, ex);
         }
     }
 
@@ -195,7 +214,39 @@ public class MiniSubscribeMessageServiceImpl implements MiniSubscribeMessageServ
      * @param templateId 模板ID
      */
     private void clearQuota(String openid, String templateId) {
-        stringRedisTemplate.delete(quotaKey(openid, templateId));
+        try {
+            stringRedisTemplate.delete(quotaKey(openid, templateId));
+        } catch (Exception ex) {
+            log.warn("清除订阅额度失败, openid={}, templateId={}", openid, templateId, ex);
+        }
+    }
+
+    /**
+     * 记录微信拒绝后的冷却状态，避免持续无效发送
+     *
+     * @param openid     用户openid
+     * @param templateId 模板ID
+     */
+    private void markCooldown(String openid, String templateId) {
+        try {
+            stringRedisTemplate.opsForValue().set(cooldownKey(openid, templateId), "1", COOLDOWN_TTL);
+        } catch (Exception ex) {
+            log.warn("记录订阅冷却状态失败, openid={}, templateId={}", openid, templateId, ex);
+        }
+    }
+
+    /**
+     * 清除冷却状态，用户重新授权后立即恢复发送
+     *
+     * @param openid     用户openid
+     * @param templateId 模板ID
+     */
+    private void clearCooldown(String openid, String templateId) {
+        try {
+            stringRedisTemplate.delete(cooldownKey(openid, templateId));
+        } catch (Exception ex) {
+            log.warn("清除订阅冷却状态失败, openid={}, templateId={}", openid, templateId, ex);
+        }
     }
 
     /**
@@ -218,6 +269,17 @@ public class MiniSubscribeMessageServiceImpl implements MiniSubscribeMessageServ
      */
     private String quotaKey(String openid, String templateId) {
         return QUOTA_KEY_PREFIX + openid + ":" + templateId;
+    }
+
+    /**
+     * 生成订阅消息冷却状态缓存 key
+     *
+     * @param openid     用户openid
+     * @param templateId 模板ID
+     * @return 缓存 key
+     */
+    private String cooldownKey(String openid, String templateId) {
+        return COOLDOWN_KEY_PREFIX + openid + ":" + templateId;
     }
 
     /**

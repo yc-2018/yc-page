@@ -191,16 +191,22 @@ public class MiniCheckinCommentServiceImpl extends ServiceImpl<MiniCheckinCommen
                 if (StringUtils.hasText(targetOpenid) && !targetOpenid.equals(viewer)) {
                     miniSubscribeMessageService.notifyReply(targetOpenid, context.noticeProjectName,
                             authorNickname, comment.getContent(), noticeTime, shareId, context.shareType);
+                } else {
+                    log.info("跳过评论回复通知：回复自己或无被回复人, commentId={}", comment.getId());
                 }
                 if (!context.ownerOpenid.equals(viewer) && !context.ownerOpenid.equals(targetOpenid)) {
                     miniSubscribeMessageService.notifyNewComment(context.ownerOpenid, context.noticeProjectName,
                             authorNickname, comment.getContent(), noticeTime, shareId, context.shareType);
+                } else {
+                    log.info("跳过评论留言通知：记录主人是评论人或被回复人, commentId={}", comment.getId());
                 }
                 return;
             }
             if (!context.ownerOpenid.equals(viewer)) {
                 miniSubscribeMessageService.notifyNewComment(context.ownerOpenid, context.noticeProjectName,
                         authorNickname, comment.getContent(), noticeTime, shareId, context.shareType);
+            } else {
+                log.info("跳过评论留言通知：记录主人自己评论, commentId={}", comment.getId());
             }
         } catch (Exception ex) {
             log.warn("发送评论订阅消息失败, commentId={}", comment.getId(), ex);
