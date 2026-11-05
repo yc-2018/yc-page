@@ -84,7 +84,7 @@ class MiniSubscribeMessageServiceImplTest {
                 eq("pages/checkinShare/checkinShare?id=5"), anyMap())).thenReturn(0);
 
         service.notifyNewComment("owner", "西湖", "小红", "你好",
-                LocalDateTime.of(2026, 11, 5, 14, 30), 5, "dynamic");
+                LocalDateTime.of(2026, 11, 5, 14, 30), 5, "dynamic", null);
 
         verify(wechatMiniAuthService).sendSubscribeMessage(eq("owner"), eq(COMMENT_TEMPLATE_ID),
                 eq("pages/checkinShare/checkinShare?id=5"), anyMap());
@@ -97,7 +97,7 @@ class MiniSubscribeMessageServiceImplTest {
         when(redisTemplate.hasKey(COMMENT_COOLDOWN_KEY)).thenReturn(true);
 
         service.notifyNewComment("owner", "西湖", "小红", "你好",
-                LocalDateTime.of(2026, 11, 5, 14, 30), 5, "dynamic");
+                LocalDateTime.of(2026, 11, 5, 14, 30), 5, "dynamic", null);
 
         verifyNoInteractions(wechatMiniAuthService);
     }
@@ -109,7 +109,7 @@ class MiniSubscribeMessageServiceImplTest {
                 eq("pages/checkinShare/checkinShare?id=5"), anyMap())).thenReturn(0);
 
         service.notifyNewComment("owner", "西湖", "小红", "你好",
-                LocalDateTime.of(2026, 11, 5, 14, 30), 5, "dynamic");
+                LocalDateTime.of(2026, 11, 5, 14, 30), 5, "dynamic", null);
 
         ArgumentCaptor<Map<String, String>> dataCaptor = ArgumentCaptor.forClass(Map.class); // 模板字段
         verify(wechatMiniAuthService).sendSubscribeMessage(eq("owner"), eq(COMMENT_TEMPLATE_ID),
@@ -121,20 +121,20 @@ class MiniSubscribeMessageServiceImplTest {
         verify(valueOperations).decrement(COMMENT_QUOTA_KEY);
     }
 
-    /** 发送回复通知时打开对应多地分享页并截断过长文本 */
+    /** 发送回复通知时打开对应多地分享页并定位记录，同时截断过长文本 */
     @Test
     void notifyReplyShouldSendToMultiSharePage() {
         when(wechatMiniAuthService.sendSubscribeMessage(eq("user-2"), eq(REPLY_TEMPLATE_ID),
-                eq("pages/multiCheckinShare/multiCheckinShare?id=8"), anyMap())).thenReturn(0);
+                eq("pages/multiCheckinShare/multiCheckinShare?id=8&recordId=10"), anyMap())).thenReturn(0);
         String longContent = "一二三四五六七八九十一二三四五六七八九十一二三四五"; // 超长回复内容
 
         service.notifyReply("user-2", "这是一个超过二十个字的评论项目名称用于测试截断",
                 "一个超过十个字的用户昵称", longContent,
-                LocalDateTime.of(2026, 11, 5, 14, 30), 8, "multi");
+                LocalDateTime.of(2026, 11, 5, 14, 30), 8, "multi", 10);
 
         ArgumentCaptor<Map<String, String>> dataCaptor = ArgumentCaptor.forClass(Map.class); // 模板字段
         verify(wechatMiniAuthService).sendSubscribeMessage(eq("user-2"), eq(REPLY_TEMPLATE_ID),
-                eq("pages/multiCheckinShare/multiCheckinShare?id=8"), dataCaptor.capture());
+                eq("pages/multiCheckinShare/multiCheckinShare?id=8&recordId=10"), dataCaptor.capture());
         Map<String, String> data = dataCaptor.getValue(); // 实际发送的模板字段
         assertEquals(20, data.get("thing6").codePointCount(0, data.get("thing6").length()));
         assertEquals(10, data.get("thing7").codePointCount(0, data.get("thing7").length()));
@@ -151,7 +151,7 @@ class MiniSubscribeMessageServiceImplTest {
                 eq("pages/checkinShare/checkinShare?id=5"), anyMap())).thenReturn(43101);
 
         service.notifyReply("user-2", "西湖", "小红", "你好",
-                LocalDateTime.of(2026, 11, 5, 14, 30), 5, "dynamic");
+                LocalDateTime.of(2026, 11, 5, 14, 30), 5, "dynamic", null);
 
         verify(redisTemplate).delete(REPLY_QUOTA_KEY);
         verify(valueOperations).set(REPLY_COOLDOWN_KEY, "1", Duration.ofDays(1));

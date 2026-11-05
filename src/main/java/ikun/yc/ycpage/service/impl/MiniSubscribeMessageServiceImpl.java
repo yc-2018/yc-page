@@ -86,10 +86,12 @@ public class MiniSubscribeMessageServiceImpl implements MiniSubscribeMessageServ
      * @param time          留言时间
      * @param shareId       分享ID，可为空
      * @param shareType     分享类型，可为空
+     * @param recordId      评论所属打卡记录ID，用于多地分享页定位，可为空
      */
     @Override
     public void notifyNewComment(String ownerOpenid, String projectName, String commenterName,
-                                 String content, LocalDateTime time, Integer shareId, String shareType) {
+                                 String content, LocalDateTime time, Integer shareId, String shareType,
+                                 Integer recordId) {
         try {
             if (!StringUtils.hasText(ownerOpenid)) {
                 return;
@@ -107,7 +109,7 @@ public class MiniSubscribeMessageServiceImpl implements MiniSubscribeMessageServ
             data.put("date4", DATE_TIME_FORMAT.format(time == null ? LocalDateTime.now() : time));
             data.put("thing2", limitText(projectName, 20, DEFAULT_PROJECT));
             data.put("thing3", limitText(content, 20, "有新评论"));
-            send(ownerOpenid, commentTemplateId, buildPage(shareId, shareType), data);
+            send(ownerOpenid, commentTemplateId, buildPage(shareId, shareType, recordId), data);
         } catch (Exception ex) {
             log.warn("发送评论留言通知失败, openid={}", ownerOpenid, ex);
         }
@@ -123,10 +125,12 @@ public class MiniSubscribeMessageServiceImpl implements MiniSubscribeMessageServ
      * @param time         回复时间
      * @param shareId      分享ID，可为空
      * @param shareType    分享类型，可为空
+     * @param recordId     回复所属打卡记录ID，用于多地分享页定位，可为空
      */
     @Override
     public void notifyReply(String targetOpenid, String projectName, String replierName,
-                            String content, LocalDateTime time, Integer shareId, String shareType) {
+                            String content, LocalDateTime time, Integer shareId, String shareType,
+                            Integer recordId) {
         try {
             if (!StringUtils.hasText(targetOpenid)) {
                 return;
@@ -144,7 +148,7 @@ public class MiniSubscribeMessageServiceImpl implements MiniSubscribeMessageServ
             data.put("thing7", limitText(replierName, 10, DEFAULT_NICKNAME));
             data.put("thing8", limitText(content, 20, "有新回复"));
             data.put("time9", TIME_FORMAT.format(time == null ? LocalDateTime.now() : time));
-            send(targetOpenid, replyTemplateId, buildPage(shareId, shareType), data);
+            send(targetOpenid, replyTemplateId, buildPage(shareId, shareType, recordId), data);
         } catch (Exception ex) {
             log.warn("发送评论回复通知失败, openid={}", targetOpenid, ex);
         }
@@ -288,14 +292,19 @@ public class MiniSubscribeMessageServiceImpl implements MiniSubscribeMessageServ
      *
      * @param shareId   分享ID，可为空
      * @param shareType 分享类型，可为空
+     * @param recordId  评论所属打卡记录ID，可为空
      * @return 小程序页面路径
      */
-    private String buildPage(Integer shareId, String shareType) {
+    private String buildPage(Integer shareId, String shareType, Integer recordId) {
         if (shareId == null || shareId <= 0) {
             return "pages/records/records";
         }
         if (SHARE_TYPE_MULTI.equals(shareType)) {
-            return "pages/multiCheckinShare/multiCheckinShare?id=" + shareId;
+            String page = "pages/multiCheckinShare/multiCheckinShare?id=" + shareId; // 多地分享页路径
+            if (recordId != null && recordId > 0) {
+                page += "&recordId=" + recordId; // 携带记录ID，进入后定位到对应地点
+            }
+            return page;
         }
         return "pages/checkinShare/checkinShare?id=" + shareId;
     }

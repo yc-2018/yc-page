@@ -130,8 +130,8 @@ class MiniCheckinCommentServiceImplTest {
         service.createComment(request);
 
         verify(miniSubscribeMessageService).notifyNewComment(eq("owner"), eq("西湖"), eq("小红"),
-                eq("你好"), any(LocalDateTime.class), eq(5), eq("dynamic"));
-        verify(miniSubscribeMessageService, never()).notifyReply(any(), any(), any(), any(), any(), any(), any());
+                eq("你好"), any(LocalDateTime.class), eq(5), eq("dynamic"), eq(10));
+        verify(miniSubscribeMessageService, never()).notifyReply(any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     /** 回复其他用户后同时通知被回复人和记录主人 */
@@ -161,9 +161,9 @@ class MiniCheckinCommentServiceImplTest {
         service.createComment(request);
 
         verify(miniSubscribeMessageService).notifyReply(eq("user-3"), eq("西湖"), eq("小红"),
-                eq("你好"), any(LocalDateTime.class), eq(5), eq("dynamic"));
+                eq("你好"), any(LocalDateTime.class), eq(5), eq("dynamic"), eq(10));
         verify(miniSubscribeMessageService).notifyNewComment(eq("owner"), eq("西湖"), eq("小红"),
-                eq("你好"), any(LocalDateTime.class), eq(5), eq("dynamic"));
+                eq("你好"), any(LocalDateTime.class), eq(5), eq("dynamic"), eq(10));
     }
 
     /** 主人未回复前，非主人最多连续评论三条 */

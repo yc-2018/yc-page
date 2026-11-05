@@ -28,9 +28,10 @@ public interface MiniSubscribeMessageService {
      * @param time          留言时间
      * @param shareId       分享ID，可为空
      * @param shareType     分享类型，可为空
+     * @param recordId      评论所属打卡记录ID，用于多地分享页定位，可为空
      */
     void notifyNewComment(String ownerOpenid, String projectName, String commenterName,
-                          String content, LocalDateTime time, Integer shareId, String shareType);
+                          String content, LocalDateTime time, Integer shareId, String shareType, Integer recordId);
 
     /**
      * 发送评论回复通知，提醒被回复人有新回复
@@ -42,7 +43,8 @@ public interface MiniSubscribeMessageService {
      * @param time         回复时间
      * @param shareId      分享ID，可为空
      * @param shareType    分享类型，可为空
+     * @param recordId     回复所属打卡记录ID，用于多地分享页定位，可为空
      */
     void notifyReply(String targetOpenid, String projectName, String replierName,
-                     String content, LocalDateTime time, Integer shareId, String shareType);
+                     String content, LocalDateTime time, Integer shareId, String shareType, Integer recordId);
 }
